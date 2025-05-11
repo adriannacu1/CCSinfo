@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Section List</h1>
+
+<form class="search-form" method="GET">
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" name="search" placeholder="Search by section name..." value="{{ request.args.get('search', '') }}">
+        <button class="btn btn-danger" type="submit">Search</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Section Name</th>
+                <th>Course</th>
+                <th>Year Level</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for section in sections %}
+            <tr>
+                <td><a href="{{ url_for('section_profile', section_id=section.id) }}">{{ section.section_name }}</a></td>
+                <td>{{ section.course }}</td>
+                <td>{{ section.year_level }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="dashboard-card">
+            <i class="fas fa-user-graduate"></i>
+            <h3>Students</h3>
+            <a href="{{ url_for('student_list') }}" class="btn btn-light">View Students</a>
+        </div>
+        <div class="dashboard-card">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <h3>Faculty</h3>
+            <a href="{{ url_for('faculty_list') }}" class="btn btn-light">View Faculty</a>
+        </div>
+        <div class="dashboard-card">
+            <i class="fas fa-door-open"></i>
+            <h3>Rooms</h3>
+            <a href="{{ url_for('room_list') }}" class="btn btn-light">View Rooms</a>
+        </div>
+        <div class="dashboard-card">
+            <i class="fas fa-users"></i>
+            <h3>Sections</h3>
+            <a href="{{ url_for('section_list') }}" class="btn btn-light">View Sections</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

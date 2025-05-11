@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Faculty List</h1>
+
+<form class="search-form" method="GET">
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" name="search" placeholder="Search by name or ID..." value="{{ request.args.get('search', '') }}">
+        <button class="btn btn-danger" type="submit">Search</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in faculty %}
+            <tr>
+                <td>{{ member.faculty_id }}</td>
+                <td><a href="{{ url_for('faculty_profile', faculty_id=member.id) }}">{{ member.name }}</a></td>
+                <td>{{ member.department }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

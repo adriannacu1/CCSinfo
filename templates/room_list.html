@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Room List</h1>
+
+<form class="search-form" method="GET">
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" name="search" placeholder="Search by room name..." value="{{ request.args.get('search', '') }}">
+        <button class="btn btn-danger" type="submit">Search</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Room Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room in rooms %}
+            <tr>
+                <td><a href="#">{{ room.room_name }}</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
