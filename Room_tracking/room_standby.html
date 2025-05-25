@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Security System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            overflow: hidden;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .test-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .test-btn:hover {
+            background: #cc3333;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .lock-status {
+            margin-bottom: 40px;
+        }
+
+        .lock-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            color: #ffcc00;
+        }
+
+        .lock-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .lock-subtitle {
+            font-size: 20px;
+            opacity: 0.8;
+        }
+
+        .login-section {
+            margin-top: 30px;
+        }
+
+        .login-btn {
+            background: #00aa44;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .login-btn:hover {
+            background: #008833;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-light {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-text {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .alert-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: flashAlert 0.5s infinite alternate;
+        }
+
+        .alert-content {
+            background: white;
+            color: red;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        @keyframes flashAlert {
+            0% { background: rgba(255, 0, 0, 0.8); }
+            100% { background: rgba(255, 0, 0, 0.9); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Indicator -->
+    <div class="status-indicator">
+        <div class="status-light"></div>
+        <span class="status-text">SECURITY ACTIVE</span>
+    </div>
+
+    <!-- Test Button for Sensor Simulation -->
+    <div class="header">
+        <button class="test-btn" onclick="triggerSensorAlert()">TEST SENSOR</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="lock-status">
+            <div class="lock-icon">🔒</div>
+            <div class="lock-title">ROOM LOCKED</div>
+            <div class="lock-subtitle">Security System Active</div>
+        </div>
+
+        <div class="login-section">
+            <button class="login-btn" onclick="showLoginForm()">LOGIN TO ACCESS</button>
+        </div>
+    </div>
+
+    <div class="alert-overlay" id="alertOverlay">
+        <div class="alert-content">
+            <div>⚠️ UNAUTHORIZED ACCESS DETECTED ⚠️</div>
+            <div style="margin-top: 20px; font-size: 18px;">Please login to proceed</div>
+        </div>
+    </div>
+
+    <audio id="alarmSound" preload="auto">
+        <source src="alarmingsound.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        let alertTimeout;
+        let alarmInterval;
+        let alarmCount = 0;
+
+        function triggerSensorAlert() {
+            const overlay = document.getElementById('alertOverlay');
+            overlay.style.display = 'flex';
+
+            alarmCount = 0;
+
+            playAlarmRepeat();
+
+            clearTimeout(alertTimeout);
+            alertTimeout = setTimeout(() => {
+                overlay.style.display = 'none';
+                stopAlarm();
+            }, 7500);
+
+            overlay.onclick = () => {
+                overlay.style.display = 'none';
+                stopAlarm();
+                clearTimeout(alertTimeout);
+            };
+        }
+
+        function playAlarmRepeat() {
+            const alarmSound = document.getElementById('alarmSound');
+            
+            // Play the alarm
+            alarmSound.currentTime = 0;
+            alarmSound.play().catch(e => {
+                console.log('Audio play failed:', e);
+                createAlarmTone();
+            });
+
+            alarmCount++;
+
+            alarmSound.onended = () => {
+                if (alarmCount < 3) {
+                    setTimeout(() => {
+                        playAlarmRepeat();
+                    }, 1500);
+                }
+            };
+        }
+
+        function stopAlarm() {
+            const alarmSound = document.getElementById('alarmSound');
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+            alarmSound.onended = null;
+            alarmCount = 0;
+        }
+
+        function createAlarmTone() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.type = 'square';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1);
+
+                setTimeout(() => {
+                    const oscillator2 = audioContext.createOscillator();
+                    const gainNode2 = audioContext.createGain();
+
+                    oscillator2.connect(gainNode2);
+                    gainNode2.connect(audioContext.destination);
+
+                    oscillator2.frequency.setValueAtTime(600, audioContext.currentTime);
+                    oscillator2.type = 'square';
+
+                    gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+
+                    oscillator2.start(audioContext.currentTime);
+                    oscillator2.stop(audioContext.currentTime + 1);
+                }, 200);
+            } catch (e) {
+                console.log('Web Audio API not supported:', e);
+            }
+        }
+
+        function showLoginForm() {
+            // Placeholder for login functionality
+            alert('Login form will be implemented here.\nThis will redirect to your authentication system.');
+        }
+    </script>
+</body>
+</html>
