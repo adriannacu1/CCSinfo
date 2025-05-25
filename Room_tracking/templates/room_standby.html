@@ -155,22 +155,18 @@
     </style>
 </head>
 <body>
-    <!-- Status Indicator -->
     <div class="status-indicator">
         <div class="status-light"></div>
         <span class="status-text">SECURITY ACTIVE</span>
     </div>
 
-    <!-- Test Button for Sensor Simulation -->
     <div class="header">
-        <button class="test-btn" onclick="triggerSensorAlert()">TEST SENSOR</button>
+        <button class="test-btn" onclick="triggerSensorAlert()">TEMPORARY SENSOR</button>
     </div>
 
-    <!-- Main Content -->
     <div class="main-container">
         <div class="lock-status">
-            <div class="lock-icon">🔒</div>
-            <div class="lock-title">ROOM LOCKED</div>
+            <div class="lock-title">SENSOR ARMED</div>
             <div class="lock-subtitle">Security System Active</div>
         </div>
 
@@ -181,26 +177,39 @@
 
     <div class="alert-overlay" id="alertOverlay">
         <div class="alert-content">
-            <div>⚠️ UNAUTHORIZED ACCESS DETECTED ⚠️</div>
+            <div>UNAUTHORIZED ACCESS DETECTED</div>
             <div style="margin-top: 20px; font-size: 18px;">Please login to proceed</div>
         </div>
     </div>
 
     <audio id="alarmSound" preload="auto">
-        <source src="alarmingsound.mp3" type="audio/mpeg">
+        <source src="{{ url_for('static', filename='alarmingsound.mp3') }}" type="audio/mpeg">
     </audio>
 
     <script>
         let alertTimeout;
-        let alarmInterval;
         let alarmCount = 0;
 
         function triggerSensorAlert() {
+            fetch('/trigger_sensor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'alert_triggered') {
+                    showAlert();
+                }
+            });
+        }
+
+        function showAlert() {
             const overlay = document.getElementById('alertOverlay');
             overlay.style.display = 'flex';
 
             alarmCount = 0;
-
             playAlarmRepeat();
 
             clearTimeout(alertTimeout);
@@ -219,11 +228,9 @@
         function playAlarmRepeat() {
             const alarmSound = document.getElementById('alarmSound');
             
-            // Play the alarm
             alarmSound.currentTime = 0;
             alarmSound.play().catch(e => {
                 console.log('Audio play failed:', e);
-                createAlarmTone();
             });
 
             alarmCount++;
@@ -245,48 +252,8 @@
             alarmCount = 0;
         }
 
-        function createAlarmTone() {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.type = 'square';
-
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 1);
-
-                setTimeout(() => {
-                    const oscillator2 = audioContext.createOscillator();
-                    const gainNode2 = audioContext.createGain();
-
-                    oscillator2.connect(gainNode2);
-                    gainNode2.connect(audioContext.destination);
-
-                    oscillator2.frequency.setValueAtTime(600, audioContext.currentTime);
-                    oscillator2.type = 'square';
-
-                    gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-
-                    oscillator2.start(audioContext.currentTime);
-                    oscillator2.stop(audioContext.currentTime + 1);
-                }, 200);
-            } catch (e) {
-                console.log('Web Audio API not supported:', e);
-            }
-        }
-
         function showLoginForm() {
-            // Placeholder for login functionality
-            alert('Login form will be implemented here.\nThis will redirect to your authentication system.');
+            window.location.href = '/login';
         }
     </script>
 </body>
