@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Access Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .timer-warning {
+            background: #ff4444;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .timer-warning.hidden {
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 300px;
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .button-group {
+            margin-bottom: 20px;
+        }
+
+        .login-btn, .temporary-key {
+            width: 100%;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .login-btn {
+            background: #00aa44;
+        }
+
+        .login-btn:hover {
+            background: #008833;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .temporary-key {
+            background: #ff8800;
+        }
+
+        .temporary-key:hover {
+            background: #cc6600;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #2a5298;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-warning hidden" id="timerWarning">
+        ⚠️ SENSOR TRIGGERED - Time remaining: <span id="timeRemaining">5:00</span>
+    </div>
+
+    <div class="login-container">
+        <h2 class="login-title">🔐 Room Access</h2>
+        
+        <div class="button-group">
+            <button class="login-btn" onclick="showProfessorLogin()">Professor Login</button>
+            <button class="temporary-key" onclick="showTemporaryKey()">Temporary Key</button>
+        </div>
+
+        <div class="back-link">
+            <a href="/">← Back to Security Screen</a>
+        </div>  
+    </div>
+
+    <script>
+        let countdownTimer;
+        let timeLeft = 390;
+
+        function showProfessorLogin() {
+            window.location.href = '/professor_login';
+        }
+
+        function showTemporaryKey() {
+            window.location.href = '/temporary_key';
+        }
+
+        function startTimer() {
+            const timerWarning = document.getElementById('timerWarning');
+            const timeRemaining = document.getElementById('timeRemaining');
+            
+            timerWarning.classList.remove('hidden');
+            
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timeRemaining.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    window.location.href = '/?alarm=true';
+                }
+            }, 1000);
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('sensor_triggered') === 'true') {
+            startTimer();
+        }
+    </script>
+</body>
+</html>

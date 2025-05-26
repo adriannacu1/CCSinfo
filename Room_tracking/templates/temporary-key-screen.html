@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporary Key Access</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            color: white;
+        }
+
+        .key-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 350px;
+            text-align: center;
+        }
+
+        .key-title {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .key-subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .button-group {
+            margin-bottom: 20px;
+        }
+
+        .key-btn {
+            width: 100%;
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .mayoral-key {
+            background: #8b0000;
+        }
+
+        .mayoral-key:hover {
+            background: #660000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .maintenance {
+            background: #ff8800;
+        }
+
+        .maintenance:hover {
+            background: #cc6600;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .five-minutes {
+            background: #4169e1;
+        }
+
+        .five-minutes:hover {
+            background: #1e3cb8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #2a5298;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="key-container">
+        <h2 class="key-title">🔑 Temporary Access</h2>
+        <p class="key-subtitle">Select your access type</p>
+        
+        <div class="button-group">
+            <button class="key-btn mayoral-key" onclick="accessMayoralKey()">
+                <span class="icon">👨🏻‍🎓</span>Mayoral Key
+            </button>
+            
+            <button class="key-btn maintenance" onclick="accessMaintenance()">
+                <span class="icon">🔧</span>Maintenance
+            </button>
+            
+            <button class="key-btn five-minutes" onclick="accessFiveMinutes()">
+                <span class="icon">⏱️</span>5 Minutes
+            </button>
+        </div>
+
+        <div class="back-link">
+            <a href="/loginInterface">← Back to Login Options</a>
+        </div>
+    </div>
+
+    <script>
+        //template for mayoral key access
+        function accessMayoralKey() {
+            alert('Mayoral Key access requested');
+        }
+
+        //template for maintenance access
+        function accessMaintenance() {
+            alert('Maintenance access requested');
+        }
+
+        //template for 5-minute temporary access
+        function accessFiveMinutes() {
+            alert('5-minute access requested');
+        }
+    </script>
+</body>
+</html>
