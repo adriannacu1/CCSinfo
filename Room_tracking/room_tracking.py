@@ -14,8 +14,13 @@ room_status = {
 @app.route('/')
 def index():
     """Main room security screen"""
+    # Check if returning from timeout
+    alarm = request.args.get('alarm')
+    if alarm == 'true':
+        # Add alarm trigger logic here if needed
+        room_status['last_sensor_trigger'] = True
+    
     return render_template('room_standby.html')
-
 
 @app.route('/trigger_sensor', methods=['POST'])
 def trigger_sensor():
@@ -29,8 +34,16 @@ def trigger_sensor():
         return jsonify({'status': 'alert_triggered', 'message': 'Unauthorized access detected'})
     return jsonify({'status': 'authorized', 'message': 'Access granted'})
 
+@app.route('/professor_login')
+def professor_login():
+    return render_template('professor_login.html')
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/temporary_key')
+def temporary_key():
+    return render_template('temporary-key-screen.html')
+
+
+@app.route('/loginInterface', methods=['GET', 'POST'])
 def login():
     """Login page for room access"""
     if request.method == 'POST':
@@ -42,9 +55,9 @@ def login():
             room_status['locked'] = False
             return redirect(url_for('dashboard'))
         else:
-            return render_template('login.html', error='Invalid credentials')
+            return render_template('loginInterface.html', error='Invalid credentials')
     
-    return render_template('login.html')
+    return render_template('loginInterface.html')
 
 if __name__ == '__main__':
     if not os.path.exists('templates'):

@@ -177,18 +177,18 @@
 
     <div class="alert-overlay" id="alertOverlay">
         <div class="alert-content">
-            <div>UNAUTHORIZED ACCESS DETECTED</div>
-            <div style="margin-top: 20px; font-size: 18px;">Please login to proceed</div>
+            <h2>🚨 SENSOR DETECTED 🚨</h2>
+            <p>Click anywhere to continue to login...</p>
         </div>
     </div>
 
-    <audio id="alarmSound" preload="auto">
+    <audio id="alarmSound" preload="auto" loop>
         <source src="{{ url_for('static', filename='alarmingsound.mp3') }}" type="audio/mpeg">
     </audio>
 
     <script>
-        let alertTimeout;
-        let alarmCount = 0;
+        let alarmTimer;
+        let isAlarmActive = false;
 
         function triggerSensorAlert() {
             fetch('/trigger_sensor', {
@@ -208,53 +208,69 @@
         function showAlert() {
             const overlay = document.getElementById('alertOverlay');
             overlay.style.display = 'flex';
-
-            alarmCount = 0;
-            playAlarmRepeat();
-
-            clearTimeout(alertTimeout);
-            alertTimeout = setTimeout(() => {
-                overlay.style.display = 'none';
+            
+            isAlarmActive = true;
+            startContinuousAlarm();
+            
+            overlay.onclick = function() {
                 stopAlarm();
-            }, 7500);
-
-            overlay.onclick = () => {
-                overlay.style.display = 'none';
-                stopAlarm();
-                clearTimeout(alertTimeout);
+                redirectToLogin();
             };
         }
 
-        function playAlarmRepeat() {
-            const alarmSound = document.getElementById('alarmSound');
+        function startContinuousAlarm() {
+            if (!isAlarmActive) return;
             
+            const alarmSound = document.getElementById('alarmSound');
             alarmSound.currentTime = 0;
+            
             alarmSound.play().catch(e => {
-                console.log('Audio play failed:', e);
+                console.log('Audio play failed, using Web Audio API:', e);
             });
 
-            alarmCount++;
-
-            alarmSound.onended = () => {
-                if (alarmCount < 3) {
-                    setTimeout(() => {
-                        playAlarmRepeat();
-                    }, 1500);
+  
+            alarmTimer = setTimeout(() => {
+                if (isAlarmActive) {
+                    startContinuousAlarm();
                 }
-            };
+            }, 3000); //di nagana delay ng alarm kaya tuloy tuloy, idk y :(
         }
 
+
         function stopAlarm() {
+            isAlarmActive = false;
+            
             const alarmSound = document.getElementById('alarmSound');
             alarmSound.pause();
             alarmSound.currentTime = 0;
-            alarmSound.onended = null;
-            alarmCount = 0;
+            
+            if (alarmTimer) {
+                clearTimeout(alarmTimer);
+                alarmTimer = null;
+            }
+        }
+
+        function redirectToLogin() {
+            window.location.href = '/loginInterface?sensor_triggered=true';
+        }
+
+        function hideAlert() {
+            const overlay = document.getElementById('alertOverlay');
+            overlay.style.display = 'none';
         }
 
         function showLoginForm() {
-            window.location.href = '/login';
+            window.location.href = '/loginInterface';
         }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('alarm') === 'true') {
+                setTimeout(() => {
+                    showAlert();
+                }, 500);
+            }
+        });
     </script>
 </body>
 </html>
