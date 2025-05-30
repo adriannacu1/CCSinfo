@@ -22,7 +22,7 @@
         <tbody>
             {% for section in sections %}
             <tr>
-                <td><a href="{{ url_for('section_profile', section_id=section.id) }}">{{ section.section_name }}</a></td>
+                <td><a href="{{ url_for('section_profile', section_id=section.section_id) }}">{{ section.section_name }}</a></td>
                 <td>{{ section.course }}</td>
                 <td>{{ section.year_level }}</td>
             </tr>

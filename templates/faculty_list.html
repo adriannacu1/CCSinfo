@@ -23,7 +23,7 @@
             {% for member in faculty %}
             <tr>
                 <td>{{ member.faculty_id }}</td>
-                <td><a href="{{ url_for('faculty_profile', faculty_id=member.id) }}">{{ member.name }}</a></td>
+                <td><a href="{{ url_for('faculty_profile', faculty_id=member.faculty_id) }}">{{ member.name }}</a></td>
                 <td>{{ member.department }}</td>
             </tr>
             {% endfor %}

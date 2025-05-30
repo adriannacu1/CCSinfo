@@ -38,7 +38,7 @@
                         {% for student in students %}
                         <tr>
                             <td>{{ student.student_number }}</td>
-                            <td><a href="{{ url_for('student_profile', student_id=student.id) }}" class="text-primary">{{ student.name }}</a></td>
+                            <td><a href="{{ url_for('student_profile', student_id=student.student_id) }}" class="text-primary">{{ student.name }}</a></td>
                             <td>{{ student.course }}</td>
                             <td>{{ student.year_level }}</td>
                             <td>{{ student.section.section_name if student.section else '' }}</td>

@@ -15,7 +15,7 @@ def search_students():
             Student.student_number.ilike(f'%{query}%')
         ).limit(10).all()
         return jsonify([{
-            'id': student.id,
+            'id': student.student_id,  # Changed from student.id to student.student_id
             'name': student.name,
             'student_number': student.student_number
         } for student in students])
