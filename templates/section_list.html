@@ -1,33 +1,91 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="mb-4">Section List</h1>
-
-<form class="search-form" method="GET">
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" name="search" placeholder="Search by section name..." value="{{ request.args.get('search', '') }}">
-        <button class="btn btn-danger" type="submit">Search</button>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Section List</h5>
+        <div class="search-container" style="width: 300px;">
+            <div class="input-group input-group-sm">
+                <input type="text" 
+                       class="form-control" 
+                       id="searchInput" 
+                       list="searchSuggestions"
+                       placeholder="Search by section name..."
+                       value="{{ request.args.get('search', '') }}"
+                       autocomplete="off">
+                <button class="btn btn-danger btn-sm" type="button" id="searchButton">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <datalist id="searchSuggestions"></datalist>
+        </div>
     </div>
-</form>
 
-<div class="table-responsive">
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Section Name</th>
-                <th>Course</th>
-                <th>Year Level</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for section in sections %}
-            <tr>
-                <td><a href="{{ url_for('section_profile', section_id=section.section_id) }}">{{ section.section_name }}</a></td>
-                <td>{{ section.course }}</td>
-                <td>{{ section.year_level }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Section ID</th>
+                            <th>Section Name</th>
+                            <th>Program</th>
+                            <th>Number of Students</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sectionTableBody">
+                        {% for section in sections %}
+                        <tr>
+                            <td>{{ section.section_id }}</td>
+                            <td><a href="{{ url_for('section_profile', section_id=section.section_id) }}" class="text-primary">{{ section.section_name }}</a></td>
+                            <td>{% if section.program %}{{ section.program }}{% else %}-{% endif %}</td>
+                            <td>{{ section.students|length }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchButton');
+
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value;
+    
+    if (query.length >= 2) {
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/sections/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(suggestions => {
+                    const datalist = document.getElementById('searchSuggestions');
+                    datalist.innerHTML = '';
+                    suggestions.forEach(section => {
+                        const option = document.createElement('option');
+                        option.value = section.section_name;
+                        datalist.appendChild(option);
+                    });
+                });
+        }, 300);
+    }
+});
+
+searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        performSearch();
+    }
+});
+
+searchButton.addEventListener('click', performSearch);
+
+function performSearch() {
+    const query = searchInput.value;
+    window.location.href = `/sections?search=${encodeURIComponent(query)}`;
+}
+</script>
 {% endblock %}

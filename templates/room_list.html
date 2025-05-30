@@ -1,29 +1,89 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="mb-4">Room List</h1>
-
-<form class="search-form" method="GET">
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" name="search" placeholder="Search by room name..." value="{{ request.args.get('search', '') }}">
-        <button class="btn btn-danger" type="submit">Search</button>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Room List</h5>
+        <div class="search-container" style="width: 300px;">
+            <div class="input-group input-group-sm">
+                <input type="text" 
+                       class="form-control" 
+                       id="searchInput" 
+                       list="searchSuggestions"
+                       placeholder="Search by room name..."
+                       value="{{ request.args.get('search', '') }}"
+                       autocomplete="off">
+                <button class="btn btn-danger btn-sm" type="button" id="searchButton">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <datalist id="searchSuggestions"></datalist>
+        </div>
     </div>
-</form>
 
-<div class="table-responsive">
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Room Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for room in rooms %}
-            <tr>
-                <td><a href="#">{{ room.room_name }}</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Room Name</th>
+                            <th>Floor</th>
+                            <th>Capacity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roomTableBody">
+                        {% for room in rooms %}
+                        <tr>
+                            <td><a href="{{ url_for('room_profile', room_id=room.room_id) }}" class="text-primary">{{ room.room_name }}</a></td>
+                            <td>{% if room.floor %}{{ room.floor }}{% else %}-{% endif %}</td>
+                            <td>{% if room.capacity %}{{ room.capacity }}{% else %}-{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchButton');
+
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value;
+    
+    if (query.length >= 2) {
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/rooms/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(suggestions => {
+                    const datalist = document.getElementById('searchSuggestions');
+                    datalist.innerHTML = '';
+                    suggestions.forEach(room => {
+                        const option = document.createElement('option');
+                        option.value = room.room_name;
+                        datalist.appendChild(option);
+                    });
+                });
+        }, 300);
+    }
+});
+
+searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        performSearch();
+    }
+});
+
+searchButton.addEventListener('click', performSearch);
+
+function performSearch() {
+    const query = searchInput.value;
+    window.location.href = `/rooms?search=${encodeURIComponent(query)}`;
+}
+</script>
 {% endblock %}

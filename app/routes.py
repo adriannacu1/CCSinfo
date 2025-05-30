@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect, url_for, jsonify
 from app import app, db
-from app.models import Student, Faculty, Room, Section, Schedule
+from app.models import Student, Faculty, Section, Schedule, Room  # Make sure Room is included here
+from sqlalchemy import or_
 
 @app.route('/')
 def index():
@@ -20,6 +21,53 @@ def search_students():
             'student_number': student.student_number
         } for student in students])
     return jsonify([])
+
+@app.route('/api/faculty/search')
+def faculty_search_api():
+    query = request.args.get('q', '')
+    if len(query) < 2:
+        return jsonify([])
+    
+    faculty_members = Faculty.query.filter(
+        or_(
+            Faculty.name.ilike(f'%{query}%'),
+            Faculty.faculty_id.ilike(f'%{query}%'),
+            Faculty.department.ilike(f'%{query}%')
+        )
+    ).limit(10).all()
+    
+    results = [{'id': f.faculty_id, 'name': f.name, 'department': f.department} for f in faculty_members]
+    return jsonify(results)
+
+@app.route('/api/rooms/search')
+def room_search_api():
+    query = request.args.get('q', '')
+    if len(query) < 2:
+        return jsonify([])
+    
+    rooms = Room.query.filter(
+        Room.room_name.ilike(f'%{query}%')
+    ).limit(10).all()
+    
+    results = [{'room_id': r.room_id, 'room_name': r.room_name} for r in rooms]
+    return jsonify(results)
+
+
+@app.route('/api/sections/search')
+def section_search_api():
+    query = request.args.get('q', '')
+    if len(query) < 2:
+        return jsonify([])
+    
+    sections = Section.query.filter(
+        or_(
+            Section.section_name.ilike(f'%{query}%'),
+            Section.program.ilike(f'%{query}%')
+        )
+    ).limit(10).all()
+    
+    results = [{'section_id': s.section_id, 'section_name': s.section_name} for s in sections]
+    return jsonify(results)
 
 @app.route('/students', methods=['GET'])
 def student_list():
@@ -43,20 +91,26 @@ def faculty_list():
         faculty = Faculty.query.all()
     return render_template('faculty_list.html', faculty=faculty)
 
-@app.route('/rooms', methods=['GET'])
+@app.route('/rooms')
 def room_list():
     search = request.args.get('search', '')
     if search:
-        rooms = Room.query.filter(Room.room_name.contains(search)).all()
+        rooms = Room.query.filter(Room.room_name.ilike(f'%{search}%')).all()
     else:
         rooms = Room.query.all()
     return render_template('room_list.html', rooms=rooms)
 
-@app.route('/sections', methods=['GET'])
+
+@app.route('/sections')
 def section_list():
     search = request.args.get('search', '')
     if search:
-        sections = Section.query.filter(Section.section_name.contains(search)).all()
+        sections = Section.query.filter(
+            or_(
+                Section.section_name.ilike(f'%{search}%'),
+                Section.program.ilike(f'%{search}%')
+            )
+        ).all()
     else:
         sections = Section.query.all()
     return render_template('section_list.html', sections=sections)
@@ -95,3 +149,13 @@ def pc_tracking():
 @app.route('/submit-documents')
 def submit_documents():
     return render_template('submit_documents.html')
+
+@app.route('/room/<int:room_id>')
+def room_profile(room_id):
+    # Get the room by ID or return 404 if not found
+    room = Room.query.get_or_404(room_id)
+    
+    # Get all schedules that use this room
+    schedules = Schedule.query.filter_by(room_id=room_id).all()
+    
+    return render_template('room_profile.html', room=room, schedules=schedules)

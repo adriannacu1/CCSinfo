@@ -4,12 +4,16 @@
 <div class="container">
     <div class="card shadow">
         <div class="card-body">
-            <h2>Section Information</h2>
+            <h2>Room Information</h2>
             
-            <div class="section-info mt-4">
-                <p><strong>Section Name:</strong> {{ section.section_name }}</p>
-                <p><strong>Course:</strong> {{ section.course }}</p>
-                <p><strong>Year Level:</strong> {{ section.year_level }}</p>
+            <div class="room-info mt-4">
+                <p><strong>Room Name:</strong> {{ room.room_name }}</p>
+                {% if room.floor %}
+                <p><strong>Floor:</strong> {{ room.floor }}</p>
+                {% endif %}
+                {% if room.capacity %}
+                <p><strong>Capacity:</strong> {{ room.capacity }} persons</p>
+                {% endif %}
             </div>
             
             <h2 class="mt-4 mb-3">Schedule</h2>
@@ -20,8 +24,8 @@
                             <th>Time</th>
                             <th>Day</th>
                             <th>Subject</th>
+                            <th>Section</th>
                             <th>Instructor</th>
-                            <th>Room</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -31,6 +35,15 @@
                             <td>{{ schedule.day }}</td>
                             <td>{{ schedule.subject }}</td>
                             <td>
+                                {% if schedule.section %}
+                                <a href="{{ url_for('section_profile', section_id=schedule.section.section_id) }}" class="text-primary">
+                                    {{ schedule.section.section_name }}
+                                </a>
+                                {% else %}
+                                Not Assigned
+                                {% endif %}
+                            </td>
+                            <td>
                                 {% if schedule.faculty %}
                                 <a href="{{ url_for('faculty_profile', faculty_id=schedule.faculty.faculty_id) }}" class="text-primary">
                                     {{ schedule.faculty.name }}
@@ -39,44 +52,20 @@
                                 Not Assigned
                                 {% endif %}
                             </td>
-                            <td>
-                                {% if schedule.room %}
-                                <a href="{{ url_for('room_profile', room_id=schedule.room.room_id) }}" class="text-primary">
-                                    {{ schedule.room.room_name }}
-                                </a>
-                                {% else %}
-                                Not Assigned
-                                {% endif %}
-                            </td>
                         </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <h2 class="mt-4 mb-3">Student List</h2>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
+                        {% if not schedules %}
                         <tr>
-                            <th>Student Number</th>
-                            <th>Name</th>
+                            <td colspan="5" class="text-center">No schedules available for this room</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for student in students %}
-                        <tr>
-                            <td>{{ student.student_number }}</td>
-                            <td><a href="{{ url_for('student_profile', student_id=student.student_id) }}" class="text-primary">{{ student.name }}</a></td>
-                        </tr>
-                        {% endfor %}
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
 
             <div class="mt-4">
                 <button class="btn btn-danger" onclick="window.print()">Print</button>
-                <a href="{{ url_for('section_list') }}" class="btn btn-secondary">Back</a>
+                <a href="{{ url_for('room_list') }}" class="btn btn-secondary">Back</a>
             </div>
         </div>
     </div>

@@ -29,7 +29,7 @@
                             <td>{{ schedule.day }}</td>
                             <td>{{ schedule.subject }}</td>
                             <td><a href="{{ url_for('faculty_profile', faculty_id=schedule.faculty.faculty_id) }}" class="text-primary">{{ schedule.faculty.name }}</a></td>
-                            <td><a href="#" class="text-primary">{{ schedule.room.room_name }}</a></td>
+                            <td><a href="{{ url_for('room_profile', room_id=schedule.room.room_id) }}" class="text-primary">{{ schedule.room.room_name }}</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
