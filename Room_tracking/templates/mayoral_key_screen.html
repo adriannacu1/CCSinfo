@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mayoral Key Access</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            color: white;
+        }
+
+        .key-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 400px;
+            text-align: center;
+        }
+
+        .key-title {
+            color: #8b0000;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .key-subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        /* Timer Alert Styles */
+        .timer-alert {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .timer-alert.hidden {
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .code-input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .code-input:focus {
+            border-color: #8b0000;
+            outline: none;
+        }
+
+        .access-btn {
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .access-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .access-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: #8b0000;
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .generate-btn:hover {
+            background: #660000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #2a5298;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #ffeaa7;
+            text-align: left;
+        }
+
+        .section-divider {
+            border-top: 2px solid #eee;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .section-divider::after {
+            content: "OR";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 15px;
+            color: #666;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="key-container">
+        <h2 class="key-title">👨🏻‍🎓 Mayoral Key</h2>
+        <p class="key-subtitle">Generate or Enter access code</p>
+        
+        <!-- Timer Alert (shown when timer is active) -->
+        <div id="timer-alert" class="timer-alert hidden">
+            🚨 SECURITY ALERT ACTIVE<br>
+            Time remaining: <span id="timer-display">0:00</span>
+        </div>
+
+        <!-- Code Entry Section -->
+        <div class="code-input-section">
+            <h4 style="color: #333; margin-top: 0;">Enter Your Code</h4>
+            <input type="text" id="codeInput" class="code-input" placeholder="Enter 7-digit code" maxlength="7">
+            <button id="accessBtn" class="access-btn" onclick="submitCode()">
+                🔓 Access Room
+            </button>
+        </div>
+
+        <div class="section-divider"></div>
+        
+        <!-- Code Generation Section -->
+        <div class="instructions">
+            <strong>Need a new code?</strong>
+            <ul>
+                <li>Click "Generate Code" to create a unique access code</li>
+                <li>The code will be sent to administration</li>
+                <li>Visit the admin office to retrieve your code</li>
+            </ul>
+        </div>
+
+        <button id="generateBtn" class="generate-btn" onclick="generateCode()">
+            🔑 Generate New Code
+        </button>
+
+        <div id="message"></div>
+
+        <div class="back-link">
+            <a href="/temporary_key">← Back to Temporary Access</a>
+        </div>
+    </div>
+
+    <script>
+        function submitCode() {
+            const codeInput = document.getElementById('codeInput');
+            const accessBtn = document.getElementById('accessBtn');
+            const messageDiv = document.getElementById('message');
+            const code = codeInput.value.trim();
+            
+            if (code.length !== 7) {
+                messageDiv.innerHTML = `
+                    <div class="message error">
+                        ❌ Please enter a 7-digit code
+                    </div>
+                `;
+                return;
+            }
+            
+            accessBtn.disabled = true;
+            accessBtn.textContent = 'Verifying...';
+            
+            fetch('/verify_mayoral_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({code: code})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    messageDiv.innerHTML = `
+                        <div class="message success">
+                            ✅ Access granted! Redirecting to dashboard...
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/mayoral_screen';
+                    }, 1500);
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="message error">
+                            ❌ ${data.message}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = `
+                    <div class="message error">
+                        ❌ Network error. Please try again.
+                    </div>
+                `;
+            })
+            .finally(() => {
+                accessBtn.disabled = false;
+                accessBtn.textContent = '🔓 Access Room';
+            });
+        }
+
+        function generateCode() {
+            const btn = document.getElementById('generateBtn');
+            const messageDiv = document.getElementById('message');
+            
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            
+            fetch('/generate_mayoral_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    messageDiv.innerHTML = `
+                        <div class="message success">
+                            ✅ Code generated successfully!<br>
+                            Please visit the administration office to retrieve your access code.
+                        </div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="message error">
+                            ❌ Error: ${data.message}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = `
+                    <div class="message error">
+                        ❌ Network error. Please try again.
+                    </div>
+                `;
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = '🔑 Generate New Code';
+            });
+        }
+
+        // Timer functionality
+        function updateTimer() {
+            fetch('/timer_status')
+                .then(response => response.json())
+                .then(data => {
+                    const timerAlert = document.getElementById('timer-alert');
+                    const timerDisplay = document.getElementById('timer-display');
+                    
+                    if (data.active && data.time_left > 0) {
+                        timerAlert.classList.remove('hidden');
+                        const minutes = Math.floor(data.time_left / 60);
+                        const seconds = data.time_left % 60;
+                        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        timerAlert.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.log('Timer check error:', error);
+                });
+        }
+
+        // Check timer status every second
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // Auto-focus on code input
+        document.getElementById('codeInput').focus();
+    </script>
+</body>
+</html>

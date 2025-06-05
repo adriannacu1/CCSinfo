@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mayoral Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            color: white;
+        }
+
+        .dashboard-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 450px;
+            text-align: center;
+        }
+
+        .dashboard-title {
+            color: #8b0000;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .dashboard-subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        /* Timer Display */
+        .timer-display {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .timer-title {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .timer-countdown {
+            font-size: 48px;
+            font-weight: bold;
+            color: #8b0000;
+            margin-bottom: 10px;
+        }
+
+        .timer-status {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Alarm Alert */
+        .alarm-alert {
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: alarmPulse 0.5s infinite;
+            display: none;
+        }
+
+        .alarm-alert.active {
+            display: block;
+        }
+
+        @keyframes alarmPulse {
+            0% { background: #ff4444; transform: scale(1); }
+            50% { background: #ff0000; transform: scale(1.02); }
+            100% { background: #ff4444; transform: scale(1); }
+        }
+
+        .acknowledge-btn {
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .acknowledge-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .professor-login-btn {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .professor-login-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .status-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #0066cc;
+            font-weight: bold;
+        }
+
+        .logout-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .logout-link a {
+            color: #dc3545;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .logout-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2 class="dashboard-title">👨🏻‍🎓 Mayoral Dashboard</h2>
+        <p class="dashboard-subtitle">Room access granted - Waiting for professor</p>
+        
+        <div class="status-info">
+            ✅ Room Access: Active<br>
+            📍 Status: Waiting for Professor Login
+        </div>
+
+        <div id="alarm-alert" class="alarm-alert">
+            🚨 ATTENTION REQUIRED! 🚨<br>
+            5-minute check-in period expired!<br>
+            Please acknowledge to continue access.
+        </div>
+
+
+        <div class="timer-display">
+            <div class="timer-title">Next Check-in Required</div>
+            <div id="timer-countdown" class="timer-countdown">5:00</div>
+            <div class="timer-status">Time until next alarm</div>
+        </div>
+
+        <button id="acknowledge-btn" class="acknowledge-btn" onclick="acknowledgeAlarm()" style="display: none;">
+            ✓ Acknowledge & Reset Timer
+        </button>
+
+        <button class="professor-login-btn" onclick="goToProfessorLogin()">
+            👨🏻‍🏫 Professor Login
+        </button>
+
+        <div class="logout-link">
+            <a href="/logout">🚪 Exit Room</a>
+        </div>
+    </div>
+
+    <!-- Alarm Sound -->
+    <audio id="alarmSound" loop preload="auto">
+        <source src="{{ url_for('static', filename='alarmingsound.mp3') }}" type="audio/mpeg">
+        <source src="/static/alarmingsound.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        let mayoralTimer = 300;
+        let timerInterval;
+        let alarmActive = false;
+
+        function startMayoralTimer() {
+            mayoralTimer = 300;
+            
+            timerInterval = setInterval(() => {
+                mayoralTimer--;
+                updateTimerDisplay();
+                
+                if (mayoralTimer <= 0) {
+                    triggerAlarm();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(mayoralTimer / 60);
+            const seconds = mayoralTimer % 60;
+            document.getElementById('timer-countdown').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function triggerAlarm() {
+            clearInterval(timerInterval);
+            alarmActive = true;
+            
+            document.getElementById('alarm-alert').classList.add('active');
+            document.getElementById('acknowledge-btn').style.display = 'block';
+            
+            const alarmSound = document.getElementById('alarmSound');
+            alarmSound.volume = 0.8;
+            alarmSound.play().catch(e => {
+                console.log('Audio play failed:', e);
+                document.addEventListener('click', function playOnClick() {
+                    alarmSound.play();
+                    document.removeEventListener('click', playOnClick);
+                }, { once: true });
+            });
+            
+            document.getElementById('timer-countdown').textContent = '⚠️ ALARM';
+            document.getElementById('timer-countdown').style.color = '#ff0000';
+            
+            console.log('Mayoral 5-minute alarm triggered!');
+        }
+
+        function acknowledgeAlarm() {
+            alarmActive = false;
+            
+            document.getElementById('alarm-alert').classList.remove('active');
+            document.getElementById('acknowledge-btn').style.display = 'none';
+            
+            const alarmSound = document.getElementById('alarmSound');
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+            
+            document.getElementById('timer-countdown').style.color = '#8b0000';
+            
+            startMayoralTimer();
+            
+            console.log('Mayoral alarm acknowledged - Timer restarted');
+        }
+
+        function goToProfessorLogin() {
+            clearInterval(timerInterval);
+            const alarmSound = document.getElementById('alarmSound');
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+            
+            window.location.href = '/professor_login';
+        }
+
+        function checkProfessorLogin() {
+            fetch('/check_professor_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.professor_logged_in) {
+                        clearInterval(timerInterval);
+                        const alarmSound = document.getElementById('alarmSound');
+                        alarmSound.pause();
+                        alarmSound.currentTime = 0;
+                        
+                        alert('Professor has logged in! Mayoral timer deactivated.');
+                        window.location.href = '/';
+                    }
+                })
+                .catch(error => {
+                    console.log('Professor status check error:', error);
+                });
+        }
+
+        startMayoralTimer();
+        
+        setInterval(checkProfessorLogin, 2000);
+        
+        updateTimerDisplay();
+    </script>
+</body>
+</html>

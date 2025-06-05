@@ -38,6 +38,27 @@
             margin-bottom: 30px;
         }
 
+        /* Timer Alert Styles */
+        .timer-alert {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .timer-alert.hidden {
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
         .button-group {
             margin-bottom: 20px;
         }
@@ -112,6 +133,12 @@
         <h2 class="key-title">🔑 Temporary Access</h2>
         <p class="key-subtitle">Select your access type</p>
         
+        <!-- Timer Alert (shown when timer is active) -->
+        <div id="timer-alert" class="timer-alert hidden">
+            🚨 SECURITY ALERT ACTIVE<br>
+            Time remaining: <span id="timer-display">0:00</span>
+        </div>
+        
         <div class="button-group">
             <button class="key-btn mayoral-key" onclick="accessMayoralKey()">
                 <span class="icon">👨🏻‍🎓</span>Mayoral Key
@@ -134,7 +161,7 @@
     <script>
         //template for mayoral key access
         function accessMayoralKey() {
-            alert('Mayoral Key access requested');
+            window.location.href = '/mayoral_key';
         }
 
         //template for maintenance access
@@ -146,6 +173,38 @@
         function accessFiveMinutes() {
             alert('5-minute access requested');
         }
+
+        // Timer functionality
+        function updateTimer() {
+            fetch('/timer_status')
+                .then(response => response.json())
+                .then(data => {
+                    const timerAlert = document.getElementById('timer-alert');
+                    const timerDisplay = document.getElementById('timer-display');
+                    
+                    if (data.active && data.time_left > 0) {
+                        // Show timer
+                        timerAlert.classList.remove('hidden');
+                        
+                        // Format time as MM:SS
+                        const minutes = Math.floor(data.time_left / 60);
+                        const seconds = data.time_left % 60;
+                        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        // Hide timer
+                        timerAlert.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.log('Timer check error:', error);
+                });
+        }
+
+        // Check timer status every second
+        setInterval(updateTimer, 1000);
+        
+        // Initial timer check
+        updateTimer();
     </script>
 </body>
 </html>
