@@ -155,10 +155,68 @@
             }, 1000);
         }
 
+        // Check timer status from server
+        function checkTimerStatus() {
+            fetch('/timer_status')
+                .then(response => response.json())
+                .then(data => {
+                    const timerWarning = document.getElementById('timerWarning');
+                    const timeRemaining = document.getElementById('timeRemaining');
+                    
+                    if (data.active && data.time_left > 0) {
+                        // Update timeLeft with server value
+                        timeLeft = data.time_left;
+                        
+                        // Show timer if not already showing
+                        if (timerWarning.classList.contains('hidden')) {
+                            timerWarning.classList.remove('hidden');
+                            
+                            // Start countdown if not already running
+                            if (!countdownTimer) {
+                                countdownTimer = setInterval(() => {
+                                    timeLeft--;
+                                    
+                                    const minutes = Math.floor(timeLeft / 60);
+                                    const seconds = timeLeft % 60;
+                                    timeRemaining.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                                    
+                                    if (timeLeft <= 0) {
+                                        clearInterval(countdownTimer);
+                                        window.location.href = '/?alarm=true';
+                                    }
+                                }, 1000);
+                            }
+                        }
+                        
+                        // Update display
+                        const minutes = Math.floor(data.time_left / 60);
+                        const seconds = data.time_left % 60;
+                        timeRemaining.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        // Hide timer
+                        timerWarning.classList.add('hidden');
+                        if (countdownTimer) {
+                            clearInterval(countdownTimer);
+                            countdownTimer = null;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.log('Timer check error:', error);
+                });
+        }
+
+        // Check for sensor_triggered parameter (for initial trigger)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('sensor_triggered') === 'true') {
             startTimer();
+        } else {
+            // Check server timer status on page load
+            checkTimerStatus();
         }
+
+        // Periodically check timer status from server
+        setInterval(checkTimerStatus, 1000);
     </script>
 </body>
 </html>

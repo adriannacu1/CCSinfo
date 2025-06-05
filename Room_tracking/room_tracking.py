@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 import os
 import pymysql
 import time
+import random
+import string
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'CCS-2025-SecretKey'  
@@ -13,7 +16,9 @@ room_status = {
     'access_log': [],
     'timer_started': False,
     'timer_start_time': None,
-    'timer_duration': 300  # 5 minutes in seconds
+    'timer_duration': 300,  # 5 minutes in seconds
+    'mayoral_active': False,  # Add this line
+    'professor_logged_in': False  # Add this line
 }
 
 # Database connection
@@ -107,8 +112,10 @@ def professor_login():
                     room_status['locked'] = False
                     room_status['timer_started'] = False
                     room_status['timer_start_time'] = None
+                    room_status['mayoral_active'] = False
+                    room_status['professor_logged_in'] = True 
                     
-                    print(f"Login successful for: {faculty['name']}")
+                    print(f"Login successful for: {faculty['name']} - Mayoral timer deactivated")
                     connection.close()
                     return redirect(url_for('professor_dashboard'))
                 else:
@@ -152,7 +159,7 @@ def professor_dashboard():
         print(f"Dashboard error: {e}")
         return redirect(url_for('professor_login'))
 
-@app.route('/unlock_room', methods=['POST'])
+@app.route('/unlock_room', methods=['POST'])   #change to disable sensor------
 def unlock_room():
     if 'faculty_id' not in session:
         return jsonify({'status': 'error', 'message': 'Not authenticated'})
@@ -179,6 +186,101 @@ def temporary_key():
 @app.route('/loginInterface')
 def login():
     return render_template('loginInterface.html', timer_active=get_timer_status())
+
+@app.route('/mayoral_key')
+def mayoral_key():
+    return render_template('mayoral_key_screen.html')
+
+@app.route('/generate_mayoral_code', methods=['POST'])
+def generate_mayoral_code():
+    try:
+        random_code = ''.join(random.choices(string.digits, k=7))
+        
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            sql = "INSERT INTO rand_strings (randomC, Date, State) VALUES (%s, %s, %s)"
+            cursor.execute(sql, (random_code, current_date, 'Mayoral'))
+            connection.commit()
+            
+        connection.close()
+        
+        print(f"Generated mayoral code: {random_code} at {current_date}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'Code generated and sent to administration'
+        })
+        
+    except Exception as e:
+        print(f"Error generating mayoral code: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to generate code'})
+
+@app.route('/mayoral_screen')
+def mayoral_screen():
+    # Only accessible if mayoral code was used
+    if not room_status.get('mayoral_active', False):
+        return redirect(url_for('mayoral_key'))
+    
+    return render_template('mayoral_screen.html')
+
+@app.route('/check_professor_status')
+def check_professor_status():
+    return jsonify({
+        'professor_logged_in': room_status.get('professor_logged_in', False),
+        'authenticated': room_status.get('authenticated', False)
+    })
+
+@app.route('/verify_mayoral_code', methods=['POST'])
+def verify_mayoral_code():
+    try:
+        data = request.get_json()
+        code = data.get('code')
+        
+        if not code or len(code) != 7:
+            return jsonify({'status': 'error', 'message': 'Invalid code format'})
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM rand_strings WHERE randomC = %s AND State = %s"
+            cursor.execute(sql, (code, 'Mayoral'))
+            result = cursor.fetchone()
+            
+            if result:
+
+                room_status['timer_started'] = False
+                room_status['timer_start_time'] = None
+                room_status['authenticated'] = True
+                room_status['locked'] = False
+                room_status['mayoral_active'] = True  # Add this line
+                room_status['professor_logged_in'] = False  # Add this line
+                
+                delete_sql = "DELETE FROM rand_strings WHERE randomC = %s AND State = %s"
+                cursor.execute(delete_sql, (code, 'Mayoral'))
+                connection.commit()
+                
+                connection.close()
+                
+                print(f"Mayoral code {code} used successfully - Redirecting to dashboard")
+                return jsonify({
+                    'status': 'success', 
+                    'message': 'Access granted!',
+                    'redirect': '/mayoral_screen'
+                })
+            else:
+                connection.close()
+                return jsonify({'status': 'error', 'message': 'Invalid or expired code'})
+                
+    except Exception as e:
+        print(f"Error verifying mayoral code: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to verify code'})
 
 if __name__ == '__main__':
     if not os.path.exists('templates'):
