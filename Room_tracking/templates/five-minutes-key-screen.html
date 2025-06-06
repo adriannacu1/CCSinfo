@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5-Minute Access Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4169e1, #1e3cb8);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            color: white;
+        }
+
+        .dashboard-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 400px;
+            text-align: center;
+        }
+
+        .dashboard-title {
+            color: #4169e1;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .status-info {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .timer-display {
+            background: #fff3cd;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #ffeaa7;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .timer-display.warning {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .extend-btn {
+            width: 100%;
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 0;
+        }
+
+        .extend-btn:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .extend-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .return-btn {
+            width: 100%;
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 0;
+        }
+
+        .return-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .access-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="access-icon">⏱️</div>
+        <h2 class="dashboard-title">5-Minute Access</h2>
+        
+        <div class="status-info">
+            ✅ 5-minute access granted<br>
+            Sensors disabled for temporary access
+        </div>
+
+        <div id="timer-display" class="timer-display">
+            Time remaining: <span id="time-left">5:00</span>
+        </div>
+
+        <button id="extendBtn" class="extend-btn" onclick="extendAccess()">
+            ⏰ Extend Access (New Code Required)
+        </button>
+
+        <button id="returnBtn" class="return-btn" onclick="returnToMain()">
+            🏠 Return to Main Screen
+        </button>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        let timeLeft = 300;
+        let timerInterval;
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const display = document.getElementById('time-left');
+            const timerDiv = document.getElementById('timer-display');
+            
+            display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 60) {
+                timerDiv.classList.add('warning');
+            } else {
+                timerDiv.classList.remove('warning');
+            }
+            
+            timeLeft--;
+            
+            if (timeLeft < 0) {
+                clearInterval(timerInterval);
+                document.getElementById('message').innerHTML = `
+                    <div class="message error">
+                        ⏰ Time expired! Returning to main screen...
+                    </div>
+                `;
+                setTimeout(() => {
+                    fetch('/expire_five_minute_access', { method: 'POST' })
+                        .then(() => {
+                            window.location.href = '/';
+                        });
+                }, 2000);
+            }
+        }
+
+        function extendAccess() {
+            window.location.href = '/five_minutes_screen';
+        }
+
+        function returnToMain() {
+            const btn = document.getElementById('returnBtn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Returning...';
+            
+            fetch('/expire_five_minute_access', { method: 'POST' })
+                .then(() => {
+                    window.location.href = '/';
+                });
+        }
+
+        timerInterval = setInterval(updateDisplay, 1000);
+        updateDisplay();
+
+        setInterval(() => {
+            fetch('/check_five_minute_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.active) {
+                        clearInterval(timerInterval);
+                        window.location.href = '/';
+                    }
+                });
+        }, 10000);
+    </script>
+</body>
+</html>
