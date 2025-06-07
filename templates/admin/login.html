@@ -1,0 +1,756 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-login-container">
+    <div class="login-background">
+        <div class="animated-grid"></div>
+        <div class="floating-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-5 col-md-7 col-sm-9">
+                <div class="login-card">
+                    <div class="login-header">
+                        <div class="admin-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h2 class="login-title">Admin <span class="text-gradient">Portal</span></h2>
+                        <p class="login-subtitle">Secure access to CCS administration</p>
+                    </div>
+
+                    <form class="login-form" method="POST" action="{{ url_for('admin_login') }}">
+                        {{ csrf_token() if csrf_token }}
+
+                        <!-- Username Field -->
+                        <div class="form-group">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user"></i>
+                                Username
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="text" class="form-control futuristic-input" id="username" name="username"
+                                    placeholder="Enter your username" required autocomplete="username">
+                                <div class="input-focus-line"></div>
+                            </div>
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="form-group">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock"></i>
+                                Password
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="password" class="form-control futuristic-input" id="password"
+                                    name="password" placeholder="Enter your password" required
+                                    autocomplete="current-password">
+                                <button type="button" class="password-toggle" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <div class="input-focus-line"></div>
+                            </div>
+                        </div>
+
+                        <!-- Remember Me -->
+                        <div class="form-group">
+                            <div class="form-check futuristic-checkbox">
+                                <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                                <label class="form-check-label" for="remember">
+                                    <span class="checkmark"></span>
+                                    Remember me for 30 days
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Error Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                        <div class="alert-container">
+                            {% for category, message in messages %}
+                            <div
+                                class="alert alert-{{ 'danger' if category == 'error' else category }} futuristic-alert">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+
+                        <!-- Submit Button -->
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary futuristic-btn">
+                                <span class="btn-text">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Access Admin Panel
+                                </span>
+                                <div class="btn-ripple"></div>
+                            </button>
+                        </div>
+
+                        <!-- Additional Links -->
+                        <div class="login-footer">
+                            <div class="footer-links">
+                                <a href="#" class="forgot-password" data-bs-toggle="modal"
+                                    data-bs-target="#forgotPasswordModal">
+                                    <i class="fas fa-key"></i>
+                                    Forgot Password?
+                                </a>
+                                <a href="{{ url_for('index') }}" class="back-home">
+                                    <i class="fas fa-home"></i>
+                                    Back to Home
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Security Badge -->
+                <div class="security-badge">
+                    <div class="badge-content">
+                        <i class="fas fa-lock"></i>
+                        <span>256-bit SSL Encrypted</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content futuristic-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="forgotPasswordModalLabel">
+                    <i class="fas fa-key"></i>
+                    Password Recovery
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Contact your system administrator to reset your password.</p>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>admin@ccs.edu</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>+1 (555) 123-4567</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Admin Login Container */
+    .admin-login-container {
+        min-height: 100vh;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #dc3545 0%, #b02a37 50%, #8b1e2b 100%);
+        z-index: -2;
+    }
+
+    .animated-grid {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 20s linear infinite;
+        z-index: -1;
+    }
+
+    @keyframes gridMove {
+        0% {
+            transform: translate(0, 0);
+        }
+
+        100% {
+            transform: translate(50px, 50px);
+        }
+    }
+
+    .floating-particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+    }
+
+    .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        animation: float 15s infinite linear;
+    }
+
+    .particle:nth-child(1) {
+        left: 10%;
+        animation-delay: 0s;
+        animation-duration: 15s;
+    }
+
+    .particle:nth-child(2) {
+        left: 30%;
+        animation-delay: 3s;
+        animation-duration: 18s;
+    }
+
+    .particle:nth-child(3) {
+        left: 50%;
+        animation-delay: 6s;
+        animation-duration: 12s;
+    }
+
+    .particle:nth-child(4) {
+        left: 70%;
+        animation-delay: 9s;
+        animation-duration: 20s;
+    }
+
+    .particle:nth-child(5) {
+        left: 90%;
+        animation-delay: 12s;
+        animation-duration: 16s;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(100vh) scale(0);
+            opacity: 0;
+        }
+
+        10% {
+            opacity: 1;
+        }
+
+        90% {
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(-100vh) scale(1);
+            opacity: 0;
+        }
+    }
+
+    /* Login Card */
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        padding: 50px 40px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow:
+            0 25px 50px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #dc3545, #b02a37, #dc3545);
+        background-size: 200% 100%;
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    /* Login Header */
+    .login-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .admin-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(45deg, #dc3545, #b02a37);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .admin-icon i {
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .login-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .text-gradient {
+        background: linear-gradient(45deg, #dc3545, #b02a37);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .login-subtitle {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    /* Form Styling */
+    .login-form {
+        margin-top: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-label i {
+        margin-right: 8px;
+        color: #dc3545;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .futuristic-input {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(220, 53, 69, 0.2);
+        border-radius: 15px;
+        padding: 15px 20px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .futuristic-input:focus {
+        outline: none;
+        border-color: #dc3545;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 20px rgba(220, 53, 69, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .input-focus-line {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #dc3545, #b02a37);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .futuristic-input:focus+.password-toggle+.input-focus-line,
+    .futuristic-input:focus+.input-focus-line {
+        width: 100%;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        z-index: 10;
+    }
+
+    .password-toggle:hover {
+        color: #dc3545;
+    }
+
+    /* Futuristic Checkbox */
+    .futuristic-checkbox {
+        position: relative;
+    }
+
+    .futuristic-checkbox .form-check-input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .futuristic-checkbox .form-check-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+
+    .checkmark {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(220, 53, 69, 0.3);
+        border-radius: 5px;
+        margin-right: 10px;
+        position: relative;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .futuristic-checkbox input:checked+.form-check-label .checkmark {
+        background: linear-gradient(45deg, #dc3545, #b02a37);
+        border-color: #dc3545;
+    }
+
+    .futuristic-checkbox input:checked+.form-check-label .checkmark::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+    }
+
+    /* Futuristic Button */
+    .futuristic-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(45deg, #dc3545, #b02a37);
+        border: none;
+        border-radius: 15px;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3);
+    }
+
+    .futuristic-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(220, 53, 69, 0.4);
+        background: linear-gradient(45deg, #b02a37, #8b1e2b);
+    }
+
+    .btn-text {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-text i {
+        margin-right: 10px;
+    }
+
+    .btn-ripple {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.2));
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    .futuristic-btn:hover .btn-ripple {
+        transform: translateX(100%);
+    }
+
+    /* Alert Styling */
+    .futuristic-alert {
+        background: rgba(248, 215, 218, 0.9);
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        border-radius: 12px;
+        color: #721c24;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .futuristic-alert i {
+        margin-right: 8px;
+    }
+
+    /* Login Footer */
+    .login-footer {
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .footer-links {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .forgot-password,
+    .back-home {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .forgot-password:hover,
+    .back-home:hover {
+        color: #dc3545;
+        transform: translateY(-2px);
+    }
+
+    .forgot-password i,
+    .back-home i {
+        margin-right: 5px;
+        font-size: 0.8rem;
+    }
+
+    /* Security Badge */
+    .security-badge {
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .badge-content {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 25px;
+        padding: 8px 15px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-content i {
+        margin-right: 8px;
+        color: #ffd700;
+    }
+
+    /* Modal Styling */
+    .futuristic-modal .modal-content {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .futuristic-modal .modal-header {
+        border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+        background: linear-gradient(45deg, rgba(220, 53, 69, 0.1), rgba(176, 42, 55, 0.1));
+    }
+
+    .futuristic-modal .modal-title {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .futuristic-modal .modal-title i {
+        color: #dc3545;
+        margin-right: 10px;
+    }
+
+    .contact-info {
+        margin-top: 20px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: rgba(220, 53, 69, 0.05);
+        border-radius: 8px;
+    }
+
+    .contact-item i {
+        color: #dc3545;
+        margin-right: 15px;
+        width: 20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .login-card {
+            padding: 30px 20px;
+            margin: 20px;
+        }
+
+        .login-title {
+            font-size: 2rem;
+        }
+
+        .admin-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .admin-icon i {
+            font-size: 2rem;
+        }
+
+        .footer-links {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .floating-particles {
+            display: none;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .login-card {
+            border-radius: 20px;
+            padding: 25px 15px;
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+        }
+
+        .futuristic-input {
+            padding: 12px 15px;
+        }
+
+        .futuristic-btn {
+            padding: 12px;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Password Toggle Functionality
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordField = document.getElementById('password');
+
+        if (togglePassword && passwordField) {
+            togglePassword.addEventListener('click', function () {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Form submission with loading state
+        const loginForm = document.querySelector('.login-form');
+        const submitBtn = document.querySelector('.futuristic-btn');
+
+        if (loginForm && submitBtn) {
+            loginForm.addEventListener('submit', function () {
+                submitBtn.disabled = true;
+                submitBtn.querySelector('.btn-text').innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                Authenticating...
+            `;
+            });
+        }
+
+        // Input focus effects
+        const inputs = document.querySelectorAll('.futuristic-input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function () {
+                this.parentElement.classList.add('focused');
+            });
+
+            input.addEventListener('blur', function () {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+
+        // Particle animation optimization for mobile
+        if (window.innerWidth <= 768) {
+            const particles = document.querySelectorAll('.particle');
+            particles.forEach(particle => {
+                particle.style.display = 'none';
+            });
+        }
+    });
+</script>
+{% endblock %}

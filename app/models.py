@@ -2,8 +2,7 @@ from app import db
 
 class Room(db.Model):
     __tablename__ = 'rooms'
-    # Should be room_id not id to match foreign key references
-    room_id = db.Column(db.Integer, primary_key=True)  # Change from 'id' to 'room_id'
+    room_id = db.Column(db.Integer, primary_key=True)
     room_name = db.Column(db.String(50), unique=True, nullable=False)
     floor = db.Column(db.Integer, default=1)
     capacity = db.Column(db.Integer, default=0)
@@ -11,14 +10,14 @@ class Room(db.Model):
 
 class Faculty(db.Model):
     __tablename__ = 'faculty'
-    faculty_id = db.Column(db.Integer, primary_key=True)  # Change from 'id' to 'faculty_id'
+    faculty_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     department = db.Column(db.String(50))
     schedules = db.relationship('Schedule', backref='faculty', lazy=True)
 
 class Section(db.Model):
     __tablename__ = 'sections'
-    section_id = db.Column(db.Integer, primary_key=True)  # Change from 'id' to 'section_id'
+    section_id = db.Column(db.Integer, primary_key=True)
     section_name = db.Column(db.String(50), unique=True, nullable=False)
     course = db.Column(db.String(50))
     year_level = db.Column(db.String(20))
@@ -28,18 +27,18 @@ class Section(db.Model):
 
 class Schedule(db.Model):
     __tablename__ = 'schedule'
-    schedule_id = db.Column(db.Integer, primary_key=True)  # Change from 'id' to 'schedule_id'
-    time = db.Column(db.String(50))
-    day = db.Column(db.String(20))
-    subject = db.Column(db.String(50))
+    schedule_id = db.Column(db.Integer, primary_key=True)
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.subject_id'))
     section_id = db.Column(db.Integer, db.ForeignKey('sections.section_id'))
     faculty_id = db.Column(db.Integer, db.ForeignKey('faculty.faculty_id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.room_id'))
+    day_of_week = db.Column(db.String(20))
+    start_time = db.Column(db.Time)
+    end_time = db.Column(db.Time)
 
 class Student(db.Model):
     __tablename__ = 'students'
-    student_id = db.Column(db.Integer, primary_key=True)  # Change from 'id' to 'student_id'
+    student_id = db.Column(db.Integer, primary_key=True)
     student_number = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     course = db.Column(db.String(50))
