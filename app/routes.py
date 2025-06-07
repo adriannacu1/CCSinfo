@@ -334,7 +334,7 @@ def register_routes(app):
                         """, (student_number, name, course, year_level, section_id, email, status, course_id))
                         conn.commit()
                         flash(f'Student {name} added successfully', 'success')
-            
+                
                 elif action == 'edit':
                     # Edit existing student
                     student_id = request.form.get('student_id_hidden')
@@ -362,7 +362,7 @@ def register_routes(app):
                         """, (student_number, name, course, year_level, section_id, email, course_id, student_id))
                         conn.commit()
                         flash(f'Student {name} updated successfully', 'success')
-            
+                
                 elif action == 'delete':
                     # Delete student
                     student_id = request.form.get('student_id_hidden')
@@ -413,8 +413,8 @@ def register_routes(app):
                 conn.close()
             except Exception as e:
                 flash(f'Error fetching students: {str(e)}', 'error')
-    
-    return render_template('admin/students.html', admin=admin_info, students=students, sections=sections)
+        
+        return render_template('admin/students.html', admin=admin_info, students=students, sections=sections)
 
     @app.route('/admin/faculty')
     def admin_faculty():
@@ -451,212 +451,84 @@ def register_routes(app):
         flash('You have been logged out successfully', 'success')
         return redirect(url_for('admin_login'))
 
-    # ==================== PROFILE ROUTES ====================
-    
-    @app.route('/admin/student/<int:student_id>')
-    def admin_student_profile(student_id):
-        if not session.get('logged_in'):
-            return redirect(url_for('admin_login'))
-        
-        conn = get_db_connection()
-        if not conn:
-            flash('Database connection error', 'error')
-            return redirect(url_for('admin_students'))
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get student details
-            student_query = """
-            SELECT s.*, c.course_name, sec.section_name
-            FROM students s
-            LEFT JOIN courses c ON s.course_id = c.course_id
-            LEFT JOIN sections sec ON s.section_id = sec.section_id
-            WHERE s.student_id = %s
-            """
-            cursor.execute(student_query, (student_id,))
-            student = cursor.fetchone()
-            
-            if not student:
-                flash('Student not found', 'error')
-                return redirect(url_for('admin_students'))
-            
-            return render_template('student/profile.html', student=student)
-            
-        except mysql.connector.Error as e:
-            flash(f'Error loading student: {e}', 'error')
-            return redirect(url_for('admin_students'))
-        finally:
-            cursor.close()
-            conn.close()
-
-    @app.route('/admin/faculty/<int:faculty_id>')
-    def admin_faculty_profile(faculty_id):
-        if not session.get('logged_in'):
-            return redirect(url_for('admin_login'))
-        
-        conn = get_db_connection()
-        if not conn:
-            flash('Database connection error', 'error')
-            return redirect(url_for('admin_faculty'))
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get faculty details
-            cursor.execute("SELECT * FROM faculty WHERE faculty_id = %s", (faculty_id,))
-            faculty = cursor.fetchone()
-            
-            if not faculty:
-                flash('Faculty not found', 'error')
-                return redirect(url_for('admin_faculty'))
-            
-            # Get faculty schedule
-            schedule_query = """
-            SELECT sc.*, s.subject_name, sec.section_name, r.room_name
-            FROM schedule sc
-            LEFT JOIN subjects s ON sc.subject_id = s.subject_id
-            LEFT JOIN sections sec ON sc.section_id = sec.section_id
-            LEFT JOIN rooms r ON sc.room_id = r.room_id
-            WHERE sc.faculty_id = %s
-            ORDER BY sc.day_of_week, sc.start_time
-            """
-            cursor.execute(schedule_query, (faculty_id,))
-            schedules = cursor.fetchall()
-            
-            return render_template('faculty/profile.html', faculty=faculty, schedules=schedules)
-            
-        except mysql.connector.Error as e:
-            flash(f'Error loading faculty: {e}', 'error')
-            return redirect(url_for('admin_faculty'))
-        finally:
-            cursor.close()
-            conn.close()
-
-    @app.route('/admin/room/<int:room_id>')
-    def admin_room_profile(room_id):
-        if not session.get('logged_in'):
-            return redirect(url_for('admin_login'))
-        
-        conn = get_db_connection()
-        if not conn:
-            flash('Database connection error', 'error')
-            return redirect(url_for('admin_rooms'))
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get room details
-            cursor.execute("SELECT * FROM rooms WHERE room_id = %s", (room_id,))
-            room = cursor.fetchone()
-            
-            if not room:
-                flash('Room not found', 'error')
-                return redirect(url_for('admin_rooms'))
-            
-            # Get room schedule
-            schedule_query = """
-            SELECT sc.*, s.subject_name, sec.section_name, f.name as faculty_name
-            FROM schedule sc
-            LEFT JOIN subjects s ON sc.subject_id = s.subject_id
-            LEFT JOIN sections sec ON sc.section_id = sec.section_id
-            LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
-            WHERE sc.room_id = %s
-            ORDER BY sc.day_of_week, sc.start_time
-            """
-            cursor.execute(schedule_query, (room_id,))
-            schedules = cursor.fetchall()
-            
-            return render_template('room/profile.html', room=room, schedules=schedules)
-            
-        except mysql.connector.Error as e:
-            flash(f'Error loading room: {e}', 'error')
-            return redirect(url_for('admin_rooms'))
-        finally:
-            cursor.close()
-            conn.close()
-
-    @app.route('/admin/section/<int:section_id>')
-    def admin_section_profile(section_id):
-        if not session.get('logged_in'):
-            return redirect(url_for('admin_login'))
-        
-        conn = get_db_connection()
-        if not conn:
-            flash('Database connection error', 'error')
-            return redirect(url_for('admin_sections'))
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get section details
-            section_query = """
-            SELECT s.*, c.course_name
-            FROM sections s
-            LEFT JOIN courses c ON s.course_id = c.course_id
-            WHERE s.section_id = %s
-            """
-            cursor.execute(section_query, (section_id,))
-            section = cursor.fetchone()
-            
-            if not section:
-                flash('Section not found', 'error')
-                return redirect(url_for('admin_sections'))
-            
-            # Get students in this section
-            cursor.execute("SELECT * FROM students WHERE section_id = %s ORDER BY name", (section_id,))
-            students = cursor.fetchall()
-            
-            # Get section schedule
-            schedule_query = """
-            SELECT sc.*, s.subject_name, f.name as faculty_name, r.room_name
-            FROM schedule sc
-            LEFT JOIN subjects s ON sc.subject_id = s.subject_id
-            LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
-            LEFT JOIN rooms r ON sc.room_id = r.room_id
-            WHERE sc.section_id = %s
-            ORDER BY sc.day_of_week, sc.start_time
-            """
-            cursor.execute(schedule_query, (section_id,))
-            schedules = cursor.fetchall()
-            
-            return render_template('section/profile.html', section=section, students=students, schedules=schedules)
-            
-        except mysql.connector.Error as e:
-            flash(f'Error loading section: {e}', 'error')
-            return redirect(url_for('admin_sections'))
-        finally:
-            cursor.close()
-            conn.close()
-
-    # ==================== PUBLIC ROUTES ====================
+    # ==================== OTHER ROUTES ====================
     
     @app.route('/students')
     def student_list():
         conn = get_db_connection()
         if not conn:
             flash('Database connection error', 'error')
-            return render_template('students.html', students=[])
+            return render_template('student/list.html', students=[])
         
         try:
             cursor = conn.cursor(dictionary=True)
             
             # Get all students with course and section info
             students_query = """
-            SELECT s.*, c.course_name, sec.section_name
+            SELECT s.student_id, s.student_number, s.name, s.course, s.year_level, s.email,
+                   sec.section_name, sec.section_id
             FROM students s
-            LEFT JOIN courses c ON s.course_id = c.course_id
             LEFT JOIN sections sec ON s.section_id = sec.section_id
             ORDER BY s.name
             """
             cursor.execute(students_query)
             students = cursor.fetchall()
             
-            return render_template('students.html', students=students)
+            return render_template('student/list.html', students=students)
             
         except mysql.connector.Error as e:
             flash(f'Error loading students: {e}', 'error')
-            return render_template('students.html', students=[])
+            return render_template('student/list.html', students=[])
+        finally:
+            cursor.close()
+            conn.close()
+
+    @app.route('/student/<int:student_id>')
+    def student_profile(student_id):
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return redirect(url_for('student_list'))
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get student info
+            cursor.execute("""
+                SELECT s.*, sec.section_name, sec.section_id
+                FROM students s
+                LEFT JOIN sections sec ON s.section_id = sec.section_id
+                WHERE s.student_id = %s
+            """, (student_id,))
+            student = cursor.fetchone()
+            
+            if not student:
+                flash('Student not found', 'error')
+                return redirect(url_for('student_list'))
+            
+            # Get student's schedule (if schedules table exists)
+            schedules = []
+            try:
+                cursor.execute("""
+                    SELECT sc.*, f.name as faculty_name, f.faculty_id,
+                           r.room_name, r.room_id, sub.subject_name
+                    FROM schedules sc
+                    LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
+                    LEFT JOIN rooms r ON sc.room_id = r.room_id
+                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
+                    WHERE sc.section_id = %s
+                    ORDER BY sc.day, sc.time
+                """, (student.get('section_id'),))
+                schedules = cursor.fetchall()
+            except:
+                # If schedules table doesn't exist, use empty list
+                schedules = []
+            
+            return render_template('student/profile.html', student=student, schedules=schedules)
+            
+        except mysql.connector.Error as e:
+            flash(f'Error loading student: {e}', 'error')
+            return redirect(url_for('student_list'))
         finally:
             cursor.close()
             conn.close()
@@ -666,18 +538,63 @@ def register_routes(app):
         conn = get_db_connection()
         if not conn:
             flash('Database connection error', 'error')
-            return render_template('faculty.html', faculty=[])
+            return render_template('faculty/list.html', faculty=[])
         
         try:
             cursor = conn.cursor(dictionary=True)
             cursor.execute("SELECT * FROM faculty ORDER BY name")
             faculty = cursor.fetchall()
             
-            return render_template('faculty.html', faculty=faculty)
+            return render_template('faculty/list.html', faculty=faculty)
             
         except mysql.connector.Error as e:
             flash(f'Error loading faculty: {e}', 'error')
-            return render_template('faculty.html', faculty=[])
+            return render_template('faculty/list.html', faculty=[])
+        finally:
+            cursor.close()
+            conn.close()
+
+    @app.route('/faculty/<int:faculty_id>')
+    def faculty_profile(faculty_id):
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return redirect(url_for('faculty_list'))
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get faculty info
+            cursor.execute("SELECT * FROM faculty WHERE faculty_id = %s", (faculty_id,))
+            faculty = cursor.fetchone()
+            
+            if not faculty:
+                flash('Faculty member not found', 'error')
+                return redirect(url_for('faculty_list'))
+            
+            # Get faculty's schedule (if schedules table exists)
+            schedules = []
+            try:
+                cursor.execute("""
+                    SELECT sc.*, sec.section_name, sec.section_id,
+                           r.room_name, r.room_id, sub.subject_name
+                    FROM schedules sc
+                    LEFT JOIN sections sec ON sc.section_id = sec.section_id
+                    LEFT JOIN rooms r ON sc.room_id = r.room_id
+                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
+                    WHERE sc.faculty_id = %s
+                    ORDER BY sc.day, sc.time
+                """, (faculty_id,))
+                schedules = cursor.fetchall()
+            except:
+                # If schedules table doesn't exist, use empty list
+                schedules = []
+            
+            return render_template('faculty/profile.html', faculty=faculty, schedules=schedules)
+            
+        except mysql.connector.Error as e:
+            flash(f'Error loading faculty: {e}', 'error')
+            return redirect(url_for('faculty_list'))
         finally:
             cursor.close()
             conn.close()
@@ -687,18 +604,63 @@ def register_routes(app):
         conn = get_db_connection()
         if not conn:
             flash('Database connection error', 'error')
-            return render_template('rooms.html', rooms=[])
+            return render_template('room/list.html', rooms=[])
         
         try:
             cursor = conn.cursor(dictionary=True)
             cursor.execute("SELECT * FROM rooms ORDER BY room_name")
             rooms = cursor.fetchall()
             
-            return render_template('rooms.html', rooms=rooms)
+            return render_template('room/list.html', rooms=rooms)
             
         except mysql.connector.Error as e:
             flash(f'Error loading rooms: {e}', 'error')
-            return render_template('rooms.html', rooms=[])
+            return render_template('room/list.html', rooms=[])
+        finally:
+            cursor.close()
+            conn.close()
+
+    @app.route('/room/<int:room_id>')
+    def room_profile(room_id):
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return redirect(url_for('room_list'))
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get room info
+            cursor.execute("SELECT * FROM rooms WHERE room_id = %s", (room_id,))
+            room = cursor.fetchone()
+            
+            if not room:
+                flash('Room not found', 'error')
+                return redirect(url_for('room_list'))
+            
+            # Get room's schedule (if schedules table exists)
+            schedules = []
+            try:
+                cursor.execute("""
+                    SELECT sc.*, sec.section_name, sec.section_id,
+                           f.name as faculty_name, f.faculty_id, sub.subject_name
+                    FROM schedules sc
+                    LEFT JOIN sections sec ON sc.section_id = sec.section_id
+                    LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
+                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
+                    WHERE sc.room_id = %s
+                    ORDER BY sc.day, sc.time
+                """, (room_id,))
+                schedules = cursor.fetchall()
+            except:
+                # If schedules table doesn't exist, use empty list
+                schedules = []
+            
+            return render_template('room/profile.html', room=room, schedules=schedules)
+            
+        except mysql.connector.Error as e:
+            flash(f'Error loading room: {e}', 'error')
+            return redirect(url_for('room_list'))
         finally:
             cursor.close()
             conn.close()
@@ -708,27 +670,84 @@ def register_routes(app):
         conn = get_db_connection()
         if not conn:
             flash('Database connection error', 'error')
-            return render_template('sections.html', sections=[])
+            return render_template('section/list.html', sections=[])
         
         try:
             cursor = conn.cursor(dictionary=True)
             
-            # Get all sections with course info
+            # Get all sections with course info and student count
             sections_query = """
-            SELECT s.*, c.course_name,
+            SELECT s.section_id, s.section_name, s.course, s.year_level,
                    (SELECT COUNT(*) FROM students st WHERE st.section_id = s.section_id) as student_count
             FROM sections s
-            LEFT JOIN courses c ON s.course_id = c.course_id
-            ORDER BY s.section_name
+            ORDER BY s.course, s.year_level, s.section_name
             """
             cursor.execute(sections_query)
             sections = cursor.fetchall()
             
-            return render_template('sections.html', sections=sections)
+            # Add students list to each section for compatibility
+            for section in sections:
+                section['students'] = []
+            
+            return render_template('section/list.html', sections=sections)
             
         except mysql.connector.Error as e:
             flash(f'Error loading sections: {e}', 'error')
-            return render_template('sections.html', sections=[])
+            return render_template('section/list.html', sections=[])
+        finally:
+            cursor.close()
+            conn.close()
+
+    @app.route('/section/<int:section_id>')
+    def section_profile(section_id):
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return redirect(url_for('section_list'))
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get section info
+            cursor.execute("SELECT * FROM sections WHERE section_id = %s", (section_id,))
+            section = cursor.fetchone()
+            
+            if not section:
+                flash('Section not found', 'error')
+                return redirect(url_for('section_list'))
+            
+            # Get students in this section
+            cursor.execute("""
+                SELECT student_id, student_number, name
+                FROM students
+                WHERE section_id = %s
+                ORDER BY name
+            """, (section_id,))
+            students = cursor.fetchall()
+            
+            # Get section's schedule (if schedules table exists)
+            schedules = []
+            try:
+                cursor.execute("""
+                    SELECT sc.*, f.name as faculty_name, f.faculty_id,
+                           r.room_name, r.room_id, sub.subject_name
+                    FROM schedules sc
+                    LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
+                    LEFT JOIN rooms r ON sc.room_id = r.room_id
+                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
+                    WHERE sc.section_id = %s
+                    ORDER BY sc.day, sc.time
+                """, (section_id,))
+                schedules = cursor.fetchall()
+            except:
+                # If schedules table doesn't exist, use empty list
+                schedules = []
+            
+            return render_template('section/profile.html', section=section, students=students, schedules=schedules)
+            
+        except mysql.connector.Error as e:
+            flash(f'Error loading section: {e}', 'error')
+            return redirect(url_for('section_list'))
         finally:
             cursor.close()
             conn.close()
