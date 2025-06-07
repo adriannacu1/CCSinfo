@@ -53,14 +53,6 @@ def get_timer_status():
     
     return {'active': False, 'time_left': 0}
 
-@app.route('/')
-def index():
-    alarm = request.args.get('alarm')
-    if alarm == 'true':
-        room_status['last_sensor_trigger'] = True
-    
-    return render_template('room_standby.html')
-
 @app.route('/trigger_sensor', methods=['POST'])
 def trigger_sensor():
     if not check_authentication():
@@ -76,7 +68,18 @@ def trigger_sensor():
 
 @app.route('/timer_status')
 def timer_status():
-    return jsonify(get_timer_status())
+    timer_data = get_timer_status()
+    if room_status['timer_started'] and timer_data['time_left'] <= 0:
+        pass
+    return jsonify(timer_data)
+
+@app.route('/')
+def index():
+    alarm = request.args.get('alarm')
+    if alarm == 'true':
+        room_status['last_sensor_trigger'] = True
+
+    return render_template('room_standby.html')
 
 @app.route('/professor_login', methods=['GET', 'POST'])
 def professor_login():
@@ -524,6 +527,14 @@ def expire_five_minute_access():
     except Exception as e:
         print(f"Error cleaning up codes: {e}")
     
+    return jsonify({'status': 'success'})
+
+# Add a new route to handle timer reset after alarm
+@app.route('/reset_timer_after_alarm', methods=['POST'])
+def reset_timer_after_alarm():
+    room_status['timer_started'] = False
+    room_status['timer_start_time'] = None
+    room_status['last_sensor_trigger'] = None
     return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
