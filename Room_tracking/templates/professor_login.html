@@ -156,15 +156,13 @@
                     const timerDisplay = document.getElementById('timer-display');
                     
                     if (data.active && data.time_left > 0) {
-                        // Show timer
                         timerAlert.classList.remove('hidden');
-                        
-                        // Format time as MM:SS
                         const minutes = Math.floor(data.time_left / 60);
                         const seconds = data.time_left % 60;
                         timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    } else if (data.active && data.time_left <= 0) {
+                        window.location.href = '/?alarm=true';
                     } else {
-                        // Hide timer
                         timerAlert.classList.add('hidden');
                     }
                 })

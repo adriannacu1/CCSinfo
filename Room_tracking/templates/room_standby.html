@@ -248,7 +248,21 @@
         }
 
         function redirectToLogin() {
-            window.location.href = '/loginInterface?sensor_triggered=true';
+            fetch('/reset_timer_after_alarm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(() => {
+                fetch('/trigger_sensor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(() => {
+                    window.location.href = '/loginInterface?sensor_triggered=true';
+                });
+            });
         }
 
         function hideAlert() {
