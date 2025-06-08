@@ -197,32 +197,35 @@
     </audio>
 
     <script>
-        let mayoralTimer = 300;
         let timerInterval;
         let alarmActive = false;
 
-        function startMayoralTimer() {
-            mayoralTimer = 300;
-            
-            timerInterval = setInterval(() => {
-                mayoralTimer--;
-                updateTimerDisplay();
-                
-                if (mayoralTimer <= 0) {
-                    triggerAlarm();
-                }
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            const minutes = Math.floor(mayoralTimer / 60);
-            const seconds = mayoralTimer % 60;
-            document.getElementById('timer-countdown').textContent = 
-                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        function updateMayoralTimer() {
+            fetch('/mayoral_timer_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.active && data.time_left > 0) {
+                        const minutes = Math.floor(data.time_left / 60);
+                        const seconds = data.time_left % 60;
+                        document.getElementById('timer-countdown').textContent = 
+                            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        document.getElementById('timer-countdown').style.color = '#8b0000';
+                    } else if (data.active && data.time_left <= 0) {
+                        if (!alarmActive) {
+                            triggerAlarm();
+                        }
+                    } else {
+                        // Timer not active
+                        document.getElementById('timer-countdown').textContent = '5:00';
+                        document.getElementById('timer-countdown').style.color = '#8b0000';
+                    }
+                })
+                .catch(error => {
+                    console.log('Mayoral timer check error:', error);
+                });
         }
 
         function triggerAlarm() {
-            clearInterval(timerInterval);
             alarmActive = true;
             
             document.getElementById('alarm-alert').classList.add('active');
@@ -245,29 +248,38 @@
         }
 
         function acknowledgeAlarm() {
-            alarmActive = false;
-            
-            document.getElementById('alarm-alert').classList.remove('active');
-            document.getElementById('acknowledge-btn').style.display = 'none';
-            
-            const alarmSound = document.getElementById('alarmSound');
-            alarmSound.pause();
-            alarmSound.currentTime = 0;
-            
-            document.getElementById('timer-countdown').style.color = '#8b0000';
-            
-            startMayoralTimer();
-            
-            console.log('Mayoral alarm acknowledged - Timer restarted');
+            fetch('/acknowledge_mayoral_alarm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alarmActive = false;
+                    
+                    document.getElementById('alarm-alert').classList.remove('active');
+                    document.getElementById('acknowledge-btn').style.display = 'none';
+                    
+                    const alarmSound = document.getElementById('alarmSound');
+                    alarmSound.pause();
+                    alarmSound.currentTime = 0;
+                    
+                    console.log('Mayoral alarm acknowledged - Timer restarted');
+                }
+            })
+            .catch(error => {
+                console.log('Error acknowledging alarm:', error);
+            });
         }
 
         function goToProfessorLogin() {
-            clearInterval(timerInterval);
             const alarmSound = document.getElementById('alarmSound');
             alarmSound.pause();
             alarmSound.currentTime = 0;
             
-            window.location.href = '/professor_login';
+            window.location.href = '/professor_login?from=mayoral_screen';
         }
 
         function checkProfessorLogin() {
@@ -275,7 +287,6 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.professor_logged_in) {
-                        clearInterval(timerInterval);
                         const alarmSound = document.getElementById('alarmSound');
                         alarmSound.pause();
                         alarmSound.currentTime = 0;
@@ -289,11 +300,12 @@
                 });
         }
 
-        startMayoralTimer();
-        
+        // Update timer every second
+        setInterval(updateMayoralTimer, 1000);
         setInterval(checkProfessorLogin, 2000);
         
-        updateTimerDisplay();
+        // Initial update
+        updateMayoralTimer();
     </script>
 </body>
 </html>

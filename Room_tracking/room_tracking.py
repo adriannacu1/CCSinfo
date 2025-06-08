@@ -18,12 +18,15 @@ room_status = {
     'timer_start_time': None,
     'timer_duration': 300, 
     'mayoral_active': False,
+    'mayoral_timer_start': None,
+    'mayoral_timer_duration': 300,
     'professor_logged_in': False,
     'maintenance_active': False,
     'sensors_disabled': False,
     'five_minute_active': False, 
     'five_minute_start_time': None  
 }
+
 #db connection
 def get_db_connection():
     try:
@@ -50,6 +53,21 @@ def get_timer_status():
         elapsed = time.time() - room_status['timer_start_time']
         time_left = max(0, room_status['timer_duration'] - elapsed)
         return {'active': time_left > 0, 'time_left': int(time_left)}
+    
+    return {'active': False, 'time_left': 0}
+
+def get_mayoral_timer_status():
+    if not room_status.get('mayoral_active', False) or room_status.get('professor_logged_in', False):
+        return {'active': False, 'time_left': 0}
+    
+    if room_status['mayoral_timer_start']:
+        elapsed = time.time() - room_status['mayoral_timer_start']
+        time_left = max(0, room_status['mayoral_timer_duration'] - elapsed)
+        
+        if time_left <= 0:
+            return {'active': True, 'time_left': 0}
+        else:
+            return {'active': True, 'time_left': int(time_left)}
     
     return {'active': False, 'time_left': 0}
 
@@ -83,6 +101,7 @@ def index():
 
 @app.route('/professor_login', methods=['GET', 'POST'])
 def professor_login():
+    from_page = request.args.get('from', 'loginInterface')
     print(f"Professor login route accessed with method: {request.method}")
     
     if request.method == 'POST':
@@ -93,13 +112,13 @@ def professor_login():
         
         if not username or not password:
             return render_template('professor_login.html', error='Please enter both username and password', 
-                                 timer_active=get_timer_status())
+                                 timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
         
         try:
             connection = get_db_connection()
             if not connection:
                 return render_template('professor_login.html', error='Database connection failed',
-                                     timer_active=get_timer_status())
+                                     timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
             
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM faculty WHERE username = %s AND password = %s"
@@ -119,6 +138,7 @@ def professor_login():
                     room_status['timer_started'] = False
                     room_status['timer_start_time'] = None
                     room_status['mayoral_active'] = False
+                    room_status['mayoral_timer_start'] = None
                     room_status['professor_logged_in'] = True 
                     
                     print(f"Login successful for: {faculty['name']} - Mayoral timer deactivated")
@@ -127,14 +147,14 @@ def professor_login():
                 else:
                     connection.close()
                     return render_template('professor_login.html', error='Invalid username or password',
-                                         timer_active=get_timer_status())
+                                         timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
                     
         except Exception as e:
             print(f"Database error: {e}")
             return render_template('professor_login.html', error=f'Database error: {str(e)}',
-                                 timer_active=get_timer_status())
+                                 timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
     
-    return render_template('professor_login.html', timer_active=get_timer_status())
+    return render_template('professor_login.html', timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
 
 @app.route('/professor_dashboard')
 def professor_dashboard():
@@ -165,7 +185,7 @@ def professor_dashboard():
         print(f"Dashboard error: {e}")
         return redirect(url_for('professor_login'))
 
-@app.route('/unlock_room', methods=['POST'])   #change to disable sensor------
+@app.route('/unlock_room', methods=['POST'])
 def unlock_room():
     if 'faculty_id' not in session:
         return jsonify({'status': 'error', 'message': 'Not authenticated'})
@@ -184,6 +204,18 @@ def logout():
     room_status['authenticated'] = False
     room_status['locked'] = True
     return redirect(url_for('index'))
+
+@app.route('/mayoral_timer_status')
+def mayoral_timer_status():
+    return jsonify(get_mayoral_timer_status())
+
+@app.route('/acknowledge_mayoral_alarm', methods=['POST'])
+def acknowledge_mayoral_alarm():
+    if room_status.get('mayoral_active', False):
+        room_status['mayoral_timer_start'] = time.time()
+        print("Mayoral alarm acknowledged - Timer restarted")
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error'})
 
 @app.route('/temporary_key')
 def temporary_key():
@@ -228,7 +260,6 @@ def generate_mayoral_code():
 
 @app.route('/mayoral_screen')
 def mayoral_screen():
-    # Only accessible if mayoral code was used
     if not room_status.get('mayoral_active', False):
         return redirect(url_for('mayoral_key'))
     
@@ -259,13 +290,13 @@ def verify_mayoral_code():
             cursor.execute(sql, (code, 'Mayoral'))
             result = cursor.fetchone()
             
-            #temporarily disable sensors and delete generated code
             if result:
                 room_status['timer_started'] = False
                 room_status['timer_start_time'] = None
                 room_status['authenticated'] = True
                 room_status['locked'] = False
                 room_status['mayoral_active'] = True 
+                room_status['mayoral_timer_start'] = time.time()
                 room_status['professor_logged_in'] = False 
                 
                 delete_sql = "DELETE FROM rand_strings WHERE randomC = %s AND State = %s"
@@ -339,7 +370,6 @@ def verify_maintenance_code():
             cursor.execute(sql, (code, 'Maintenance'))
             result = cursor.fetchone()
             
-            #disable sensors and delete generated code!!!
             if result:
                 room_status['timer_started'] = False
                 room_status['timer_start_time'] = None
@@ -369,13 +399,6 @@ def verify_maintenance_code():
     except Exception as e:
         print(f"Error verifying maintenance code: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to verify code'})
-
-@app.route('/maintenance_dashboard')
-def maintenance_dashboard():
-    if not room_status.get('maintenance_active', False):
-        return redirect(url_for('maintenance_screen'))
-    
-    return render_template('maintenance_main_screen.html')
 
 @app.route('/five_minutes_screen')
 def five_minutes_screen():
@@ -428,7 +451,6 @@ def verify_five_minute_code():
             cursor.execute(sql, (code, '5minutes'))
             result = cursor.fetchone()
 
-            #disable sensors and delete generated code
             if result:
                 room_status['timer_started'] = False
                 room_status['timer_start_time'] = None
@@ -442,7 +464,7 @@ def verify_five_minute_code():
                 room_status['maintenance_active'] = False
                 
                 delete_sql = "DELETE FROM rand_strings WHERE randomC = %s AND State = %s"
-                cursor.execute(delete_sql, (code, 'FiveMinute'))
+                cursor.execute(delete_sql, (code, '5minutes'))
                 connection.commit()
                 
                 connection.close()
@@ -486,7 +508,6 @@ def check_five_minute_status():
     if room_status['five_minute_start_time']:
         elapsed = time.time() - room_status['five_minute_start_time']
         if elapsed > 300: 
-
             room_status['five_minute_active'] = False
             room_status['five_minute_start_time'] = None
             room_status['authenticated'] = False
@@ -509,7 +530,6 @@ def check_five_minute_status():
 
 @app.route('/expire_five_minute_access', methods=['POST'])
 def expire_five_minute_access():
-
     room_status['five_minute_active'] = False
     room_status['five_minute_start_time'] = None
     room_status['authenticated'] = False
@@ -529,7 +549,6 @@ def expire_five_minute_access():
     
     return jsonify({'status': 'success'})
 
-# Add a new route to handle timer reset after alarm
 @app.route('/reset_timer_after_alarm', methods=['POST'])
 def reset_timer_after_alarm():
     room_status['timer_started'] = False

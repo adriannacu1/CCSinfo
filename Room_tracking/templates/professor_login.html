@@ -123,6 +123,12 @@
             Time remaining: <span id="timer-display">0:00</span>
         </div>
         
+        <!-- Mayoral Timer Alert -->
+        <div id="mayoral-timer-alert" class="timer-alert hidden" style="background: #8b0000;">
+            👨🏻‍🎓 MAYORAL CHECK-IN REQUIRED<br>
+            Time remaining: <span id="mayoral-timer-display">0:00</span>
+        </div>
+        
         {% if error %}
         <div class="error-message">{{ error }}</div>
         {% endif %}
@@ -142,12 +148,15 @@
         </form>
 
         <div class="back-link">
-            <a href="/loginInterface">← Back to Login Options</a>
+            {% if from_page == 'mayoral_screen' %}
+                <a href="/mayoral_screen">← Back to Mayoral Dashboard</a>
+            {% else %}
+                <a href="/loginInterface">← Back to Login Options</a>
+            {% endif %}
         </div>
     </div>
 
     <script>
-        // Timer functionality
         function updateTimer() {
             fetch('/timer_status')
                 .then(response => response.json())
@@ -171,11 +180,40 @@
                 });
         }
 
-        // Check timer status every second
-        setInterval(updateTimer, 1000);
+        function updateMayoralTimer() {
+            fetch('/mayoral_timer_status')
+                .then(response => response.json())
+                .then(data => {
+                    const mayoralAlert = document.getElementById('mayoral-timer-alert');
+                    const mayoralDisplay = document.getElementById('mayoral-timer-display');
+                    
+                    if (data.active && data.time_left > 0) {
+                        mayoralAlert.classList.remove('hidden');
+                        const minutes = Math.floor(data.time_left / 60);
+                        const seconds = data.time_left % 60;
+                        mayoralDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    } else if (data.active && data.time_left <= 0) {
+                        // Timer expired - redirect back to mayoral screen for alarm
+                        console.log('Mayoral timer expired - redirecting to mayoral screen');
+                        window.location.href = '/mayoral_screen';
+                    } else {
+                        mayoralAlert.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.log('Mayoral timer check error:', error);
+                });
+        }
+
+        // Check both timers every second
+        setInterval(() => {
+            updateTimer();
+            updateMayoralTimer();
+        }, 1000);
         
-        // Initial timer check
+        // Initial timer checks
         updateTimer();
+        updateMayoralTimer();
     </script>
 </body>
 </html>
