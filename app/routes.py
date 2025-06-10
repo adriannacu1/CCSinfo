@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, session, flash
 import mysql.connector
 from datetime import datetime, timedelta
 import hashlib
+import time
 
 # Database configuration
 DB_CONFIG = {
@@ -416,40 +417,306 @@ def register_routes(app):
         
         return render_template('admin/students.html', admin=admin_info, students=students, sections=sections)
 
-    @app.route('/admin/faculty')
+    @app.route('/admin/faculty', methods=['GET', 'POST'])
     def admin_faculty():
-        """Faculty management page placeholder"""
+        """Admin faculty management with CRUD operations"""
         if 'admin_id' not in session:
             return redirect(url_for('admin_login'))
-        return "Faculty Management - Coming Soon"
+        
+        admin_info = {
+            'admin_id': session.get('admin_id'),
+            'username': session.get('admin_username'),
+            'full_name': session.get('admin_name', 'Administrator'),
+            'role': session.get('admin_role', 'admin')
+        }
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'error')
+                return redirect(url_for('admin_faculty'))
+            
+            try:
+                cursor = conn.cursor()
+                
+                if action == 'add':
+                    # Add new faculty - matching your database schema
+                    name = request.form.get('name')
+                    department = request.form.get('department')
+                    username = request.form.get('username') or f"fac{int(time.time())}"  # Generate if not provided
+                    password = request.form.get('password') or '12345'  # Default password
+                    
+                    cursor.execute("""
+                        INSERT INTO faculty (name, department, username, password)
+                        VALUES (%s, %s, %s, %s)
+                    """, (name, department, username, password))
+                    conn.commit()
+                    flash(f'Faculty member {name} added successfully', 'success')
+                
+                elif action == 'edit':
+                    # Edit existing faculty
+                    faculty_id = request.form.get('faculty_id_hidden')
+                    name = request.form.get('name')
+                    department = request.form.get('department')
+                    username = request.form.get('username')
+                    password = request.form.get('password')
+                    
+                    cursor.execute("""
+                        UPDATE faculty SET name = %s, department = %s, username = %s, password = %s
+                        WHERE faculty_id = %s
+                    """, (name, department, username, password, faculty_id))
+                    conn.commit()
+                    flash(f'Faculty member {name} updated successfully', 'success')
+                
+                elif action == 'delete':
+                    # Delete faculty
+                    faculty_id = request.form.get('faculty_id_hidden')
+                    cursor.execute("DELETE FROM faculty WHERE faculty_id = %s", (faculty_id,))
+                    conn.commit()
+                    flash('Faculty member deleted successfully', 'success')
+                
+                cursor.close()
+                conn.close()
+                
+            except Exception as e:
+                flash(f'An error occurred: {str(e)}', 'error')
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+            
+            return redirect(url_for('admin_faculty'))
+        
+        # GET request - fetch and display faculty
+        faculty = []
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM faculty ORDER BY name")
+                faculty = cursor.fetchall()
+                cursor.close()
+                conn.close()
+            except Exception as e:
+                flash(f'Error fetching faculty: {str(e)}', 'error')
+        
+        return render_template('admin/faculty.html', admin=admin_info, faculty=faculty)
 
-    @app.route('/admin/rooms')
+    @app.route('/admin/rooms', methods=['GET', 'POST'])
     def admin_rooms():
-        """Rooms management page placeholder"""
+        """Admin rooms management with CRUD operations"""
         if 'admin_id' not in session:
             return redirect(url_for('admin_login'))
-        return "Rooms Management - Coming Soon"
+        
+        admin_info = {
+            'admin_id': session.get('admin_id'),
+            'username': session.get('admin_username'),
+            'full_name': session.get('admin_name', 'Administrator'),
+            'role': session.get('admin_role', 'admin')
+        }
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'error')
+                return redirect(url_for('admin_rooms'))
+            
+            try:
+                cursor = conn.cursor()
+                
+                if action == 'add':
+                    # Add new room - matching your database schema
+                    room_name = request.form.get('room_name')
+                    floor = request.form.get('floor') or None
+                    capacity = request.form.get('capacity') or None
+                    
+                    # Check if room name already exists
+                    cursor.execute("SELECT room_id FROM rooms WHERE room_name = %s", (room_name,))
+                    if cursor.fetchone():
+                        flash(f'Room {room_name} already exists', 'error')
+                    else:
+                        cursor.execute("""
+                            INSERT INTO rooms (room_name, floor, capacity)
+                            VALUES (%s, %s, %s)
+                        """, (room_name, floor, capacity))
+                        conn.commit()
+                        flash(f'Room {room_name} added successfully', 'success')
+                
+                elif action == 'edit':
+                    # Edit existing room
+                    room_id = request.form.get('room_id_hidden')
+                    room_name = request.form.get('room_name')
+                    floor = request.form.get('floor') or None
+                    capacity = request.form.get('capacity') or None
+                    
+                    # Check if new room name conflicts with existing ones (except current)
+                    cursor.execute("SELECT room_id FROM rooms WHERE room_name = %s AND room_id != %s", (room_name, room_id))
+                    if cursor.fetchone():
+                        flash(f'Room name {room_name} already exists', 'error')
+                    else:
+                        cursor.execute("""
+                            UPDATE rooms SET room_name = %s, floor = %s, capacity = %s
+                            WHERE room_id = %s
+                        """, (room_name, floor, capacity, room_id))
+                        conn.commit()
+                        flash(f'Room {room_name} updated successfully', 'success')
+                
+                elif action == 'delete':
+                    # Delete room
+                    room_id = request.form.get('room_id_hidden')
+                    cursor.execute("DELETE FROM rooms WHERE room_id = %s", (room_id,))
+                    conn.commit()
+                    flash('Room deleted successfully', 'success')
+                
+                cursor.close()
+                conn.close()
+                
+            except Exception as e:
+                flash(f'An error occurred: {str(e)}', 'error')
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+            
+            return redirect(url_for('admin_rooms'))
+        
+        # GET request - fetch and display rooms
+        rooms = []
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM rooms ORDER BY room_name")
+                rooms = cursor.fetchall()
+                cursor.close()
+                conn.close()
+            except Exception as e:
+                flash(f'Error fetching rooms: {str(e)}', 'error')
+        
+        return render_template('admin/rooms.html', admin=admin_info, rooms=rooms)
 
-    @app.route('/admin/sections')
+    @app.route('/admin/sections', methods=['GET', 'POST'])
     def admin_sections():
-        """Sections management page placeholder"""
+        """Admin sections management with CRUD operations"""
         if 'admin_id' not in session:
             return redirect(url_for('admin_login'))
-        return "Sections Management - Coming Soon"
-
-    @app.route('/admin/settings')
-    def admin_settings():
-        """Admin settings page placeholder"""
-        if 'admin_id' not in session:
-            return redirect(url_for('admin_login'))
-        return "Admin Settings - Coming Soon"
-
-    @app.route('/admin/logout')
-    def admin_logout():
-        """Admin logout"""
-        session.clear()
-        flash('You have been logged out successfully', 'success')
-        return redirect(url_for('admin_login'))
+        
+        admin_info = {
+            'admin_id': session.get('admin_id'),
+            'username': session.get('admin_username'),
+            'full_name': session.get('admin_name', 'Administrator'),
+            'role': session.get('admin_role', 'admin')
+        }
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'error')
+                return redirect(url_for('admin_sections'))
+            
+            try:
+                cursor = conn.cursor()
+                
+                if action == 'add':
+                    # Add new section - matching your database schema
+                    section_name = request.form.get('section_name')
+                    course = request.form.get('course')
+                    year_level = request.form.get('year_level')
+                    
+                    # Get course_id based on course name
+                    cursor.execute("SELECT course_id FROM courses WHERE course_name = %s", (course,))
+                    course_result = cursor.fetchone()
+                    course_id = course_result[0] if course_result else None
+                    
+                    # Check if section name already exists for same course and year
+                    cursor.execute("""
+                        SELECT section_id FROM sections 
+                        WHERE section_name = %s AND course = %s AND year_level = %s
+                    """, (section_name, course, year_level))
+                    if cursor.fetchone():
+                        flash(f'Section {section_name} already exists for {course} Year {year_level}', 'error')
+                    else:
+                        cursor.execute("""
+                            INSERT INTO sections (section_name, course, year_level, course_id)
+                            VALUES (%s, %s, %s, %s)
+                        """, (section_name, course, year_level, course_id))
+                        conn.commit()
+                        flash(f'Section {section_name} added successfully', 'success')
+                
+                elif action == 'edit':
+                    # Edit existing section
+                    section_id = request.form.get('section_id_hidden')
+                    section_name = request.form.get('section_name')
+                    course = request.form.get('course')
+                    year_level = request.form.get('year_level')
+                    
+                    # Get course_id based on course name
+                    cursor.execute("SELECT course_id FROM courses WHERE course_name = %s", (course,))
+                    course_result = cursor.fetchone()
+                    course_id = course_result[0] if course_result else None
+                    
+                    # Check if new section name conflicts (except current)
+                    cursor.execute("""
+                        SELECT section_id FROM sections 
+                        WHERE section_name = %s AND course = %s AND year_level = %s AND section_id != %s
+                    """, (section_name, course, year_level, section_id))
+                    if cursor.fetchone():
+                        flash(f'Section {section_name} already exists for {course} Year {year_level}', 'error')
+                    else:
+                        cursor.execute("""
+                            UPDATE sections SET section_name = %s, course = %s, year_level = %s, course_id = %s
+                            WHERE section_id = %s
+                        """, (section_name, course, year_level, course_id, section_id))
+                        conn.commit()
+                        flash(f'Section {section_name} updated successfully', 'success')
+                
+                elif action == 'delete':
+                    # Delete section
+                    section_id = request.form.get('section_id_hidden')
+                    cursor.execute("DELETE FROM sections WHERE section_id = %s", (section_id,))
+                    conn.commit()
+                    flash('Section deleted successfully', 'success')
+                
+                cursor.close()
+                conn.close()
+                
+            except Exception as e:
+                flash(f'An error occurred: {str(e)}', 'error')
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+            
+            return redirect(url_for('admin_sections'))
+        
+        # GET request - fetch and display sections
+        sections = []
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                
+                # Get sections with student count
+                cursor.execute("""
+                    SELECT s.*,
+                           (SELECT COUNT(*) FROM students st WHERE st.section_id = s.section_id) as student_count
+                    FROM sections s
+                    ORDER BY s.course, s.year_level, s.section_name
+                """)
+                sections = cursor.fetchall()
+                
+                cursor.close()
+                conn.close()
+            except Exception as e:
+                flash(f'Error fetching sections: {str(e)}', 'error')
+        
+        return render_template('admin/sections.html', admin=admin_info, sections=sections)
 
     # ==================== OTHER ROUTES ====================
     
@@ -506,25 +773,7 @@ def register_routes(app):
                 flash('Student not found', 'error')
                 return redirect(url_for('student_list'))
             
-            # Get student's schedule (if schedules table exists)
-            schedules = []
-            try:
-                cursor.execute("""
-                    SELECT sc.*, f.name as faculty_name, f.faculty_id,
-                           r.room_name, r.room_id, sub.subject_name
-                    FROM schedules sc
-                    LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
-                    LEFT JOIN rooms r ON sc.room_id = r.room_id
-                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
-                    WHERE sc.section_id = %s
-                    ORDER BY sc.day, sc.time
-                """, (student.get('section_id'),))
-                schedules = cursor.fetchall()
-            except:
-                # If schedules table doesn't exist, use empty list
-                schedules = []
-            
-            return render_template('student/profile.html', student=student, schedules=schedules)
+            return render_template('student/profile.html', student=student)
             
         except mysql.connector.Error as e:
             flash(f'Error loading student: {e}', 'error')
@@ -572,25 +821,7 @@ def register_routes(app):
                 flash('Faculty member not found', 'error')
                 return redirect(url_for('faculty_list'))
             
-            # Get faculty's schedule (if schedules table exists)
-            schedules = []
-            try:
-                cursor.execute("""
-                    SELECT sc.*, sec.section_name, sec.section_id,
-                           r.room_name, r.room_id, sub.subject_name
-                    FROM schedules sc
-                    LEFT JOIN sections sec ON sc.section_id = sec.section_id
-                    LEFT JOIN rooms r ON sc.room_id = r.room_id
-                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
-                    WHERE sc.faculty_id = %s
-                    ORDER BY sc.day, sc.time
-                """, (faculty_id,))
-                schedules = cursor.fetchall()
-            except:
-                # If schedules table doesn't exist, use empty list
-                schedules = []
-            
-            return render_template('faculty/profile.html', faculty=faculty, schedules=schedules)
+            return render_template('faculty/profile.html', faculty=faculty)
             
         except mysql.connector.Error as e:
             flash(f'Error loading faculty: {e}', 'error')
@@ -638,25 +869,7 @@ def register_routes(app):
                 flash('Room not found', 'error')
                 return redirect(url_for('room_list'))
             
-            # Get room's schedule (if schedules table exists)
-            schedules = []
-            try:
-                cursor.execute("""
-                    SELECT sc.*, sec.section_name, sec.section_id,
-                           f.name as faculty_name, f.faculty_id, sub.subject_name
-                    FROM schedules sc
-                    LEFT JOIN sections sec ON sc.section_id = sec.section_id
-                    LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
-                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
-                    WHERE sc.room_id = %s
-                    ORDER BY sc.day, sc.time
-                """, (room_id,))
-                schedules = cursor.fetchall()
-            except:
-                # If schedules table doesn't exist, use empty list
-                schedules = []
-            
-            return render_template('room/profile.html', room=room, schedules=schedules)
+            return render_template('room/profile.html', room=room)
             
         except mysql.connector.Error as e:
             flash(f'Error loading room: {e}', 'error')
@@ -684,10 +897,6 @@ def register_routes(app):
             """
             cursor.execute(sections_query)
             sections = cursor.fetchall()
-            
-            # Add students list to each section for compatibility
-            for section in sections:
-                section['students'] = []
             
             return render_template('section/list.html', sections=sections)
             
@@ -725,25 +934,7 @@ def register_routes(app):
             """, (section_id,))
             students = cursor.fetchall()
             
-            # Get section's schedule (if schedules table exists)
-            schedules = []
-            try:
-                cursor.execute("""
-                    SELECT sc.*, f.name as faculty_name, f.faculty_id,
-                           r.room_name, r.room_id, sub.subject_name
-                    FROM schedules sc
-                    LEFT JOIN faculty f ON sc.faculty_id = f.faculty_id
-                    LEFT JOIN rooms r ON sc.room_id = r.room_id
-                    LEFT JOIN subjects sub ON sc.subject_id = sub.subject_id
-                    WHERE sc.section_id = %s
-                    ORDER BY sc.day, sc.time
-                """, (section_id,))
-                schedules = cursor.fetchall()
-            except:
-                # If schedules table doesn't exist, use empty list
-                schedules = []
-            
-            return render_template('section/profile.html', section=section, students=students, schedules=schedules)
+            return render_template('section/profile.html', section=section, students=students)
             
         except mysql.connector.Error as e:
             flash(f'Error loading section: {e}', 'error')
@@ -752,86 +943,37 @@ def register_routes(app):
             cursor.close()
             conn.close()
 
+    # PC Tracking route (the one causing the error)
     @app.route('/pc-tracking')
     def pc_tracking():
+        """PC Tracking page - placeholder for now"""
         return render_template('pc_tracking.html')
 
-    @app.route('/submit-documents')
-    def submit_documents():
-        return render_template('submit_documents.html')
+    # Schedules route
+    @app.route('/schedules')
+    def schedules():
+        """Schedules page - placeholder for now"""
+        return render_template('schedules.html')
 
-    @app.route('/schedule')
-    def schedule():
-        return render_template('schedule.html')
-    
+    # About route
     @app.route('/about')
     def about():
+        """About page"""
         return render_template('about.html')
-    
+
+    # Contact route  
     @app.route('/contact')
     def contact():
+        """Contact page"""
         return render_template('contact.html')
-    
-    @app.route('/news')
-    def news():
-        return render_template('news.html')
-    
-    @app.route('/events')
-    def events():
-        return render_template('events.html')
-    
-    # ==================== TEST/DEBUG ROUTES ====================
-    
-    @app.route('/test-db')
-    def test_db():
-        conn = get_db_connection()
-        if not conn:
-            return "Database connection FAILED!"
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT COUNT(*) as count FROM admin")
-            result = cursor.fetchone()
-            cursor.close()
-            conn.close()
-            return f"Database connection SUCCESS! Admin count: {result['count']}"
-        except Exception as e:
-            return f"Database query FAILED: {e}"
 
-    @app.route('/test-admin-data')
-    def test_admin_data():
-        """Test route to see admin data"""
-        conn = get_db_connection()
-        if not conn:
-            return "Database connection FAILED!"
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT admin_id, username, password, full_name, email, role, is_active FROM admin")
-            admins = cursor.fetchall()
-            cursor.close()
-            conn.close()
-            
-            html = "<h2>Admin Data in Database:</h2>"
-            html += "<table border='1' style='border-collapse: collapse; padding: 10px;'>"
-            html += "<tr><th>ID</th><th>Username</th><th>Password</th><th>Full Name</th><th>Email</th><th>Role</th><th>Active</th></tr>"
-            
-            for admin in admins:
-                html += f"<tr>"
-                html += f"<td>{admin.get('admin_id', 'N/A')}</td>"
-                html += f"<td>{admin.get('username', 'N/A')}</td>"
-                html += f"<td>{admin.get('password', 'N/A')}</td>"
-                html += f"<td>{admin.get('full_name', 'N/A')}</td>"
-                html += f"<td>{admin.get('email', 'N/A')}</td>"
-                html += f"<td>{admin.get('role', 'N/A')}</td>"
-                html += f"<td>{admin.get('is_active', 'N/A')}</td>"
-                html += f"</tr>"
-            
-            html += "</table>"
-            html += f"<br><p>Total admin records: {len(admins)}</p>"
-            html += "<br><a href='/admin/login'>Try Admin Login</a>"
-            
-            return html
-            
-        except Exception as e:
-            return f"Database query FAILED: {e}"
+    @app.route('/admin/logout')
+    def admin_logout():
+        """Admin logout"""
+        session.clear()
+        flash('You have been logged out successfully', 'success')
+        return redirect(url_for('index'))
+
+    @app.route('/admin/settings')
+    def admin_settings():
+        return render_template('admin/settings.html')
