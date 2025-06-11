@@ -186,7 +186,7 @@
     <script>
         let alarmTimer;
         let isAlarmActive = false;
-
+        // Sensor template!!!!!
         function triggerSensorAlert() {
             fetch('/trigger_sensor', {
                 method: 'POST',
@@ -230,7 +230,7 @@
                 if (isAlarmActive) {
                     startContinuousAlarm();
                 }
-            }, 1000); //di nagana delay ng alarm kaya tuloy tuloy, idk y :(
+            }, 1000); //di nagana delay ng alarm
         }
 
 
