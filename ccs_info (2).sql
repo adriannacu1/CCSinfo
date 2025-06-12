@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 07, 2025 at 06:33 AM
+-- Generation Time: Jun 10, 2025 at 03:49 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -49,7 +49,7 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`admin_id`, `username`, `password`, `full_name`, `email`, `role`, `is_active`, `last_login`, `login_attempts`, `locked_until`, `password_reset_token`, `password_reset_expires`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '$2b$12$07lVEPWMITdoCP5wT5YTP.6MQMh.Z8IVftMzv4RwfZ2KW4DJ4ehHu', 'Super Administrator', 'admin@ccs.edu', 'super_admin', 1, '2025-06-06 15:10:18', 1, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-06 15:10:18'),
+(1, 'admin', '$2b$12$07lVEPWMITdoCP5wT5YTP.6MQMh.Z8IVftMzv4RwfZ2KW4DJ4ehHu', 'Super Administrator', 'admin@ccs.edu', 'super_admin', 1, '2025-06-10 01:07:28', 1, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-10 01:07:28'),
 (2, 'ccs_admin', '$2b$12$wrl.4orbkFN9U6uyLV59xubZWU9Keu0s/3N0VoH23a7seViui8KF6', 'CCS Administrator', 'ccsadmin@ccs.edu', 'admin', 1, NULL, 0, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-06 09:11:17');
 
 -- --------------------------------------------------------
@@ -123,7 +123,8 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`room_id`, `room_name`, `floor`, `capacity`) VALUES
-(1, 'Room 201', 2, 50);
+(1, 'Room 201', 2, 50),
+(2, '203', 2, 40);
 
 -- --------------------------------------------------------
 
@@ -320,7 +321,7 @@ ALTER TABLE `rand_strings`
 -- AUTO_INCREMENT for table `rooms`
 --
 ALTER TABLE `rooms`
-  MODIFY `room_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `room_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `schedule`
@@ -338,7 +339,7 @@ ALTER TABLE `sections`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `subjects`

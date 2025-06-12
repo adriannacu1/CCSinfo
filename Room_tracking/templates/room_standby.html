@@ -186,6 +186,7 @@
     <script>
         let alarmTimer;
         let isAlarmActive = false;
+<<<<<<< HEAD
         let laserState = true; // Track laser state
         
         // Check for sensor triggers every second
@@ -229,6 +230,9 @@
         }
 
         // Manual trigger for testing
+=======
+
+>>>>>>> parent of 0930aec (student_login)
         function triggerSensorAlert() {
             fetch('/trigger_sensor', {
                 method: 'POST',
@@ -272,7 +276,7 @@
                 if (isAlarmActive) {
                     startContinuousAlarm();
                 }
-            }, 1000); //di nagana delay ng alarm
+            }, 1000); //di nagana delay ng alarm kaya tuloy tuloy, idk y :(
         }
 
 

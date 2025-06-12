@@ -3,611 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professor Dashboard - Student Attendance</title>
+    <title>Professor Dashboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
             margin: 0;
             padding: 20px;
             color: white;
-            min-height: 100vh;
         }
 
         .dashboard-container {
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: #2a5298;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-        }
-
-        .professor-info {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            border-bottom: 1px solid #ddd;
-            color: #333;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .info-item {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 4px solid #2a5298;
-        }
-
-        .info-label {
-            font-weight: bold;
-            color: #666;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .info-value {
-            font-size: 16px;
-            color: #333;
-            margin-top: 2px;
-        }
-
-        /* Timer Styles */
-        .timer-section {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .timer-display {
-            font-size: 36px;
-            color: #3498db;
-            margin: 10px 0;
-        }
-
-        .timer-warning {
-            background: #e74c3c !important;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
-        /* Student Attendance Form */
-        .attendance-section {
             padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             color: #333;
         }
 
-        .attendance-title {
+        .welcome-header {
             text-align: center;
             margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .welcome-header h1 {
             color: #2a5298;
-            font-size: 24px;
+            margin-bottom: 10px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
+        .dashboard-card {
+            background: #f8f9fa;
+            padding: 20px;
             border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
+            border-left: 4px solid #2a5298;
+            text-align: center;
         }
 
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #2a5298;
+        .dashboard-card h3 {
+            color: #2a5298;
+            margin-bottom: 15px;
         }
 
-        .check-in-btn {
-            width: 100%;
-            background: #27ae60;
+        .action-btn {
+            background: #00aa44;
             color: white;
             border: none;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .check-in-btn:hover {
-            background: #219a52;
-        }
-
-        .check-in-btn:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-        }
-
-        /* Messages */
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Attendance List */
-        .attendance-list {
-            margin-top: 30px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .attendance-list h3 {
-            margin-top: 0;
-            color: #2a5298;
-            text-align: center;
-        }
-
-        .student-item {
-            background: white;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 5px;
-            border-left: 4px solid #27ae60;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .student-info {
-            flex-grow: 1;
-        }
-
-        .student-number {
-            font-weight: bold;
-            color: #2a5298;
-        }
-
-        .pc-number {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .timestamp {
-            color: #888;
-            font-size: 12px;
-        }
-
-        /* Control Buttons */
-        .control-buttons {
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #ddd;
-            text-align: center;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            margin: 0 10px;
-            border: none;
-            border-radius: 5px;
             font-size: 16px;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        .action-btn:hover {
+            background: #008833;
+        }
+
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
+            float: right;
             text-decoration: none;
             display: inline-block;
-            transition: background 0.3s;
         }
 
-        .btn-logout {
-            background: #e74c3c;
-            color: white;
+        .logout-btn:hover {
+            background: #cc3333;
         }
 
-        .btn-logout:hover {
-            background: #c0392b;
+        .unlock-btn {
+            background: #ff8800;
+            font-size: 18px;
+            padding: 15px 30px;
+            margin: 20px auto;
+            display: block;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #545b62;
-        }
-
-        .hidden {
-            display: none;
+        .unlock-btn:hover {
+            background: #cc6600;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>👨‍🏫 Professor Dashboard</h1>
-            <p>Student Attendance Management</p>
+        <div class="welcome-header">
+            <h1>Welcome, {{ faculty.name }}!</h1>
+            <p><strong>Department:</strong> {{ faculty.department }}</p>
+            <a href="/logout" class="logout-btn">Logout</a>
         </div>
 
-        <div class="professor-info">
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Professor</div>
-                    <div class="info-value">{{ session.faculty_name }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Department</div>
-                    <div class="info-value">{{ session.department }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Section</div>
-                    <div class="info-value">{{ session.selected_section }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Room</div>
-                    <div class="info-value">{{ session.selected_room }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Class Duration</div>
-                    <div class="info-value">{{ session.class_duration }}</div>
-                </div>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>📅 My Schedule</h3>
+                <p>View your class schedules and room assignments</p>
+                <button class="action-btn" onclick="viewSchedule()">View Schedule</button>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>🏫 Room Access</h3>
+                <p>Unlock assigned classrooms</p>
+                <button class="action-btn unlock-btn" onclick="unlockRoom()">Unlock Room</button>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>📊 Class Information</h3>
+                <p>View student lists and section details</p>
+                <button class="action-btn" onclick="viewClasses()">View Classes</button>
             </div>
         </div>
-
-        <div class="timer-section" id="timer-section">
-            <div>Class Time Remaining</div>
-            <div class="timer-display" id="timer-display">Loading...</div>
-            <div id="timer-status">Class in session</div>
-        </div>
-
-        <div class="attendance-section">
-            <h2 class="attendance-title">📋 Student Check-In</h2>
-            
-            <div id="message-container"></div>
-
-            <form id="attendance-form">
-                <div class="form-group">
-                    <label for="student_number">Student Number</label>
-                    <input type="text" id="student_number" name="student_number" 
-                           placeholder="Enter student number" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="pc_number">PC Number</label>
-                    <select id="pc_number" name="pc_number" required>
-                        <option value="">Select PC Number</option>
-                        {% for i in range(1, 51) %}
-                        <option value="PC#{{ '%02d'|format(i) }}">PC#{{ '%02d'|format(i) }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <button type="submit" class="check-in-btn" id="check-in-btn">
-                    ✓ Check In Student
-                </button>
-            </form>
-
-            <div class="attendance-list">
-                <h3>📝 Today's Attendance ({{ attendance_count }} students)</h3>
-                <div id="attendance-list-container">
-                    {% for record in attendance_records %}
-                    <div class="student-item">
-                        <div class="student-info">
-                            <div class="student-number">{{ record.student_number }}</div>
-                            <div class="pc-number">{{ record.pc_number }}</div>
-                        </div>
-                        <div class="timestamp">{{ record.timestamp }}</div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <div class="control-buttons">
-            <a href="/logout" class="btn btn-logout">🚪 End Class & Logout</a>
-            <button onclick="refreshAttendance()" class="btn btn-secondary">🔄 Refresh</button>
-        </div>
-    </div>
-
-    <div id="class-timer-data" 
-         data-start-time="{{ class_start_time }}"
-         data-duration="{{ class_duration_minutes }}">
     </div>
 
     <script>
-        // Debug: Check if timer data is being passed correctly
-        console.log('Timer Data Debug:', {
-            class_start_time: '{{ class_start_time }}',
-            class_duration_minutes: '{{ class_duration_minutes }}',
-            raw_start_time: {{ class_start_time }},
-            raw_duration: {{ class_duration_minutes }}
-        });
+        function viewSchedule() {
+            alert('Schedule view feature - to be implemented');
+        }
 
-        // Check if elements exist
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Timer elements check:', {
-                timerData: document.getElementById('class-timer-data'),
-                timerDisplay: document.getElementById('timer-display'),
-                timerSection: document.getElementById('timer-section'),
-                timerStatus: document.getElementById('timer-status')
-            });
-        });
-
-        const timerData = document.getElementById('class-timer-data');
-        let classStartTime = parseInt(timerData.dataset.startTime || '0', 10);
-        let classDurationMinutes = parseInt(timerData.dataset.duration || '0', 10);
-        let timerInterval;
-        let extensionsUsed = 0;
-
-        // Clear notification flag for new session
-        sessionStorage.removeItem('classEndedNotified');
-        console.log('Cleared notification flag for new session');
-
-        function playTimerAlert() {
-            // Use audio file from static folder
-            const timerSound = new Audio('/static/alarmingsound.mp3');
-            timerSound.volume = 0.8;
-            
-            let playCount = 0;
-            const maxPlays = 4; // Play 4 times over 2 seconds
-            
-            function playBeep() {
-                if (playCount < maxPlays) {
-                    timerSound.currentTime = 0; // Reset to start
-                    timerSound.play()
-                        .then(() => {
-                            console.log(`Timer alert played ${playCount + 1}/${maxPlays}`);
-                        })
-                        .catch(e => {
-                            console.log('Could not play sound:', e);
-                        });
-                    playCount++;
-                    
-                    // Play every 500ms for 2 seconds total
-                    if (playCount < maxPlays) {
-                        setTimeout(playBeep, 500);
+        function unlockRoom() {
+            if (confirm('Are you sure you want to unlock the room?')) {
+                fetch('/unlock_room', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
                     }
-                }
-            }
-            
-            playBeep();
-            console.log('Playing 2-second timer alert before notification...');
-        }
-
-        function updateClassTimer() {
-            const now = Math.floor(Date.now() / 1000);
-            const elapsed = now - classStartTime;
-            const totalDuration = classDurationMinutes * 60;
-            const remaining = Math.max(0, totalDuration - elapsed);
-
-            // DEBUG: Log timer values
-            console.log('Timer Debug:', {
-                now: now,
-                classStartTime: classStartTime,
-                elapsed: elapsed,
-                classDurationMinutes: classDurationMinutes,
-                totalDuration: totalDuration,
-                remaining: remaining,
-                sessionNotified: sessionStorage.getItem('classEndedNotified')
-            });
-
-            const hours = Math.floor(remaining / 3600);
-            const minutes = Math.floor((remaining % 3600) / 60);
-            const seconds = remaining % 60;
-
-            const timerDisplay = document.getElementById('timer-display');
-            const timerSection = document.getElementById('timer-section');
-            const timerStatus = document.getElementById('timer-status');
-
-            if (remaining > 0) {
-                if (hours > 0) {
-                    timerDisplay.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                } else {
-                    timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                }
-
-                if (remaining <= 300) {
-                    timerSection.classList.add('timer-warning');
-                    timerStatus.textContent = 'Class ending soon!';
-                } else {
-                    timerSection.classList.remove('timer-warning');
-                    timerStatus.textContent = 'Class in session';
-                }
-            } else {
-                console.log('Timer expired! Triggering alert...');
-                timerDisplay.textContent = '0:00';
-                timerSection.classList.add('timer-warning');
-                timerStatus.textContent = 'Class time has ended';
-                
-                if (!sessionStorage.getItem('classEndedNotified')) {
-                    console.log('Playing audio alert first...');
-                    sessionStorage.setItem('classEndedNotified', 'true');
-                    
-                    // Play audio first for 2 seconds
-                    playTimerAlert();
-                    
-                    // Show confirmation dialog after 2 seconds
-                    setTimeout(() => {
-                        const userChoice = confirm(
-                            `Class time has ended!\n\n` +
-                            `Click "OK" to extend class by 10 minutes\n` +
-                            `Click "Cancel" to end class now\n\n` +
-                            `Extensions used: ${extensionsUsed}/3`
-                        );
-                        
-                        console.log('User choice:', userChoice);
-                        
-                        if (userChoice && extensionsUsed < 3) {
-                            classDurationMinutes += 10;
-                            extensionsUsed++;
-                            sessionStorage.removeItem('classEndedNotified');
-                            
-                            timerSection.classList.remove('timer-warning');
-                            timerStatus.textContent = `Class extended (+10 min) - Extension ${extensionsUsed}/3`;
-                            
-                            showMessage(`Class extended by 10 minutes! (Extension ${extensionsUsed}/3)`, 'success');
-                            
-                        } else if (extensionsUsed >= 3 && userChoice) {
-                            showMessage('Maximum extensions (3) reached. Class must end now.', 'error');
-                            setTimeout(() => {
-                                window.location.href = '/logout';
-                            }, 2000);
-                        } else {
-                            console.log('Redirecting to logout...');
-                            window.location.href = '/logout';
-                        }
-                    }, 2500); // Wait 2.5 seconds for audio to play + small buffer
-                    
-                } else {
-                    console.log('Already notified, skipping alert');
-                }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(error => {
+                    alert('Error unlocking room');
+                });
             }
         }
 
-        function showMessage(message, type = 'success') {
-            const container = document.getElementById('message-container');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-            messageDiv.textContent = message;
-            container.innerHTML = '';
-            container.appendChild(messageDiv);
-
-            setTimeout(() => {
-                container.innerHTML = '';
-            }, 3000);
+        function viewClasses() {
+            alert('Class information feature - to be implemented');
         }
-
-        function refreshAttendance() {
-            window.location.reload();
-        }
-
-        document.getElementById('attendance-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const checkInBtn = document.getElementById('check-in-btn');
-            
-            checkInBtn.disabled = true;
-            checkInBtn.textContent = 'Processing...';
-
-            fetch('/student_checkin', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showMessage(data.message, 'success');
-                    this.reset();
-                    
-                    const listContainer = document.getElementById('attendance-list-container');
-                    const studentItem = document.createElement('div');
-                    studentItem.className = 'student-item';
-                    studentItem.innerHTML = `
-                        <div class="student-info">
-                            <div class="student-number">${data.student_number}</div>
-                            <div class="pc-number">${data.pc_number}</div>
-                        </div>
-                        <div class="timestamp">Just now</div>
-                    `;
-                    listContainer.insertBefore(studentItem, listContainer.firstChild);
-                    
-                    setTimeout(() => {
-                        studentItem.style.transition = 'opacity 0.5s ease-out';
-                        studentItem.style.opacity = '0';
-                        
-                        setTimeout(() => {
-                            if (studentItem.parentNode) {
-                                studentItem.parentNode.removeChild(studentItem);
-                            }
-                        }, 500);
-                    }, 2000);
-                    
-                    const countElement = document.querySelector('.attendance-list h3');
-                    const currentCount = parseInt(countElement.textContent.match(/\d+/)[0]) + 1;
-                    countElement.textContent = `📝 Today's Attendance (${currentCount} students)`;
-                    
-                } else {
-                    showMessage(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showMessage('An error occurred while checking in student', 'error');
-            })
-            .finally(() => {
-                checkInBtn.disabled = false;
-                checkInBtn.textContent = '✓ Check In Student';
-            });
-        });
-
-        updateClassTimer();
-        timerInterval = setInterval(updateClassTimer, 1000);
-
-        document.getElementById('student_number').focus();
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const existingItems = document.querySelectorAll('#attendance-list-container .student-item');
-            
-            existingItems.forEach(item => {
-                setTimeout(() => {
-                    item.style.transition = 'opacity 0.5s ease-out';
-                    item.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        if (item.parentNode) {
-                            item.parentNode.removeChild(item);
-                        }
-                    }, 500);
-                }, 2000);
-            });
-        });
     </script>
 </body>
 </html>
