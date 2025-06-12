@@ -1,11 +1,9 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 import os
 import pymysql
 import time
 import random
 import string
-import serial
-import threading
 from datetime import datetime
 
 app = Flask(__name__)
@@ -73,78 +71,19 @@ def get_mayoral_timer_status():
     
     return {'active': False, 'time_left': 0}
 
-<<<<<<< HEAD
-
-try:
-    arduino = serial.Serial('COM3', 9600, timeout=1)  # change COM3 to actual port
-    time.sleep(2)  # Wait for Arduino to initializeconnected successfully")
-except Exception as e:
-    print(f"Failed to connect to Arduino: {e}")
-    arduino = None
-
-def read_arduino_sensor():
-    """Background thread to read Arduino sensor data"""
-    global room_status
-    while True:
-        if arduino and arduino.in_waiting > 0:
-            try:
-                line = arduino.readline().decode('utf-8').strip()
-                print(f"Arduino: {line}")
-                
-                if line == "SENSOR_TRIGGERED":
-                    if not check_authentication():
-                        room_status['last_sensor_trigger'] = True
-                        room_status['timer_started'] = True
-                        room_status['timer_start_time'] = time.time()
-                        room_status['access_log'].append({
-                            'type': 'unauthorized_access',
-                            'timestamp': 'now' 
-                        })
-                        print("Sensor triggered - Alarm activated")
-                elif line == "SENSOR_CLEAR":
-                    print("Sensor cleared")
-                elif line == "SENSOR_READY":
-                    print("Arduino sensor system ready")
-                    
-            except Exception as e:
-                print(f"Error reading Arduino: {e}")
-        time.sleep(0.1)
-
-# Start Arduino reading thread
-if arduino:
-    sensor_thread = threading.Thread(target=read_arduino_sensor, daemon=True)
-    sensor_thread.start()
-
-=======
->>>>>>> parent of 0930aec (student_login)
+#trigger sensor room_standby and professor_login
 @app.route('/trigger_sensor', methods=['POST'])
 def trigger_sensor():
-    # This endpoint now checks if sensor was actually triggered
-    if room_status.get('last_sensor_trigger', False):
-        return jsonify({'status': 'alert_triggered', 'message': 'Unauthorized access detected'})
-    elif not check_authentication():
-        # Manual trigger for testing
+    if not check_authentication():
         room_status['last_sensor_trigger'] = True
         room_status['timer_started'] = True
         room_status['timer_start_time'] = time.time()
-        return jsonify({'status': 'alert_triggered', 'message': 'Manual trigger activated'})
+        room_status['access_log'].append({
+            'type': 'unauthorized_access',
+            'timestamp': 'now' 
+        })
+        return jsonify({'status': 'alert_triggered', 'message': 'Unauthorized access detected'})
     return jsonify({'status': 'authorized', 'message': 'Access granted'})
-
-@app.route('/arduino_command', methods=['POST'])
-def arduino_command():
-    """Send commands to Arduino"""
-    if not arduino:
-        return jsonify({'status': 'error', 'message': 'Arduino not connected'})
-    
-    command = request.json.get('command')
-    if command in ['ON', 'OFF', 'STATUS']:
-        try:
-            arduino.write(f"{command}\n".encode())
-            return jsonify({'status': 'success', 'message': f'Command {command} sent'})
-        except Exception as e:
-            return jsonify({'status': 'error', 'message': f'Failed to send command: {e}'})
-    
-    return jsonify({'status': 'error', 'message': 'Invalid command'})
 
 @app.route('/timer_status')
 def timer_status():
@@ -166,21 +105,51 @@ def professor_login():
     from_page = request.args.get('from', 'loginInterface')
     print(f"Professor login route accessed with method: {request.method}")
     
+    sections = []
+    rooms = []
+    
+    try:
+        connection = get_db_connection()
+        if connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT section_name FROM sections ORDER BY section_name")
+                sections = cursor.fetchall()
+                
+                cursor.execute("SELECT room_name FROM rooms ORDER BY room_name")
+                rooms = cursor.fetchall()
+                
+            connection.close()
+    except Exception as e:
+        print(f"Error fetching sections and rooms: {e}")
+    
     if request.method == 'POST':
+        section = request.form.get('section')
+        room = request.form.get('room')
+        class_duration = request.form.get('class_duration')
         username = request.form.get('username')
         password = request.form.get('password')
         
-        print(f"Login attempt - Username: {username}, Password: {password}")
+        print(f"Login attempt - Section: {section}, Room: {room}, Duration: {class_duration}, Username: {username}")
         
-        if not username or not password:
-            return render_template('professor_login.html', error='Please enter both username and password', 
-                                 timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
+        if not username or not password or not section or not room or not class_duration:
+            return render_template('professor_login.html', 
+                                 error='Please fill in all fields', 
+                                 timer_active=get_timer_status(), 
+                                 mayoral_timer=get_mayoral_timer_status(), 
+                                 from_page=from_page,
+                                 sections=sections,
+                                 rooms=rooms)
         
         try:
             connection = get_db_connection()
             if not connection:
-                return render_template('professor_login.html', error='Database connection failed',
-                                     timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
+                return render_template('professor_login.html', 
+                                     error='Database connection failed',
+                                     timer_active=get_timer_status(), 
+                                     mayoral_timer=get_mayoral_timer_status(), 
+                                     from_page=from_page,
+                                     sections=sections,
+                                     rooms=rooms)
             
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM faculty WHERE username = %s AND password = %s"
@@ -190,10 +159,32 @@ def professor_login():
                 print(f"Database query result: {faculty}")
                 
                 if faculty:
+                    session['class_session_id'] = f"{faculty['faculty_id']}_{int(time.time())}"
+                    
+                    session['class_start_time'] = int(time.time())  # Current timestamp
+                    
+                    duration_map = {
+                        '1 min': 1,
+                        '1 Hour': 60,
+                        '1.5 Hours': 90,
+                        '2 Hours': 120,
+                        '2.5 Hours': 150,
+                        '3 Hours': 180
+                    }
+                    session['class_duration_minutes'] = duration_map.get(class_duration, 60)
+                    
+                    status_message = f"CURRENTLY IN ROOM {room}"
+                    update_sql = "UPDATE faculty SET status_state = %s WHERE faculty_id = %s"
+                    cursor.execute(update_sql, (status_message, faculty['faculty_id']))
+                    connection.commit()
+
                     session['faculty_id'] = faculty['faculty_id']
                     session['faculty_name'] = faculty['name']
                     session['username'] = faculty['username']
                     session['department'] = faculty['department']
+                    session['selected_section'] = section
+                    session['selected_room'] = room
+                    session['class_duration'] = class_duration
                     
                     room_status['authenticated'] = True
                     room_status['locked'] = False
@@ -203,49 +194,174 @@ def professor_login():
                     room_status['mayoral_timer_start'] = None
                     room_status['professor_logged_in'] = True 
                     
-                    print(f"Login successful for: {faculty['name']} - Mayoral timer deactivated")
+                    print(f"Login successful for: {faculty['name']} - Section: {section}, Room: {room}, Duration: {class_duration}")
+                    print(f"Updated status to: {status_message}")
                     connection.close()
                     return redirect(url_for('professor_dashboard'))
                 else:
                     connection.close()
-                    return render_template('professor_login.html', error='Invalid username or password',
-                                         timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
+                    return render_template('professor_login.html', 
+                                         error='Invalid username or password',
+                                         timer_active=get_timer_status(), 
+                                         mayoral_timer=get_mayoral_timer_status(), 
+                                         from_page=from_page,
+                                         sections=sections,
+                                         rooms=rooms)
                     
         except Exception as e:
             print(f"Database error: {e}")
-            return render_template('professor_login.html', error=f'Database error: {str(e)}',
-                                 timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
+            return render_template('professor_login.html', 
+                                 error=f'Database error: {str(e)}',
+                                 timer_active=get_timer_status(), 
+                                 mayoral_timer=get_mayoral_timer_status(), 
+                                 from_page=from_page,
+                                 sections=sections,
+                                 rooms=rooms)
     
-    return render_template('professor_login.html', timer_active=get_timer_status(), mayoral_timer=get_mayoral_timer_status(), from_page=from_page)
+    return render_template('professor_login.html', 
+                         timer_active=get_timer_status(), 
+                         mayoral_timer=get_mayoral_timer_status(), 
+                         from_page=from_page,
+                         sections=sections,
+                         rooms=rooms)
 
 @app.route('/professor_dashboard')
 def professor_dashboard():
-    print(f"Dashboard accessed - Session: {session}")
-    
-    if 'faculty_id' not in session:
-        print("No faculty_id in session, redirecting to login")
+    if 'faculty_id' not in session or 'class_session_id' not in session:
         return redirect(url_for('professor_login'))
     
     try:
         connection = get_db_connection()
         if not connection:
+            flash('Database connection failed', 'error')
             return redirect(url_for('professor_login'))
-            
+        
         with connection.cursor() as cursor:
-            sql = "SELECT * FROM faculty WHERE faculty_id = %s"
-            cursor.execute(sql, (session['faculty_id'],))
-            faculty = cursor.fetchone()
-            connection.close()
+            attendance_sql = """
+                SELECT student_number, pc_number, check_in_time as timestamp 
+                FROM student_attendance 
+                WHERE professor_id = %s AND class_session_id = %s
+                ORDER BY check_in_time DESC
+            """
+            cursor.execute(attendance_sql, (session['faculty_id'], session['class_session_id']))
+            attendance_records = cursor.fetchall()
             
-            if faculty:
-                print(f"Rendering dashboard for: {faculty['name']}")
-                return render_template('professor_dashboard.html', faculty=faculty)
-            else:
-                return redirect(url_for('professor_login'))
-                
+            for record in attendance_records:
+                if record['timestamp']:
+                    record['timestamp'] = record['timestamp'].strftime('%H:%M:%S')
+            
+            attendance_count = len(attendance_records)
+            
+        connection.close()
+        
+        return render_template('professor_dashboard.html', 
+                             attendance_records=attendance_records,
+                             attendance_count=attendance_count,
+                             class_start_time=session.get('class_start_time', 0),
+                             class_duration_minutes=session.get('class_duration_minutes', 0))
+                             
     except Exception as e:
         print(f"Dashboard error: {e}")
+        flash('Error loading dashboard', 'error')
         return redirect(url_for('professor_login'))
+
+@app.route('/student_checkin', methods=['POST'])
+def student_checkin():
+    if 'faculty_id' not in session or 'class_session_id' not in session:
+        return jsonify({'status': 'error', 'message': 'Professor not logged in'})
+    
+    student_number = request.form.get('student_number')
+    pc_number = request.form.get('pc_number')
+    
+    if not student_number or not pc_number:
+        return jsonify({'status': 'error', 'message': 'Please fill in all fields'})
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            check_student_sql = """
+                SELECT s.*, sec.section_name 
+                FROM students s 
+                JOIN sections sec ON s.section_id = sec.section_id 
+                WHERE s.student_number = %s
+            """
+            cursor.execute(check_student_sql, (student_number,))
+            student = cursor.fetchone()
+            
+            if not student:
+                connection.close()
+                return jsonify({'status': 'error', 'message': 'Student number not found'})
+            
+            professor_section = session.get('selected_section')
+            student_section_name = student.get('section_name')
+            
+            if student_section_name != professor_section:
+                connection.close()
+                return jsonify({
+                    'status': 'error', 
+                    'message': f'Student is from section {student_section_name}. This class is for section {professor_section}.'
+                })
+            
+            check_pc_sql = """
+                SELECT * FROM student_attendance 
+                WHERE pc_number = %s AND class_session_id = %s
+            """
+            cursor.execute(check_pc_sql, (pc_number, session['class_session_id']))
+            pc_taken = cursor.fetchone()
+            
+            if pc_taken:
+                connection.close()
+                return jsonify({'status': 'error', 'message': f'{pc_number} is already occupied in this session'})
+            
+            check_attendance_sql = """
+                SELECT * FROM student_attendance 
+                WHERE student_number = %s AND class_session_id = %s
+            """
+            cursor.execute(check_attendance_sql, (student_number, session['class_session_id']))
+            already_checked = cursor.fetchone()
+            
+            if already_checked:
+                connection.close()
+                return jsonify({'status': 'error', 'message': 'Student already checked in for this session'})
+            
+            room_number = session.get('selected_room', 'Unknown')
+            status_message = f"CURRENTLY IN ROOM {room_number}"
+            update_student_sql = "UPDATE students SET status = %s WHERE student_number = %s"
+            cursor.execute(update_student_sql, (status_message, student_number))
+            
+            attendance_sql = """
+                INSERT INTO student_attendance 
+                (student_number, pc_number, professor_id, check_in_time, room_number, class_session_id) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            current_time = datetime.now()
+            cursor.execute(attendance_sql, (
+                student_number, 
+                pc_number, 
+                session['faculty_id'], 
+                current_time, 
+                room_number, 
+                session['class_session_id']
+            ))
+            
+            connection.commit()
+            connection.close()
+            
+            print(f"Student {student_number} from section {student_section_name} checked in to {pc_number} at {current_time}")
+            
+            return jsonify({
+                'status': 'success', 
+                'message': f'Student {student_number} checked in successfully to {pc_number}',
+                'student_number': student_number,
+                'pc_number': pc_number
+            })
+            
+    except Exception as e:
+        print(f"Student check-in error: {e}")
+        return jsonify({'status': 'error', 'message': f'Database error: {str(e)}'})
 
 @app.route('/unlock_room', methods=['POST'])
 def unlock_room():
@@ -261,10 +377,34 @@ def unlock_room():
 def logout():
     if 'faculty_id' in session:
         print(f"Logout for: {session.get('faculty_name', 'Unknown')}")
+        
+        try:
+            connection = get_db_connection()
+            if connection:
+                with connection.cursor() as cursor:
+                    update_sql = "UPDATE faculty SET status_state = %s WHERE faculty_id = %s"
+                    cursor.execute(update_sql, ('AVAILABLE', session['faculty_id']))
+                    
+                    today = datetime.now().strftime('%Y-%m-%d')
+                    reset_students_sql = """
+                        UPDATE students SET status = 'AVAILABLE' 
+                        WHERE student_number IN (
+                            SELECT student_number FROM student_attendance 
+                            WHERE professor_id = %s AND DATE(check_in_time) = %s
+                        )
+                    """
+                    cursor.execute(reset_students_sql, (session['faculty_id'], today))
+                    
+                    connection.commit()
+                    print(f"Reset status for faculty_id: {session['faculty_id']} and their students")
+                connection.close()
+        except Exception as e:
+            print(f"Error updating status on logout: {e}")
     
     session.clear()
     room_status['authenticated'] = False
     room_status['locked'] = True
+    room_status['professor_logged_in'] = False
     return redirect(url_for('index'))
 
 @app.route('/mayoral_timer_status')
