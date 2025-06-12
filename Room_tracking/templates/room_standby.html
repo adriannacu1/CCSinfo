@@ -161,7 +161,8 @@
     </div>
 
     <div class="header">
-        <button class="test-btn" onclick="triggerSensorAlert()">TEMPORARY SENSOR</button>
+        <button class="test-btn" onclick="triggerSensorAlert()">MANUAL TEST</button>
+        <button class="test-btn" onclick="toggleLaser()" style="margin-left: 10px;">TOGGLE LASER</button>
     </div>
 
     <div class="main-container">
@@ -169,7 +170,6 @@
             <div class="lock-title">SENSOR ARMED</div>
             <div class="lock-subtitle">Security System Active</div>
         </div>
-
     </div>
 
     <div class="alert-overlay" id="alertOverlay">
@@ -186,7 +186,49 @@
     <script>
         let alarmTimer;
         let isAlarmActive = false;
-        // Sensor template!!!!!
+        let laserState = true; // Track laser state
+        
+        // Check for sensor triggers every second
+        function checkSensorStatus() {
+            fetch('/trigger_sensor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'alert_triggered') {
+                    showAlert();
+                }
+            })
+            .catch(error => {
+                console.log('Sensor check error:', error);
+            });
+        }
+
+        // Check sensor status every 500ms
+        setInterval(checkSensorStatus, 500);
+
+        function toggleLaser() {
+            const command = laserState ? 'OFF' : 'ON';
+            fetch('/arduino_command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({command: command})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    laserState = !laserState;
+                    console.log(`Laser turned ${command}`);
+                }
+            });
+        }
+
+        // Manual trigger for testing
         function triggerSensorAlert() {
             fetch('/trigger_sensor', {
                 method: 'POST',

@@ -4,6 +4,8 @@ import pymysql
 import time
 import random
 import string
+import serial
+import threading
 from datetime import datetime
 
 app = Flask(__name__)
@@ -71,19 +73,75 @@ def get_mayoral_timer_status():
     
     return {'active': False, 'time_left': 0}
 
-#trigger sensor room_standby and professor_login
+
+try:
+    arduino = serial.Serial('COM3', 9600, timeout=1)  # change COM3 to actual port
+    time.sleep(2)  # Wait for Arduino to initializeconnected successfully")
+except Exception as e:
+    print(f"Failed to connect to Arduino: {e}")
+    arduino = None
+
+def read_arduino_sensor():
+    """Background thread to read Arduino sensor data"""
+    global room_status
+    while True:
+        if arduino and arduino.in_waiting > 0:
+            try:
+                line = arduino.readline().decode('utf-8').strip()
+                print(f"Arduino: {line}")
+                
+                if line == "SENSOR_TRIGGERED":
+                    if not check_authentication():
+                        room_status['last_sensor_trigger'] = True
+                        room_status['timer_started'] = True
+                        room_status['timer_start_time'] = time.time()
+                        room_status['access_log'].append({
+                            'type': 'unauthorized_access',
+                            'timestamp': 'now' 
+                        })
+                        print("Sensor triggered - Alarm activated")
+                elif line == "SENSOR_CLEAR":
+                    print("Sensor cleared")
+                elif line == "SENSOR_READY":
+                    print("Arduino sensor system ready")
+                    
+            except Exception as e:
+                print(f"Error reading Arduino: {e}")
+        time.sleep(0.1)
+
+# Start Arduino reading thread
+if arduino:
+    sensor_thread = threading.Thread(target=read_arduino_sensor, daemon=True)
+    sensor_thread.start()
+
 @app.route('/trigger_sensor', methods=['POST'])
 def trigger_sensor():
-    if not check_authentication():
+    # This endpoint now checks if sensor was actually triggered
+    if room_status.get('last_sensor_trigger', False):
+        return jsonify({'status': 'alert_triggered', 'message': 'Unauthorized access detected'})
+    elif not check_authentication():
+        # Manual trigger for testing
         room_status['last_sensor_trigger'] = True
         room_status['timer_started'] = True
         room_status['timer_start_time'] = time.time()
-        room_status['access_log'].append({
-            'type': 'unauthorized_access',
-            'timestamp': 'now' 
-        })
-        return jsonify({'status': 'alert_triggered', 'message': 'Unauthorized access detected'})
+        return jsonify({'status': 'alert_triggered', 'message': 'Manual trigger activated'})
     return jsonify({'status': 'authorized', 'message': 'Access granted'})
+
+@app.route('/arduino_command', methods=['POST'])
+def arduino_command():
+    """Send commands to Arduino"""
+    if not arduino:
+        return jsonify({'status': 'error', 'message': 'Arduino not connected'})
+    
+    command = request.json.get('command')
+    if command in ['ON', 'OFF', 'STATUS']:
+        try:
+            arduino.write(f"{command}\n".encode())
+            return jsonify({'status': 'success', 'message': f'Command {command} sent'})
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'Failed to send command: {e}'})
+    
+    return jsonify({'status': 'error', 'message': 'Invalid command'})
 
 @app.route('/timer_status')
 def timer_status():
