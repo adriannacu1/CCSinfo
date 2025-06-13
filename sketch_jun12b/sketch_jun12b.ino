@@ -3,7 +3,9 @@ int sensorPin1 = A1;
 int sensor0 = 1000;
 int sensor1 = 1000;
 int sensorValue = 0;
- 
+
+int sensorControlPin = 9;
+
 float threshold = 800;
 int sent = 0;
  
@@ -15,8 +17,10 @@ const float secondsCalibrating = 1.5;
 void setup() {
   pinMode(sensorPin0, INPUT);
   pinMode(sensorPin1, INPUT);
+  pinMode(sensorControlPin, OUTPUT);
   Serial.begin(9600);
  
+  digitalWrite(sensorControlPin, HIGH);
   sensor0 = analogRead(sensorPin0);
   sensor1 = analogRead(sensorPin1);
   Serial.println("Calibrating...");
@@ -68,11 +72,13 @@ void handleCommand(String cmd) {
   if (cmd == "ON") {
     // Send "ON" on tablet
     // Code here for turning on the laser module
+    digitalWrite(sensorControlPin, HIGH);
     Serial.println("LASER ON");
   }
   else if (cmd == "OFF") {
     // Send "OFF" on the tablet
     // Code here for turning off the laser module
+    digitalWrite(sensorControlPin, LOW);
     Serial.println("LASER OFF");
   }
 }
