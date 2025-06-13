@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino Sensor Monitor - Bluetooth</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .connect-section {
+            margin-bottom: 30px;
+        }
+        
+        .connect-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .connect-btn:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .connect-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .status-display {
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .sensor-ready {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .sensor-blocked {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .sensor-disconnected {
+            background: #e2e3e5;
+            color: #6c757d;
+            border: 2px solid #d6d8db;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-on {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-on:hover:not(:disabled) {
+            background: #218838;
+        }
+        
+        .btn-off {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-off:hover:not(:disabled) {
+            background: #c82333;
+        }
+        
+        .control-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .connection-status {
+            font-size: 14px;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .connected {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .log {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Arduino Sensor Monitor</h1>
+            <p>Bluetooth Direct Connection</p>
+        </div>
+        
+        <div class="connect-section">
+            <button id="connectBtn" class="connect-btn">📱 Connect to Arduino</button>
+            <button id="disconnectBtn" class="connect-btn hidden" style="background: #dc3545;">🔌 Disconnect</button>
+        </div>
+        
+        <div id="sensorStatus" class="status-display sensor-disconnected">
+            📡 Not Connected
+        </div>
+        
+        <div class="controls">
+            <button id="laserOnBtn" class="control-btn btn-on" disabled>🔴 Laser ON</button>
+            <button id="laserOffBtn" class="control-btn btn-off" disabled>⚫ Laser OFF</button>
+        </div>
+        
+        <div id="connectionStatus" class="connection-status disconnected">
+            Status: Disconnected
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let bluetoothDevice;
+        let bluetoothServer;
+        let bluetoothService;
+        let bluetoothCharacteristic;
+        let isConnected = false;
+
+        // UI Elements
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const sensorStatus = document.getElementById('sensorStatus');
+        const laserOnBtn = document.getElementById('laserOnBtn');
+        const laserOffBtn = document.getElementById('laserOffBtn');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const log = document.getElementById('log');
+
+        // HC-05 Bluetooth Classic UUID (SPP)
+        const serviceUuid = '00001101-0000-1000-8000-00805f9b34fb';
+
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `[${timestamp}] ${message}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function connectToBluetooth() {
+            try {
+                addLog('Requesting Bluetooth device...');
+                
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [
+                        { name: 'HC-05' },
+                        { name: 'HC-06' },
+                        { namePrefix: 'HC-' }
+                    ],
+                    optionalServices: [serviceUuid]
+                });
+
+                addLog(`Connecting to ${bluetoothDevice.name}...`);
+                
+                bluetoothServer = await bluetoothDevice.gatt.connect();
+                bluetoothService = await bluetoothServer.getPrimaryService(serviceUuid);
+                bluetoothCharacteristic = await bluetoothService.getCharacteristic(serviceUuid);
+
+                // Start notifications
+                await bluetoothCharacteristic.startNotifications();
+                bluetoothCharacteristic.addEventListener('characteristicvaluechanged', handleNotifications);
+
+                isConnected = true;
+                updateUI();
+                addLog('✅ Connected successfully!');
+                
+                // Listen for disconnection
+                bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+            } catch (error) {
+                addLog(`❌ Connection error: ${error.message}`);
+                console.error('Bluetooth connection failed:', error);
+                isConnected = false;
+                updateUI();
+            }
+        }
+
+        function handleNotifications(event) {
+            const value = new TextDecoder().decode(event.target.value);
+            const data = value.trim();
+            
+            addLog(`📨 Received: ${data}`);
+            
+            if (data === '1') {
+                // Sensor blocked
+                sensorStatus.textContent = '🚫 SENSOR BLOCKED';
+                sensorStatus.className = 'status-display sensor-blocked';
+            } else if (data === '0') {
+                // Sensor ready
+                sensorStatus.textContent = '✅ SENSOR READY';
+                sensorStatus.className = 'status-display sensor-ready';
+            } else if (data.includes('LASER')) {
+                addLog(`🔴 ${data}`);
+            }
+        }
+
+        async function sendCommand(command) {
+            if (!isConnected || !bluetoothCharacteristic) {
+                addLog('❌ Not connected to device');
+                return;
+            }
+
+            try {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(command + '\n');
+                await bluetoothCharacteristic.writeValue(data);
+                addLog(`📤 Sent: ${command}`);
+            } catch (error) {
+                addLog(`❌ Send error: ${error.message}`);
+                console.error('Send command failed:', error);
+            }
+        }
+
+        function onDisconnected() {
+            addLog('🔌 Device disconnected');
+            isConnected = false;
+            updateUI();
+        }
+
+        function disconnect() {
+            if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+                bluetoothDevice.gatt.disconnect();
+            }
+            isConnected = false;
+            updateUI();
+            addLog('🔌 Disconnected');
+        }
+
+        function updateUI() {
+            if (isConnected) {
+                connectBtn.classList.add('hidden');
+                disconnectBtn.classList.remove('hidden');
+                laserOnBtn.disabled = false;
+                laserOffBtn.disabled = false;
+                connectionStatus.textContent = 'Status: Connected ✅';
+                connectionStatus.className = 'connection-status connected';
+            } else {
+                connectBtn.classList.remove('hidden');
+                disconnectBtn.classList.add('hidden');
+                laserOnBtn.disabled = true;
+                laserOffBtn.disabled = true;
+                connectionStatus.textContent = 'Status: Disconnected ❌';
+                connectionStatus.className = 'connection-status disconnected';
+                sensorStatus.textContent = '📡 Not Connected';
+                sensorStatus.className = 'status-display sensor-disconnected';
+            }
+        }
+
+        // Event Listeners
+        connectBtn.addEventListener('click', connectToBluetooth);
+        disconnectBtn.addEventListener('click', disconnect);
+        laserOnBtn.addEventListener('click', () => sendCommand('ON'));
+        laserOffBtn.addEventListener('click', () => sendCommand('OFF'));
+
+        // Check if Web Bluetooth is supported
+        if (!navigator.bluetooth) {
+            addLog('❌ Web Bluetooth not supported in this browser');
+            connectBtn.disabled = true;
+            connectBtn.textContent = 'Bluetooth Not Supported';
+        } else {
+            addLog('✅ Web Bluetooth supported');
+        }
+
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>
