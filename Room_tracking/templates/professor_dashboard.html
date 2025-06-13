@@ -368,8 +368,6 @@
             raw_start_time: {{ class_start_time }},
             raw_duration: {{ class_duration_minutes }}    ///ignore error
         });
-
-        // Check if elements exist
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Timer elements check:', {
                 timerData: document.getElementById('class-timer-data'),
@@ -385,21 +383,19 @@
         let timerInterval;
         let extensionsUsed = 0;
 
-        // Clear notification flag for new session
         sessionStorage.removeItem('classEndedNotified');
         console.log('Cleared notification flag for new session');
 
         function playTimerAlert() {
-            // Use audio file from static folder
             const timerSound = new Audio('/static/alarmingsound.mp3');
             timerSound.volume = 0.8;
             
             let playCount = 0;
-            const maxPlays = 4; // Play 4 times over 2 seconds
+            const maxPlays = 4;
             
             function playBeep() {
                 if (playCount < maxPlays) {
-                    timerSound.currentTime = 0; // Reset to start
+                    timerSound.currentTime = 0;
                     timerSound.play()
                         .then(() => {
                             console.log(`Timer alert played ${playCount + 1}/${maxPlays}`);
@@ -409,7 +405,6 @@
                         });
                     playCount++;
                     
-                    // Play every 500ms for 2 seconds total
                     if (playCount < maxPlays) {
                         setTimeout(playBeep, 500);
                     }
@@ -426,7 +421,6 @@
             const totalDuration = classDurationMinutes * 60;
             const remaining = Math.max(0, totalDuration - elapsed);
 
-            // DEBUG: Log timer values
             console.log('Timer Debug:', {
                 now: now,
                 classStartTime: classStartTime,
@@ -468,11 +462,9 @@
                 if (!sessionStorage.getItem('classEndedNotified')) {
                     console.log('Playing audio alert first...');
                     sessionStorage.setItem('classEndedNotified', 'true');
-                    
-                    // Play audio first for 2 seconds
+
                     playTimerAlert();
                     
-                    // Show confirmation dialog after 2 seconds
                     setTimeout(() => {
                         const userChoice = confirm(
                             `Class time has ended!\n\n` +
