@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 07, 2025 at 06:33 AM
+-- Generation Time: Jun 13, 2025 at 05:25 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -29,28 +29,17 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `admin` (
   `admin_id` int(11) NOT NULL,
-  `username` varchar(50) NOT NULL,
+  `username` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `full_name` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `role` enum('super_admin','admin','moderator') DEFAULT 'admin',
-  `is_active` tinyint(1) DEFAULT 1,
-  `last_login` timestamp NULL DEFAULT NULL,
-  `login_attempts` int(11) DEFAULT 0,
-  `locked_until` timestamp NULL DEFAULT NULL,
-  `password_reset_token` varchar(255) DEFAULT NULL,
-  `password_reset_expires` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `full_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admin`
 --
 
-INSERT INTO `admin` (`admin_id`, `username`, `password`, `full_name`, `email`, `role`, `is_active`, `last_login`, `login_attempts`, `locked_until`, `password_reset_token`, `password_reset_expires`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '$2b$12$07lVEPWMITdoCP5wT5YTP.6MQMh.Z8IVftMzv4RwfZ2KW4DJ4ehHu', 'Super Administrator', 'admin@ccs.edu', 'super_admin', 1, '2025-06-06 15:10:18', 1, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-06 15:10:18'),
-(2, 'ccs_admin', '$2b$12$wrl.4orbkFN9U6uyLV59xubZWU9Keu0s/3N0VoH23a7seViui8KF6', 'CCS Administrator', 'ccsadmin@ccs.edu', 'admin', 1, NULL, 0, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-06 09:11:17');
+INSERT INTO `admin` (`admin_id`, `username`, `password`, `full_name`) VALUES
+(1, 'admin', '202cb962ac59075b964b07152d234b70', 'Default Admin');
 
 -- --------------------------------------------------------
 
@@ -82,15 +71,16 @@ CREATE TABLE `faculty` (
   `name` varchar(100) NOT NULL,
   `department` varchar(50) DEFAULT NULL,
   `username` varchar(10) NOT NULL,
-  `password` varchar(7) NOT NULL
+  `password` varchar(7) NOT NULL,
+  `status_state` varchar(25) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `faculty`
 --
 
-INSERT INTO `faculty` (`faculty_id`, `name`, `department`, `username`, `password`) VALUES
-(1, 'Adrian Nacu', 'Computer Science', 'nacup', '12345');
+INSERT INTO `faculty` (`faculty_id`, `name`, `department`, `username`, `password`, `status_state`) VALUES
+(1, 'Adrian Nacu', 'Computer Science', 'nacup', '12345', 'AVAILABLE');
 
 -- --------------------------------------------------------
 
@@ -123,7 +113,7 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`room_id`, `room_name`, `floor`, `capacity`) VALUES
-(1, 'Room 201', 2, 50);
+(1, '201', 2, 50);
 
 -- --------------------------------------------------------
 
@@ -186,7 +176,7 @@ CREATE TABLE `students` (
   `year_level` int(11) DEFAULT NULL,
   `section_id` int(11) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
-  `status` varchar(20) DEFAULT NULL,
+  `status` varchar(25) NOT NULL,
   `course_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -195,9 +185,41 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`student_id`, `student_number`, `name`, `course`, `year_level`, `section_id`, `email`, `status`, `course_id`) VALUES
-(1, 'S224-12536M', 'Adrian Kurt P. Nacu', 'BSCS', 3, 1, 'adrian.nacu@example.com', 'Active', 1),
-(2, 'S224-12537M', 'Emman Seron', 'BSCS', 3, 1, 'emman.seron@example.com', 'Active', 1),
-(3, 'S224-12538M', 'Charlie Magne Aranez', 'BSCS', 3, 1, 'charlie.aranez@example.com', 'Active', 1);
+(1, '224-12536M', 'Adrian Kurt P. Nacu', 'BSCS', 3, 1, 'adrian.nacu@example.com', 'AVAILABLE', 1),
+(2, '224-12537M', 'Emman Seron', 'BSCS', 3, 1, 'emman.seron@example.com', 'AVAILABLE', 1),
+(3, '224-12538M', 'Charlie Magne Aranez', 'BSCS', 3, 1, 'charlie.aranez@example.com', 'AVAILABLE', 1),
+(4, '224-11392M', 'Rodeo, RJ L.', 'BSCS', 3, 2, 'rjrodeo@gmail.com', 'AVAILABLE', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_attendance`
+--
+
+CREATE TABLE `student_attendance` (
+  `id` int(11) NOT NULL,
+  `student_number` varchar(50) NOT NULL,
+  `pc_number` varchar(10) NOT NULL,
+  `professor_id` int(11) NOT NULL,
+  `check_in_time` datetime NOT NULL,
+  `room_number` varchar(50) DEFAULT NULL,
+  `class_session_id` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_attendance`
+--
+
+INSERT INTO `student_attendance` (`id`, `student_number`, `pc_number`, `professor_id`, `check_in_time`, `room_number`, `class_session_id`) VALUES
+(1, '224-12536M', 'PC#05', 1, '2025-06-11 11:24:11', '201', NULL),
+(2, '224-12537M', 'PC#03', 1, '2025-06-11 11:24:47', '201', NULL),
+(3, '224-12536M', 'PC#03', 1, '2025-06-11 11:44:32', '201', '1_1749613468'),
+(4, '224-12537M', 'PC#08', 1, '2025-06-11 11:47:02', '201', '1_1749613598'),
+(5, '224-12536M', 'PC#04', 1, '2025-06-11 11:48:27', '201', '1_1749613598'),
+(6, '224-12536M', 'PC#01', 1, '2025-06-11 11:55:26', '201', '1_1749614120'),
+(7, '224-12536M', 'PC#02', 1, '2025-06-11 11:55:53', '201', '1_1749614146'),
+(8, '224-12537M', 'PC#11', 1, '2025-06-11 12:10:43', '201', '1_1749615030'),
+(9, '224-12536M', 'PC#09', 1, '2025-06-12 22:01:58', '201', '1_1749736914');
 
 -- --------------------------------------------------------
 
@@ -227,8 +249,7 @@ INSERT INTO `subjects` (`subject_id`, `subject_name`) VALUES
 --
 ALTER TABLE `admin`
   ADD PRIMARY KEY (`admin_id`),
-  ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `username` (`username`);
 
 --
 -- Indexes for table `courses`
@@ -283,6 +304,13 @@ ALTER TABLE `students`
   ADD KEY `course_id` (`course_id`);
 
 --
+-- Indexes for table `student_attendance`
+--
+ALTER TABLE `student_attendance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `professor_id` (`professor_id`);
+
+--
 -- Indexes for table `subjects`
 --
 ALTER TABLE `subjects`
@@ -296,7 +324,7 @@ ALTER TABLE `subjects`
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -314,7 +342,7 @@ ALTER TABLE `faculty`
 -- AUTO_INCREMENT for table `rand_strings`
 --
 ALTER TABLE `rand_strings`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `rooms`
@@ -338,7 +366,13 @@ ALTER TABLE `sections`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `student_attendance`
+--
+ALTER TABLE `student_attendance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `subjects`
@@ -371,6 +405,12 @@ ALTER TABLE `sections`
 ALTER TABLE `students`
   ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`),
   ADD CONSTRAINT `students_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`);
+
+--
+-- Constraints for table `student_attendance`
+--
+ALTER TABLE `student_attendance`
+  ADD CONSTRAINT `student_attendance_ibfk_1` FOREIGN KEY (`professor_id`) REFERENCES `faculty` (`faculty_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
