@@ -1,84 +1,166 @@
-int sensorPin0 = A0;
-int sensorPin1 = A1;
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <WebServer.h>
+
+// WiFi credentials
+const char* ssid = "KyrieJ";           // Replace with your WiFi name
+const char* password = "maytwo@2015Seron";   // Replace with your WiFi password
+
+// Flask server details
+String flaskServerIP = "192.168.1.9";  // Replace with your PC's IP address
+int flaskServerPort = 5000;
+
+// Web server for ESP32
+WebServer server(80);
+
+// Sensor pins
+int sensorPin0 = 34;  // GPIO36 (D34)
+int sensorPin1 = 35;  // GPIO39 (D35)
 int sensor0 = 1000;
 int sensor1 = 1000;
-int sensorValue = 0;
 
-int sensorControlPin = 9;
+// Laser control pin
+int sensorControlPin = 2;  // GPIO2
 
 float threshold = 800;
 int sent = 0;
- 
-String command = "";
- 
-// Const, change depending on needs 
-const float secondsCalibrating = 1.5; 
- 
+bool wifiConnected = false;
+
 void setup() {
+  Serial.begin(115200);
+  
+  // Initialize pins
   pinMode(sensorPin0, INPUT);
   pinMode(sensorPin1, INPUT);
   pinMode(sensorControlPin, OUTPUT);
-  Serial.begin(9600);
- 
   digitalWrite(sensorControlPin, HIGH);
-  sensor0 = analogRead(sensorPin0);
-  sensor1 = analogRead(sensorPin1);
-  Serial.println("Calibrating...");
-  int tick = secondsCalibrating * 10;
+  
+  // Connect to WiFi
+  connectToWiFi();
+  
+  // Setup web server routes
+  setupWebServer();
+  
+  // Calibration
+  calibrateSensors();
+  
+  Serial.println("ESP32 ready!");
+}
+
+void connectToWiFi() {
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
+  
+  WiFi.begin(ssid, password);
+  
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(1000);
+    Serial.print(".");
+    attempts++;
+  }
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    wifiConnected = true;
+    Serial.println();
+    Serial.println("WiFi connected!");
+    Serial.print("ESP32 IP address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println();
+    Serial.println("WiFi connection failed!");
+    wifiConnected = false;
+  }
+}
+
+void setupWebServer() {
+  // Route to control laser
+  server.on("/laser/on", HTTP_GET, [](){
+    digitalWrite(sensorControlPin, HIGH);
+    Serial.println("Laser turned ON via HTTP");
+    server.send(200, "application/json", "{\"status\":\"success\",\"message\":\"Laser ON\"}");
+  });
+  
+  server.on("/laser/off", HTTP_GET, [](){
+    digitalWrite(sensorControlPin, LOW);
+    Serial.println("Laser turned OFF via HTTP");
+    server.send(200, "application/json", "{\"status\":\"success\",\"message\":\"Laser OFF\"}");
+  });
+  
+  // Route to get sensor status
+  server.on("/sensor/status", HTTP_GET, [](){
+    String json = "{\"sensor_blocked\":" + String(sent == 1 ? "true" : "false") + 
+                  ",\"threshold\":" + String(threshold) + 
+                  ",\"sensor0\":" + String(sensor0) + 
+                  ",\"sensor1\":" + String(sensor1) + "}";
+    server.send(200, "application/json", json);
+  });
+  
+  server.begin();
+  Serial.println("HTTP server started on port 80");
+}
+
+void calibrateSensors() {
+  Serial.println("Starting calibration...");
+  
+  int tick = 15; // 1.5 seconds
   int sum = 0;
+  
   for (int i = 0; i < tick; i++) {
+    sensor0 = analogRead(sensorPin0);
+    sensor1 = analogRead(sensorPin1);
     sum += sensor0 + sensor1;
     delay(100);
   }
- 
+  
   float thres = sum / (tick * 2);
   threshold = thres + 200;
-  Serial.println("Average ambiant light: " + String(thres));
-  Serial.println("Threshold: " + String(threshold));
+  
+  Serial.println("Calibration complete. Threshold: " + String(threshold));
 }
- 
+
 void loop() {
+  // Handle web server requests
+  server.handleClient();
+  
+  // Read sensors
   sensor0 = analogRead(sensorPin0);
   sensor1 = analogRead(sensorPin1);
- 
-  // Will send a constant 0 to the phone, and 1 if both sensors are triggered
+  
+  // Determine sensor status
   if (sensor0 >= threshold || sensor1 >= threshold) {
-    sent = 0;
-    delay(500);
+    sent = 0; // Ready
+  } else {
+    sent = 1; // Blocked
   }
-  else {
-    sent = 1;
-    delay(500);
+  
+  // Send sensor data to Flask server
+  if (wifiConnected) {
+    sendSensorDataToFlask();
   }
- 
-  Serial.println(String(sent));
- 
-  while (Serial.available()) {
-    char c = Serial.read();
-    if (c == '\n' || c == '\r') {
-      handleCommand(command);
-      command = "";
-    }
-    else {
-      command += c;
-    }
-  }
- 
-  delay(300);
+  
+  delay(500); // Send data every 500ms
 }
- 
-void handleCommand(String cmd) {
-  cmd.trim();
-  if (cmd == "ON") {
-    // Send "ON" on tablet
-    // Code here for turning on the laser module
-    digitalWrite(sensorControlPin, HIGH);
-    Serial.println("LASER ON");
+
+void sendSensorDataToFlask() {
+  HTTPClient http;
+  http.begin("http://" + flaskServerIP + ":" + String(flaskServerPort) + "/api/esp32/sensor-data");
+  http.addHeader("Content-Type", "application/json");
+  
+  // Create JSON payload
+  String jsonPayload = "{\"sensor_blocked\":" + String(sent == 1 ? "true" : "false") + 
+                       ",\"sensor0\":" + String(sensor0) + 
+                       ",\"sensor1\":" + String(sensor1) + 
+                       ",\"threshold\":" + String(threshold) + "}";
+  
+  int httpResponseCode = http.POST(jsonPayload);
+  
+  if (httpResponseCode > 0) {
+    // Success - no need to log every time
+  } else {
+    Serial.println("Error sending data to Flask: " + String(httpResponseCode));
   }
-  else if (cmd == "OFF") {
-    // Send "OFF" on the tablet
-    // Code here for turning off the laser module
-    digitalWrite(sensorControlPin, LOW);
-    Serial.println("LASER OFF");
-  }
+  
+  http.end();
 }

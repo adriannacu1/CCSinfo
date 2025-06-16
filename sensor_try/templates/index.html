@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arduino Sensor Monitor - Bluetooth</title>
+    <title>Arduino Sensor Monitor - USB OTG</title>
     <style>
         * {
             margin: 0;
@@ -36,6 +36,16 @@
             color: #333;
             margin-bottom: 10px;
             font-size: 24px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 14px;
         }
         
         .connect-section {
@@ -166,18 +176,35 @@
         .hidden {
             display: none;
         }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🔬 Arduino Sensor Monitor</h1>
-            <p>Bluetooth Direct Connection</p>
+            <p>USB OTG Direct Connection</p>
+        </div>
+        
+        <div class="info-box">
+            <strong>📱 Requirements:</strong><br>
+            • Android phone with USB OTG support<br>
+            • USB OTG adapter (USB-C to USB-A)<br>
+            • USB cable (Arduino programming cable)<br>
+            • Chrome browser (Web Serial API support)
         </div>
         
         <div class="connect-section">
-            <button id="connectBtn" class="connect-btn">📱 Connect to Arduino</button>
-            <button id="disconnectBtn" class="connect-btn hidden" style="background: #dc3545;">🔌 Disconnect</button>
+            <button id="connectBtn" class="connect-btn">🔌 Connect to Arduino</button>
+            <button id="disconnectBtn" class="connect-btn hidden" style="background: #dc3545;">❌ Disconnect</button>
         </div>
         
         <div id="sensorStatus" class="status-display sensor-disconnected">
@@ -197,10 +224,9 @@
     </div>
 
     <script>
-        let bluetoothDevice;
-        let bluetoothServer;
-        let bluetoothService;
-        let bluetoothCharacteristic;
+        let port;
+        let reader;
+        let writer;
         let isConnected = false;
 
         // UI Elements
@@ -212,82 +238,95 @@
         const connectionStatus = document.getElementById('connectionStatus');
         const log = document.getElementById('log');
 
-        // HC-05 Bluetooth Classic UUID (SPP)
-        const serviceUuid = '00001101-0000-1000-8000-00805f9b34fb';
-
         function addLog(message) {
             const timestamp = new Date().toLocaleTimeString();
             log.innerHTML += `[${timestamp}] ${message}<br>`;
             log.scrollTop = log.scrollHeight;
         }
 
-        async function connectToBluetooth() {
+        async function connectToArduino() {
             try {
-                addLog('Requesting Bluetooth device...');
+                addLog('🔍 Requesting serial port...');
                 
-                bluetoothDevice = await navigator.bluetooth.requestDevice({
-                    filters: [
-                        { name: 'HC-05' },
-                        { name: 'HC-06' },
-                        { namePrefix: 'HC-' }
-                    ],
-                    optionalServices: [serviceUuid]
-                });
-
-                addLog(`Connecting to ${bluetoothDevice.name}...`);
+                // Request a port and open a connection
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
                 
-                bluetoothServer = await bluetoothDevice.gatt.connect();
-                bluetoothService = await bluetoothServer.getPrimaryService(serviceUuid);
-                bluetoothCharacteristic = await bluetoothService.getCharacteristic(serviceUuid);
+                addLog('✅ Connected to Arduino!');
+                
+                // Set up the reader and writer
+                const textDecoder = new TextDecoderStream();
+                const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+                reader = textDecoder.readable.getReader();
 
-                // Start notifications
-                await bluetoothCharacteristic.startNotifications();
-                bluetoothCharacteristic.addEventListener('characteristicvaluechanged', handleNotifications);
+                const textEncoder = new TextEncoderStream();
+                const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+                writer = textEncoder.writable.getWriter();
 
                 isConnected = true;
                 updateUI();
-                addLog('✅ Connected successfully!');
                 
-                // Listen for disconnection
-                bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-
+                // Start reading data
+                readLoop();
+                
             } catch (error) {
                 addLog(`❌ Connection error: ${error.message}`);
-                console.error('Bluetooth connection failed:', error);
+                console.error('Serial connection failed:', error);
                 isConnected = false;
                 updateUI();
             }
         }
 
-        function handleNotifications(event) {
-            const value = new TextDecoder().decode(event.target.value);
-            const data = value.trim();
-            
+        async function readLoop() {
+            try {
+                while (isConnected) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        break;
+                    }
+                    
+                    // Process incoming data
+                    const lines = value.split('\n');
+                    for (let line of lines) {
+                        line = line.trim();
+                        if (line) {
+                            handleArduinoData(line);
+                        }
+                    }
+                }
+            } catch (error) {
+                addLog(`❌ Read error: ${error.message}`);
+                console.error('Read error:', error);
+                disconnect();
+            }
+        }
+
+        function handleArduinoData(data) {
             addLog(`📨 Received: ${data}`);
             
             if (data === '1') {
-                // Sensor blocked
-                sensorStatus.textContent = '🚫 SENSOR BLOCKED';
-                sensorStatus.className = 'status-display sensor-blocked';
-            } else if (data === '0') {
                 // Sensor ready
                 sensorStatus.textContent = '✅ SENSOR READY';
                 sensorStatus.className = 'status-display sensor-ready';
+            } else if (data === '0') {
+                // Sensor blocked
+                sensorStatus.textContent = '🚫 SENSOR BLOCKED';
+                sensorStatus.className = 'status-display sensor-blocked';
             } else if (data.includes('LASER')) {
                 addLog(`🔴 ${data}`);
+            } else if (data.includes('Calibrating') || data.includes('Average') || data.includes('Threshold')) {
+                addLog(`⚙️ ${data}`);
             }
         }
 
         async function sendCommand(command) {
-            if (!isConnected || !bluetoothCharacteristic) {
-                addLog('❌ Not connected to device');
+            if (!isConnected || !writer) {
+                addLog('❌ Not connected to Arduino');
                 return;
             }
 
             try {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(command + '\n');
-                await bluetoothCharacteristic.writeValue(data);
+                await writer.write(command + '\n');
                 addLog(`📤 Sent: ${command}`);
             } catch (error) {
                 addLog(`❌ Send error: ${error.message}`);
@@ -295,19 +334,29 @@
             }
         }
 
-        function onDisconnected() {
-            addLog('🔌 Device disconnected');
-            isConnected = false;
-            updateUI();
-        }
-
-        function disconnect() {
-            if (bluetoothDevice && bluetoothDevice.gatt.connected) {
-                bluetoothDevice.gatt.disconnect();
+        async function disconnect() {
+            try {
+                if (reader) {
+                    await reader.cancel();
+                    reader = null;
+                }
+                if (writer) {
+                    await writer.close();
+                    writer = null;
+                }
+                if (port) {
+                    await port.close();
+                    port = null;
+                }
+                
+                isConnected = false;
+                updateUI();
+                addLog('🔌 Disconnected');
+                
+            } catch (error) {
+                addLog(`❌ Disconnect error: ${error.message}`);
+                console.error('Disconnect error:', error);
             }
-            isConnected = false;
-            updateUI();
-            addLog('🔌 Disconnected');
         }
 
         function updateUI() {
@@ -331,18 +380,25 @@
         }
 
         // Event Listeners
-        connectBtn.addEventListener('click', connectToBluetooth);
+        connectBtn.addEventListener('click', connectToArduino);
         disconnectBtn.addEventListener('click', disconnect);
         laserOnBtn.addEventListener('click', () => sendCommand('ON'));
         laserOffBtn.addEventListener('click', () => sendCommand('OFF'));
 
-        // Check if Web Bluetooth is supported
-        if (!navigator.bluetooth) {
-            addLog('❌ Web Bluetooth not supported in this browser');
+        // Check if Web Serial is supported
+        if (!('serial' in navigator)) {
+            addLog('❌ Web Serial not supported in this browser');
             connectBtn.disabled = true;
-            connectBtn.textContent = 'Bluetooth Not Supported';
+            connectBtn.textContent = 'Web Serial Not Supported';
+            
+            // Show warning and alternatives
+            const warning = document.createElement('div');
+            warning.className = 'warning';
+            warning.innerHTML = `<strong>⚠️ Web Serial API not supported</strong><br>
+                Please use Chrome browser on Android with USB OTG, or try the Bluetooth terminal app approach.`;
+            document.querySelector('.container').insertBefore(warning, document.querySelector('.connect-section'));
         } else {
-            addLog('✅ Web Bluetooth supported');
+            addLog('✅ Web Serial supported');
         }
 
         // Initialize UI
