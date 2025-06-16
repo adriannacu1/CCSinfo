@@ -31,7 +31,6 @@
             font-size: 24px;
         }
 
-        /* Timer Alert Styles */
         .timer-alert {
             background: #ff4444;
             color: white;
@@ -73,10 +72,6 @@
             font-size: 16px;
             box-sizing: border-box;
             background: white;
-        }
-
-        .form-group select {
-            cursor: pointer;
         }
 
         .login-btn {
@@ -126,11 +121,6 @@
         <div id="timer-alert" class="timer-alert hidden">
             🚨 SECURITY ALERT ACTIVE<br>
             Time remaining: <span id="timer-display">0:00</span>
-        </div>
-        
-        <div id="mayoral-timer-alert" class="timer-alert hidden" style="background: #8b0000;">
-            👨🏻‍🎓 MAYORAL CHECK-IN REQUIRED<br>
-            Time remaining: <span id="mayoral-timer-display">0:00</span>
         </div>
         
         {% if error %}
@@ -185,11 +175,7 @@
         </form>
 
         <div class="back-link">
-            {% if from_page == 'mayoral_screen' %}
-                <a href="/mayoral_screen">← Back to Mayoral Dashboard</a>
-            {% else %}
-                <a href="/loginInterface">← Back to Login Options</a>
-            {% endif %}
+            <a href="/loginInterface">← Back to Login Options</a>
         </div>
     </div>
 
@@ -217,37 +203,8 @@
                 });
         }
 
-        function updateMayoralTimer() {
-            fetch('/mayoral_timer_status')
-                .then(response => response.json())
-                .then(data => {
-                    const mayoralAlert = document.getElementById('mayoral-timer-alert');
-                    const mayoralDisplay = document.getElementById('mayoral-timer-display');
-                    
-                    if (data.active && data.time_left > 0) {
-                        mayoralAlert.classList.remove('hidden');
-                        const minutes = Math.floor(data.time_left / 60);
-                        const seconds = data.time_left % 60;
-                        mayoralDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                    } else if (data.active && data.time_left <= 0) {
-                        console.log('Mayoral timer expired - redirecting to mayoral screen');
-                        window.location.href = '/mayoral_screen';
-                    } else {
-                        mayoralAlert.classList.add('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.log('Mayoral timer check error:', error);
-                });
-        }
-
-        setInterval(() => {
-            updateTimer();
-            updateMayoralTimer();
-        }, 1000);
-        
+        setInterval(updateTimer, 1000);
         updateTimer();
-        updateMayoralTimer();
     </script>
 </body>
 </html>

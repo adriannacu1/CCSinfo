@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
-from flask_cors import CORS
 import os
 import pymysql
 import time
@@ -8,8 +7,7 @@ import string
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'CCS-2025-SecretKey'
-CORS(app)
+app.secret_key = 'CCS-2025-SecretKey'  
 
 room_status = {
     'locked': True,
@@ -26,8 +24,7 @@ room_status = {
     'maintenance_active': False,
     'sensors_disabled': False,
     'five_minute_active': False, 
-    'five_minute_start_time': None,
-    'esp32_sensor_data': {'sensor_blocked': False, 'last_update': None}
+    'five_minute_start_time': None  
 }
 
 #db connection
@@ -50,23 +47,14 @@ def check_authentication():
 
 def get_timer_status():
     if not room_status['timer_started'] or check_authentication():
-        return {'active': False, 'time_left': 0, 'expired': False}
+        return {'active': False, 'time_left': 0}
     
     if room_status['timer_start_time']:
         elapsed = time.time() - room_status['timer_start_time']
         time_left = max(0, room_status['timer_duration'] - elapsed)
-        
-        # Check if timer has expired
-        if time_left <= 0:
-            print("⏰ Timer expired! Resetting timer state...")
-            room_status['timer_started'] = False
-            room_status['timer_start_time'] = None
-            room_status['last_sensor_trigger'] = None
-            return {'active': False, 'time_left': 0, 'expired': True}
-        
-        return {'active': True, 'time_left': int(time_left), 'expired': False}
+        return {'active': time_left > 0, 'time_left': int(time_left)}
     
-    return {'active': False, 'time_left': 0, 'expired': False}
+    return {'active': False, 'time_left': 0}
 
 def get_mayoral_timer_status():
     if not room_status.get('mayoral_active', False) or room_status.get('professor_logged_in', False):
@@ -83,129 +71,34 @@ def get_mayoral_timer_status():
     
     return {'active': False, 'time_left': 0}
 
-# ESP32 sensor data endpoint
-@app.route('/api/esp32/sensor-data', methods=['POST', 'OPTIONS'])
-def receive_esp32_sensor_data():
-    # Handle preflight OPTIONS request
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'ok'})
-    
-    try:
-        print("=== ESP32 Data Received ===")
-        
-        data = request.get_json()
-        if not data:
-            print("❌ No JSON data received")
-            return jsonify({'status': 'error', 'message': 'No JSON data received'}), 400
-        
-        print(f"📊 Data: {data}")
-        
-        sensor_blocked = data.get('sensor_blocked', False)
-        sensor0 = data.get('sensor0', 0)
-        sensor1 = data.get('sensor1', 0)
-        threshold0 = data.get('threshold0', 0)
-        threshold1 = data.get('threshold1', 0)
-        
-        # Update room status
-        room_status['esp32_sensor_data'] = {
-            'sensor_blocked': sensor_blocked,
-            'sensor0': sensor0,
-            'sensor1': sensor1,
-            'threshold0': threshold0,
-            'threshold1': threshold1,
-            'last_update': time.time()
-        }
-        
-        # Only trigger alarm if sensor is blocked AND no timer is currently active AND not authenticated
-        if (sensor_blocked and 
-            not room_status['timer_started'] and 
-            not check_authentication() and 
-            not room_status.get('sensors_disabled', False)):
-            
-            print(f"🚨 ESP32 Sensor triggered NEW ALARM! S0:{sensor0} S1:{sensor1}")
-            room_status['last_sensor_trigger'] = True
-            room_status['timer_started'] = True
-            room_status['timer_start_time'] = time.time()
-            room_status['access_log'].append({
-                'type': 'esp32_sensor_triggered',
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'sensor_data': {
-                    'sensor0': sensor0,
-                    'sensor1': sensor1,
-                    'threshold0': threshold0,
-                    'threshold1': threshold1
-                }
-            })
-        elif sensor_blocked and room_status['timer_started']:
-            print(f"🔄 Sensor blocked but timer already active - no new trigger")
-        
-        return jsonify({'status': 'success', 'message': 'Data received successfully'})
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-# ESP32 status endpoint
-@app.route('/api/esp32/status')
-def get_esp32_status():
-    data = room_status['esp32_sensor_data']
-    print(f"📤 Status request: {data}")
-    return jsonify(data)
-
-# ESP32 test endpoint
-@app.route('/api/esp32/test', methods=['GET', 'POST'])
-def test_esp32_connection():
-    if request.method == 'POST':
-        data = request.get_json() or {}
-        print(f"✅ ESP32 POST test: {data}")
-        return jsonify({'status': 'success', 'message': 'Flask received ESP32 POST!', 'data': data})
-    else:
-        print("✅ ESP32 GET test received")
-        return jsonify({
-            'status': 'success', 
-            'message': 'Flask server is running and accessible from ESP32!',
-            'timestamp': time.time(),
-            'server_ip': '192.168.1.9'
-        })
-
-# Manual trigger for testing
+#trigger sensor room_standby and professor_login
 @app.route('/trigger_sensor', methods=['POST'])
 def trigger_sensor():
-    manual_trigger = request.get_json().get('manual', False) if request.is_json else True
-    
-    if manual_trigger:
-        # Only trigger if no timer is currently active and not authenticated
-        if not room_status['timer_started'] and not check_authentication():
-            print("🔧 Manual trigger activated")
-            room_status['last_sensor_trigger'] = True
-            room_status['timer_started'] = True
-            room_status['timer_start_time'] = time.time()
-            room_status['access_log'].append({
-                'type': 'manual_trigger',
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
-            return jsonify({'status': 'alert_triggered', 'message': 'Manual sensor trigger activated'})
-        else:
-            return jsonify({'status': 'no_action', 'message': 'Timer already active or user authenticated'})
-    
-    return jsonify({'status': 'authorized', 'message': 'Access granted or no trigger needed'})
+    if not check_authentication():
+        room_status['last_sensor_trigger'] = True
+        room_status['timer_started'] = True
+        room_status['timer_start_time'] = time.time()
+        room_status['access_log'].append({
+            'type': 'unauthorized_access',
+            'timestamp': 'now' 
+        })
+        return jsonify({'status': 'alert_triggered', 'message': 'Unauthorized access detected'})
+    return jsonify({'status': 'authorized', 'message': 'Access granted'})
 
 @app.route('/timer_status')
 def timer_status():
     timer_data = get_timer_status()
+    if room_status['timer_started'] and timer_data['time_left'] <= 0:
+        pass
     return jsonify(timer_data)
 
 @app.route('/')
 def index():
-    return render_template('room_standby.html')
+    alarm = request.args.get('alarm')
+    if alarm == 'true':
+        room_status['last_sensor_trigger'] = True
 
-@app.route('/reset_timer_after_alarm', methods=['POST'])
-def reset_timer_after_alarm():
-    print("🔄 Resetting timer after alarm acknowledgment")
-    room_status['timer_started'] = True
-    room_status['timer_start_time'] = time.time()
-    room_status['last_sensor_trigger'] = None
-    return jsonify({'status': 'success', 'message': 'Timer reset successfully'})
+    return render_template('room_standby.html')
 
 @app.route('/professor_login', methods=['GET', 'POST'])
 def professor_login():
@@ -267,15 +160,16 @@ def professor_login():
                 
                 if faculty:
                     session['class_session_id'] = f"{faculty['faculty_id']}_{int(time.time())}"
-                    session['class_start_time'] = int(time.time())
+                    
+                    session['class_start_time'] = int(time.time())  # Current timestamp
                     
                     duration_map = {
                         '1 min': 1,
-                        '15 mins': 15,
-                        '30 mins': 30, 
-                        '1hr': 60,
-                        '2hrs': 120,
-                        '3hrs': 180
+                        '1 Hour': 60,
+                        '1.5 Hours': 90,
+                        '2 Hours': 120,
+                        '2.5 Hours': 150,
+                        '3 Hours': 180
                     }
                     session['class_duration_minutes'] = duration_map.get(class_duration, 60)
                     
@@ -469,6 +363,16 @@ def student_checkin():
         print(f"Student check-in error: {e}")
         return jsonify({'status': 'error', 'message': f'Database error: {str(e)}'})
 
+@app.route('/unlock_room', methods=['POST'])
+def unlock_room():
+    if 'faculty_id' not in session:
+        return jsonify({'status': 'error', 'message': 'Not authenticated'})
+    
+    room_status['locked'] = False
+    room_status['authenticated'] = True
+    
+    return jsonify({'status': 'success', 'message': 'Room unlocked successfully!'})
+
 @app.route('/logout')
 def logout():
     if 'faculty_id' in session:
@@ -503,26 +407,204 @@ def logout():
     room_status['professor_logged_in'] = False
     return redirect(url_for('index'))
 
-@app.route('/loginInterface')
-def login():
-    return render_template('loginInterface.html', timer_active=get_timer_status())
-
-# Add all the other routes (mayoral, maintenance, etc.)
 @app.route('/mayoral_timer_status')
 def mayoral_timer_status():
     return jsonify(get_mayoral_timer_status())
+
+@app.route('/acknowledge_mayoral_alarm', methods=['POST'])
+def acknowledge_mayoral_alarm():
+    if room_status.get('mayoral_active', False):
+        room_status['mayoral_timer_start'] = time.time()
+        print("Mayoral alarm acknowledged - Timer restarted")
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error'})
 
 @app.route('/temporary_key')
 def temporary_key():
     return render_template('temporary-key-screen.html', timer_active=get_timer_status())
 
+@app.route('/loginInterface')
+def login():
+    return render_template('loginInterface.html', timer_active=get_timer_status())
+
 @app.route('/mayoral_key')
 def mayoral_key():
     return render_template('mayoral_key_screen.html')
 
+@app.route('/generate_mayoral_code', methods=['POST'])
+def generate_mayoral_code():
+    try:
+        random_code = ''.join(random.choices(string.digits, k=7))
+        
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            sql = "INSERT INTO rand_strings (randomC, Date, State) VALUES (%s, %s, %s)"
+            cursor.execute(sql, (random_code, current_date, 'Mayoral'))
+            connection.commit()
+            
+        connection.close()
+        
+        print(f"Generated mayoral code: {random_code} at {current_date}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'Code generated and sent to administration'
+        })
+        
+    except Exception as e:
+        print(f"Error generating mayoral code: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to generate code'})
+
+@app.route('/mayoral_screen')
+def mayoral_screen():
+    if not room_status.get('mayoral_active', False):
+        return redirect(url_for('mayoral_key'))
+    
+    return render_template('mayoral_screen.html')
+
+@app.route('/check_professor_status')
+def check_professor_status():
+    return jsonify({
+        'professor_logged_in': room_status.get('professor_logged_in', False),
+        'authenticated': room_status.get('authenticated', False)
+    })
+
+@app.route('/verify_mayoral_code', methods=['POST'])
+def verify_mayoral_code():
+    try:
+        data = request.get_json()
+        code = data.get('code')
+        
+        if not code or len(code) != 7:
+            return jsonify({'status': 'error', 'message': 'Invalid code format'})
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM rand_strings WHERE randomC = %s AND State = %s"
+            cursor.execute(sql, (code, 'Mayoral'))
+            result = cursor.fetchone()
+            
+            if result:
+                room_status['timer_started'] = False
+                room_status['timer_start_time'] = None
+                room_status['authenticated'] = True
+                room_status['locked'] = False
+                room_status['mayoral_active'] = True 
+                room_status['mayoral_timer_start'] = time.time()
+                room_status['professor_logged_in'] = False 
+                
+                delete_sql = "DELETE FROM rand_strings WHERE randomC = %s AND State = %s"
+                cursor.execute(delete_sql, (code, 'Mayoral'))
+                connection.commit()
+                
+                connection.close()
+                
+                print(f"Mayoral code {code} used successfully - Redirecting to dashboard")
+                return jsonify({
+                    'status': 'success', 
+                    'message': 'Access granted!',
+                    'redirect': '/mayoral_screen'
+                })
+            else:
+                connection.close()
+                return jsonify({'status': 'error', 'message': 'Invalid or expired code'})
+                
+    except Exception as e:
+        print(f"Error verifying mayoral code: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to verify code'})
+
 @app.route('/maintenance_screen')
 def maintenance_screen():
     return render_template('maintenance_screen.html')
+
+@app.route('/generate_maintenance_code', methods=['POST'])
+def generate_maintenance_code():
+    try:
+        random_code = ''.join(random.choices(string.digits, k=7))
+        
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            sql = "INSERT INTO rand_strings (randomC, Date, State) VALUES (%s, %s, %s)"
+            cursor.execute(sql, (random_code, current_date, 'Maintenance'))
+            connection.commit()
+            
+        connection.close()
+        
+        print(f"Generated maintenance code: {random_code} at {current_date}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'Code generated and sent to administration'
+        })
+        
+    except Exception as e:
+        print(f"Error generating maintenance code: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to generate code'})
+
+@app.route('/verify_maintenance_code', methods=['POST'])
+def verify_maintenance_code():
+    try:
+        data = request.get_json()
+        code = data.get('code')
+        
+        if not code or len(code) != 7:
+            return jsonify({'status': 'error', 'message': 'Invalid code format'})
+        
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM rand_strings WHERE randomC = %s AND State = %s"
+            cursor.execute(sql, (code, 'Maintenance'))
+            result = cursor.fetchone()
+            
+            if result:
+                room_status['timer_started'] = False
+                room_status['timer_start_time'] = None
+                room_status['authenticated'] = True
+                room_status['locked'] = False
+                room_status['maintenance_active'] = True
+                room_status['sensors_disabled'] = True
+                room_status['mayoral_active'] = False
+                room_status['professor_logged_in'] = False
+                
+                delete_sql = "DELETE FROM rand_strings WHERE randomC = %s AND State = %s"
+                cursor.execute(delete_sql, (code, 'Maintenance'))
+                connection.commit()
+                
+                connection.close()
+                
+                print(f"Maintenance code {code} used successfully - Sensors disabled")
+                return jsonify({
+                    'status': 'success', 
+                    'message': 'Maintenance access granted!',
+                    'redirect': '/maintenance_dashboard'
+                })
+            else:
+                connection.close()
+                return jsonify({'status': 'error', 'message': 'Invalid or expired code'})
+                
+    except Exception as e:
+        print(f"Error verifying maintenance code: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to verify code'})
+    
+@app.route('/maintenance_dashboard')
+def maintenance_dashboard():
+    return render_template('maintenance_main_screen.html')
 
 @app.route('/five_minutes_screen')
 def five_minutes_screen():
@@ -606,176 +688,88 @@ def verify_five_minute_code():
     except Exception as e:
         print(f"Error verifying 5-minute code: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to verify code'})
-    
+
 @app.route('/five_minute_dashboard')
 def five_minute_dashboard():
+    if not room_status.get('five_minute_active', False):
+        return redirect(url_for('five_minutes_screen'))
+    
+    if room_status['five_minute_start_time']:
+        elapsed = time.time() - room_status['five_minute_start_time']
+        if elapsed > 300: 
+            room_status['five_minute_active'] = False
+            room_status['five_minute_start_time'] = None
+            room_status['authenticated'] = False
+            room_status['locked'] = True
+            room_status['sensors_disabled'] = False
+            return redirect(url_for('index'))
+    
     return render_template('five-minutes-key-screen.html')
 
-@app.route('/generate_mayoral_code', methods=['POST'])
-def generate_mayoral_code():
-    try:
-        random_code = ''.join(random.choices(string.digits, k=7))
-        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'status': 'error', 'message': 'Database connection failed'})
-        
-        with connection.cursor() as cursor:
-            sql = "INSERT INTO rand_strings (randomC, Date, State) VALUES (%s, %s, %s)"
-            cursor.execute(sql, (random_code, current_date, 'Mayoral'))
-            connection.commit()
-            
-        connection.close()
-        print(f"Generated mayoral code: {random_code} at {current_date}")
-        
-        return jsonify({
-            'status': 'success', 
-            'message': 'Code generated and sent to administration'
-        })
-        
-    except Exception as e:
-        print(f"Error generating mayoral code: {e}")
-        return jsonify({'status': 'error', 'message': 'Failed to generate code'})
-
-@app.route('/verify_mayoral_code', methods=['POST'])
-def verify_mayoral_code():
-    try:
-        data = request.get_json()
-        code = data.get('code')
-        
-        if not code or len(code) != 7:
-            return jsonify({'status': 'error', 'message': 'Invalid code format'})
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'status': 'error', 'message': 'Database connection failed'})
-        
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM rand_strings WHERE randomC = %s AND State = %s"
-            cursor.execute(sql, (code, 'Mayoral'))
-            result = cursor.fetchone()
-            
-            if result:
-                room_status['timer_started'] = False
-                room_status['timer_start_time'] = None
-                room_status['authenticated'] = True
-                room_status['locked'] = False
-                room_status['mayoral_active'] = True 
-                room_status['mayoral_timer_start'] = time.time()
-                room_status['professor_logged_in'] = False 
-                
-                delete_sql = "DELETE FROM rand_strings WHERE randomC = %s AND State = %s"
-                cursor.execute(delete_sql, (code, 'Mayoral'))
-                connection.commit()
-                connection.close()
-                
-                print(f"Mayoral code {code} used successfully")
-                return jsonify({
-                    'status': 'success', 
-                    'message': 'Access granted!',
-                    'redirect': '/mayoral_screen'
-                })
-            else:
-                connection.close()
-                return jsonify({'status': 'error', 'message': 'Invalid or expired code'})
-                
-    except Exception as e:
-        print(f"Error verifying mayoral code: {e}")
-        return jsonify({'status': 'error', 'message': 'Failed to verify code'})
+@app.route('/check_five_minute_status')
+def check_five_minute_status():
+    if not room_status.get('five_minute_active', False):
+        return jsonify({'active': False})
     
-@app.route('/generate_maintenance_code', methods=['POST'])
-def generate_maintenance_code():
-    try:
-        random_code = ''.join(random.choices(string.digits, k=7))
-        
-        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'status': 'error', 'message': 'Database connection failed'})
-        
-        with connection.cursor() as cursor:
-            sql = "INSERT INTO rand_strings (randomC, Date, State) VALUES (%s, %s, %s)"
-            cursor.execute(sql, (random_code, current_date, 'Maintenance'))
-            connection.commit()
-            
-        connection.close()
-        
-        print(f"Generated maintenance code: {random_code} at {current_date}")
-        
-        return jsonify({
-            'status': 'success', 
-            'message': 'Code generated and sent to administration'
-        })
-        
-    except Exception as e:
-        print(f"Error generating maintenance code: {e}")
-        return jsonify({'status': 'error', 'message': 'Failed to generate code'})
+    if room_status['five_minute_start_time']:
+        elapsed = time.time() - room_status['five_minute_start_time']
+        if elapsed > 300: 
+            room_status['five_minute_active'] = False
+            room_status['five_minute_start_time'] = None
+            room_status['authenticated'] = False
+            room_status['locked'] = True
+            room_status['sensors_disabled'] = False
 
-@app.route('/verify_maintenance_code', methods=['POST'])
-def verify_maintenance_code():
-    try:
-        data = request.get_json()
-        code = data.get('code')
-        
-        if not code or len(code) != 7:
-            return jsonify({'status': 'error', 'message': 'Invalid code format'})
-        
-        connection = get_db_connection()
-        if not connection:
-            return jsonify({'status': 'error', 'message': 'Database connection failed'})
-        
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM rand_strings WHERE randomC = %s AND State = %s"
-            cursor.execute(sql, (code, 'Maintenance'))
-            result = cursor.fetchone()
+            try:
+                connection = get_db_connection()
+                if connection:
+                    with connection.cursor() as cursor:
+                        cursor.execute("DELETE FROM rand_strings WHERE State = %s", ('5minutes',))
+                        connection.commit()
+                    connection.close()
+            except Exception as e:
+                print(f"Error cleaning up expired codes: {e}")
             
-            if result:
-                room_status['timer_started'] = False
-                room_status['timer_start_time'] = None
-                room_status['authenticated'] = True
-                room_status['locked'] = False
-                room_status['maintenance_active'] = True
-                room_status['sensors_disabled'] = True
-                room_status['mayoral_active'] = False
-                room_status['professor_logged_in'] = False
-                
-                delete_sql = "DELETE FROM rand_strings WHERE randomC = %s AND State = %s"
-                cursor.execute(delete_sql, (code, 'Maintenance'))
+            return jsonify({'active': False})
+    
+    return jsonify({'active': True})
+
+@app.route('/expire_five_minute_access', methods=['POST'])
+def expire_five_minute_access():
+    room_status['five_minute_active'] = False
+    room_status['five_minute_start_time'] = None
+    room_status['authenticated'] = False
+    room_status['locked'] = True
+    room_status['sensors_disabled'] = False
+    
+    try:
+        connection = get_db_connection()
+        if connection:
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM rand_strings WHERE State = %s", ('5minutes',))
                 connection.commit()
-                
-                connection.close()
-                
-                print(f"Maintenance code {code} used successfully - Sensors disabled")
-                return jsonify({
-                    'status': 'success', 
-                    'message': 'Maintenance access granted!',
-                    'redirect': '/maintenance_dashboard'
-                })
-            else:
-                connection.close()
-                return jsonify({'status': 'error', 'message': 'Invalid or expired code'})
-                
+            connection.close()
+            print("Expired 5-minute access and cleaned up unused codes")
     except Exception as e:
-        print(f"Error verifying maintenance code: {e}")
-        return jsonify({'status': 'error', 'message': 'Failed to verify code'})
+        print(f"Error cleaning up codes: {e}")
+    
+    return jsonify({'status': 'success'})
 
-@app.route('/maintenance_dashboard')
-def maintenance_dashboard():
-    return render_template('maintenance_main_screen.html')
-
-@app.route('/mayoral_screen')
-def mayoral_screen():
-    if not room_status.get('mayoral_active', False):
-        return redirect(url_for('mayoral_key'))
-    return render_template('mayoral_screen.html')
+@app.route('/reset_timer_after_alarm', methods=['POST'])
+def reset_timer_after_alarm():
+    room_status['timer_started'] = False
+    room_status['timer_start_time'] = None
+    room_status['last_sensor_trigger'] = None
+    return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
-    print("🚀 Starting Room Security Server...")
-    print("📡 Server accessible at:")
-    print("   - Local: http://127.0.0.1:5000")
-    print("   - Network: http://192.168.1.9:5000")
-    print("   - ESP32 Test: http://192.168.1.9:5000/api/esp32/test")
+    if not os.path.exists('templates'):
+        os.makedirs('templates')
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print("Starting Room Security Server...")
+    print("Available routes:")
+    for rule in app.url_map.iter_rules():
+        print(f"  {rule.endpoint}: {rule.rule} {list(rule.methods)}")
+    
+    print("Open your browser to: http://localhost:5000")
+    app.run(debug=True, port=5000)
