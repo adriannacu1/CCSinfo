@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 13, 2025 at 05:25 AM
+-- Generation Time: Jun 16, 2025 at 11:05 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -29,17 +29,28 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `admin` (
   `admin_id` int(11) NOT NULL,
-  `username` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `full_name` varchar(100) NOT NULL
+  `full_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `role` enum('super_admin','admin','moderator') DEFAULT 'admin',
+  `is_active` tinyint(1) DEFAULT 1,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `login_attempts` int(11) DEFAULT 0,
+  `locked_until` timestamp NULL DEFAULT NULL,
+  `password_reset_token` varchar(255) DEFAULT NULL,
+  `password_reset_expires` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admin`
 --
 
-INSERT INTO `admin` (`admin_id`, `username`, `password`, `full_name`) VALUES
-(1, 'admin', '202cb962ac59075b964b07152d234b70', 'Default Admin');
+INSERT INTO `admin` (`admin_id`, `username`, `password`, `full_name`, `email`, `role`, `is_active`, `last_login`, `login_attempts`, `locked_until`, `password_reset_token`, `password_reset_expires`, `created_at`, `updated_at`) VALUES
+(1, 'admin', '$2b$12$07lVEPWMITdoCP5wT5YTP.6MQMh.Z8IVftMzv4RwfZ2KW4DJ4ehHu', 'Super Administrator', 'admin@ccs.edu', 'super_admin', 1, '2025-06-15 06:58:59', 1, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-15 06:58:59'),
+(2, 'ccs_admin', '$2b$12$wrl.4orbkFN9U6uyLV59xubZWU9Keu0s/3N0VoH23a7seViui8KF6', 'CCS Administrator', 'ccsadmin@ccs.edu', 'admin', 1, NULL, 0, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-06 09:11:17');
 
 -- --------------------------------------------------------
 
@@ -219,7 +230,8 @@ INSERT INTO `student_attendance` (`id`, `student_number`, `pc_number`, `professo
 (6, '224-12536M', 'PC#01', 1, '2025-06-11 11:55:26', '201', '1_1749614120'),
 (7, '224-12536M', 'PC#02', 1, '2025-06-11 11:55:53', '201', '1_1749614146'),
 (8, '224-12537M', 'PC#11', 1, '2025-06-11 12:10:43', '201', '1_1749615030'),
-(9, '224-12536M', 'PC#09', 1, '2025-06-12 22:01:58', '201', '1_1749736914');
+(9, '224-12536M', 'PC#09', 1, '2025-06-12 22:01:58', '201', '1_1749736914'),
+(10, '224-12537M', 'PC#11', 1, '2025-06-15 18:38:04', '201', '1_1749983851');
 
 -- --------------------------------------------------------
 
@@ -249,7 +261,8 @@ INSERT INTO `subjects` (`subject_id`, `subject_name`) VALUES
 --
 ALTER TABLE `admin`
   ADD PRIMARY KEY (`admin_id`),
-  ADD UNIQUE KEY `username` (`username`);
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Indexes for table `courses`
@@ -324,7 +337,7 @@ ALTER TABLE `subjects`
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -372,7 +385,7 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `student_attendance`
 --
 ALTER TABLE `student_attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `subjects`

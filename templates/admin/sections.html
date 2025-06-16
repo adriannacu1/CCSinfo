@@ -765,6 +765,10 @@
                             <td>{{ section.year_level }}</td>
                             <td>{{ section.student_count }}</td>
                             <td class="actions">
+                                <a href="{{ url_for('section_profile', section_id=section.section_id) }}"
+                                    class="btn-action btn-view" title="View Section">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <button class="btn-action btn-edit" data-section-id="{{ section.section_id }}"
                                     data-section-name="{{ section.section_name|e }}"
                                     data-course="{{ section.course|e }}" data-year-level="{{ section.year_level }}"

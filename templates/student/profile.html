@@ -5,12 +5,14 @@
     <div class="card shadow">
         <div class="card-body">
             <h2>Student Information</h2>
-            
             <div class="student-info mt-4">
                 <p><strong>Name:</strong> {{ student.name }}</p>
-                <p><strong>Student ID:</strong> {{ student.student_number }}</p>
-                <p><strong>Section:</strong> BSCS {{ student.section.section_name if student.section else 'Not Assigned' }}</p>
-            </div>            <h2 class="mt-4 mb-3">Schedule</h2>
+                <p><strong>Student Number:</strong> {{ student.student_number }}</p>
+                <p><strong>Section:</strong> {{ student.section_name or 'Not Assigned' }}</p>
+                <p><strong>Year Level:</strong> {{ student.year_level or 'N/A' }}</p>
+                <p><strong>Course:</strong> {{ student.course_name or student.course or 'N/A' }}</p>
+            </div>
+            <h2 class="mt-4 mb-3">Schedule</h2>
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -23,13 +25,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for schedule in schedules %}
+                        {% for sched in schedule %}
                         <tr>
-                            <td>{{ schedule.time }}</td>
-                            <td>{{ schedule.day }}</td>
-                            <td>{{ schedule.subject }}</td>
-                            <td><a href="{{ url_for('faculty_profile', faculty_id=schedule.faculty.faculty_id) }}" class="text-primary">{{ schedule.faculty.name }}</a></td>
-                            <td><a href="{{ url_for('room_profile', room_id=schedule.room.room_id) }}" class="text-primary">{{ schedule.room.room_name }}</a></td>
+                            <td>{{ sched.time }}</td>
+                            <td>{{ sched.day }}</td>
+                            <td>{{ sched.subject_name }}</td>
+                            <td>{{ sched.instructor_name or 'N/A' }}</td>
+                            <td>{{ sched.room_name or 'N/A' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">No schedule found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

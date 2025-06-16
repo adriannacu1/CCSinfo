@@ -173,6 +173,10 @@
                                 </span>
                             </td>
                             <td class="actions">
+                                <button class="btn-action btn-view" data-student-id="{{ student.student_id }}"
+                                    title="View Profile" onclick="openProfileModal('{{ student.student_id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                                 <button class="btn-action btn-edit" data-student-id="{{ student.student_id }}"
                                     data-student-number="{{ student.student_number|e }}"
                                     data-name="{{ student.name|e }}" data-course="{{ student.course|e }}"
@@ -281,6 +285,98 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button type="button" class="btn btn-danger" onclick="deleteStudent()">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Profile Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content profile-modal-student">
+            <div class="modal-header">
+                <h3>Student Profile</h3>
+                <span class="close" onclick="closeProfileModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="profile-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading profile...</p>
+                </div>
+                <div class="profile-content" style="display: none;">
+                    <!-- Student Information Section -->
+                    <div class="profile-section">
+                        <h3>Student Information</h3>
+                        <div class="student-info">
+                            <div class="info-row">
+                                <strong>Name:</strong> <span id="student-name"></span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Student Number:</strong> <span id="student-number"></span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Section:</strong> <span id="student-section"></span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Year Level:</strong> <span id="student-year"></span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Course:</strong> <span id="student-course"></span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Email:</strong> <span id="student-email"></span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Status:</strong> <span id="student-status"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule Section -->
+                    <div class="profile-section">
+                        <h3>Schedule</h3>
+                        <div class="table-container">
+                            <table class="profile-table">
+                                <thead>
+                                    <tr>
+                                        <th>TIME</th>
+                                        <th>DAY</th>
+                                        <th>SUBJECT</th>
+                                        <th>INSTRUCTOR</th>
+                                        <th>ROOM</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedule-table">
+                                    <!-- Schedule data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log Section (Admin Only) -->
+                    <div class="profile-section">
+                        <h3>Activity Log</h3>
+                        <div class="table-container">
+                            <table class="profile-table">
+                                <thead>
+                                    <tr>
+                                        <th>PC NUMBER</th>
+                                        <th>PROFESSOR</th>
+                                        <th>CHECK-IN TIME</th>
+                                        <th>ROOM</th>
+                                        <th>SESSION ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activity-table">
+                                    <!-- Activity log data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="profile-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -697,6 +793,16 @@
             transition: all 0.3s ease;
         }
 
+        .btn-view {
+            background: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+
+        .btn-view:hover {
+            background: rgba(23, 162, 184, 0.4);
+            transform: scale(1.1);
+        }
+
         .btn-edit {
             background: rgba(23, 162, 184, 0.2);
             color: #17a2b8;
@@ -717,38 +823,559 @@
             transform: scale(1.1);
         }
 
-        .no-data {
-            text-align: center;
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .management-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
             color: rgba(255, 255, 255, 0.5);
-            font-style: italic;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: #dc3545;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-container select {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .filter-container select option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .management-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .management-table th,
+        .management-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .management-table th {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+        }
+
+        .management-table td {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .management-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .status-inactive {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+
+        .btn-view:hover {
+            background: rgba(23, 162, 184, 0.4);
+            transform: scale(1.1);
+        }
+
+        .btn-edit {
+            background: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+
+        .btn-edit:hover {
+            background: rgba(23, 162, 184, 0.4);
+            transform: scale(1.1);
+        }
+
+        .btn-delete {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .btn-delete:hover {
+            background: rgba(220, 53, 69, 0.4);
+            transform: scale(1.1);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .management-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: #dc3545;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-container select {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .filter-container select option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .management-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .management-table th,
+        .management-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .management-table th {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+        }
+
+        .management-table td {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .management-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .status-inactive {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+
+        .btn-view:hover {
+            background: rgba(23, 162, 184, 0.4);
+            transform: scale(1.1);
+        }
+
+        .btn-edit {
+            background: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+
+        .btn-edit:hover {
+            background: rgba(23, 162, 184, 0.4);
+            transform: scale(1.1);
+        }
+
+        .btn-delete {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .btn-delete:hover {
+            background: rgba(220, 53, 69, 0.4);
+            transform: scale(1.1);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        /* Profile Modal Specific Styles */
+        .profile-loading {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
             padding: 40px;
         }
 
+        .profile-loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .profile-section {
+            margin-bottom: 30px;
+        }
+
+        .profile-section h3 {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #dc3545;
+            display: inline-block;
+        }
+
+        .student-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-row strong {
+            color: #dc3545;
+            font-weight: 600;
+            min-width: 140px;
+            margin-right: 10px;
+        }
+
+        .info-row span {
+            color: white;
+            font-weight: 400;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .profile-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .profile-table thead {
+            background: rgba(220, 53, 69, 0.2);
+        }
+
+        .profile-table thead th {
+            padding: 12px 15px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-align: left;
+            border-bottom: 2px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .profile-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-table tbody td {
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .profile-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .profile-actions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: right;
+        }
+
+        .no-data {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
-            z-index: 2000;
+            z-index: 1000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
             margin: 5% auto;
             padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
             width: 90%;
             max-width: 600px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .modal-header {
-            padding: 20px 25px;
+            padding: 20px 30px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
@@ -758,11 +1385,12 @@
         .modal-header h3 {
             color: white;
             margin: 0;
+            font-size: 1.5rem;
             font-weight: 600;
         }
 
         .close {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
@@ -774,7 +1402,7 @@
         }
 
         .modal-body {
-            padding: 25px;
+            padding: 30px;
         }
 
         .form-group {
@@ -784,14 +1412,14 @@
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 20px;
         }
 
         .form-group label {
             display: block;
             color: white;
             font-weight: 500;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-size: 0.9rem;
         }
 
@@ -804,10 +1432,7 @@
             border-radius: 8px;
             color: white;
             font-size: 0.9rem;
-        }
-
-        .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
         }
 
         .form-group input:focus,
@@ -815,6 +1440,11 @@
             outline: none;
             border-color: #dc3545;
             box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
         }
 
         .form-group select option {
@@ -824,20 +1454,40 @@
 
         .form-actions {
             display: flex;
+            gap: 15px;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 25px;
+            margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .warning {
-            color: #ffc107;
-            font-style: italic;
-            margin-top: 10px;
-        }
+        @media (max-width: 768px) {
+            .profile-sections {
+                grid-template-columns: 1fr;
+            }
 
-        @media (max-width: 1024px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+
             .sidebar-toggle {
                 display: block;
             }
@@ -850,231 +1500,289 @@
                 transform: translateX(0);
             }
 
-            .sidebar-close {
-                display: block;
-            }
-
             .sidebar-overlay.active {
                 display: block;
             }
 
-            .admin-main {
-                margin-left: 0;
-                padding: 80px 20px 20px;
-            }
-
-            .page-title {
-                font-size: 1.8rem;
-            }
-
-            .management-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .filter-container {
-                justify-content: stretch;
-            }
-
-            .filter-container select {
-                flex: 1;
+            .sidebar-close {
+                display: block;
             }
         }
 
-        @media (max-width: 768px) {
-            .admin-main {
-                padding: 80px 15px 15px;
-            }
+        /* Student Profile Modal Styles */
+        .profile-modal-student {
+            max-width: 800px !important;
+            width: 90% !important;
+            max-height: 85vh !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
 
-            .admin-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
+        .profile-modal-student .modal-header {
+            flex-shrink: 0;
+        }
 
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+        .profile-modal-student .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
 
-            .management-table {
-                font-size: 0.8rem;
-            }
+        .profile-modal-student .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
 
-            .management-table th,
-            .management-table td {
-                padding: 10px 8px;
-            }
+        .profile-modal-student .modal-body::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
 
-            .modal-content {
-                width: 95%;
-                margin: 2% auto;
-            }
+        .profile-modal-student .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
 
-            .actions {
-                flex-direction: column;
-                gap: 5px;
-            }
+        .profile-modal-student .modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
     </style>
 
     <script>
-        let deleteStudentId = null;
+        // Sidebar toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const adminSidebar = document.getElementById('adminSidebar');
+        const sidebarClose = document.getElementById('sidebarClose');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebar = document.getElementById('adminSidebar');
-            const sidebarClose = document.getElementById('sidebarClose');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('active');
-                sidebarOverlay.classList.toggle('active');
-            }
-
-            function closeSidebar() {
-                sidebar.classList.remove('active');
-                sidebarOverlay.classList.remove('active');
-            }
-
-            if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
-            if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
-            if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
-
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth <= 1024) {
-                        closeSidebar();
-                    }
-                });
-            });
+        sidebarToggle.addEventListener('click', () => {
+            adminSidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
         });
 
-        function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Add Student';
-            document.getElementById('submitBtn').textContent = 'Add Student';
-            document.getElementById('formAction').value = 'add';
-            document.getElementById('studentForm').reset();
-            document.getElementById('studentId').value = '';
-            document.getElementById('studentModal').style.display = 'block';
-        }
+        sidebarClose.addEventListener('click', () => {
+            adminSidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
 
-        function openEditModalFromData(button) {
-            const data = button.dataset;
-            openEditModal(
-                data.studentId,
-                data.studentNumber,
-                data.name,
-                data.course,
-                data.yearLevel,
-                data.sectionId || null,
-                data.email
-            );
-        }
+        sidebarOverlay.addEventListener('click', () => {
+            adminSidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
 
-        function confirmDeleteFromData(button) {
-            const data = button.dataset;
-            confirmDelete(data.studentId, data.name);
-        }
-
-        function openEditModal(id, studentNumber, name, course, yearLevel, sectionId, email) {
-            document.getElementById('modalTitle').textContent = 'Edit Student';
-            document.getElementById('submitBtn').textContent = 'Update Student';
-            document.getElementById('formAction').value = 'edit';
-            document.getElementById('studentId').value = id || '';
-            document.getElementById('student_number').value = studentNumber || '';
-            document.getElementById('name').value = name || '';
-            document.getElementById('course').value = course || '';
-            document.getElementById('year_level').value = yearLevel || '';
-            document.getElementById('section_id').value = sectionId || '';
-            document.getElementById('email').value = email || '';
-            document.getElementById('studentModal').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('studentModal').style.display = 'none';
-        }
-
-        function confirmDelete(id, name) {
-            deleteStudentId = id;
-            document.getElementById('deleteStudentName').textContent = name || 'this student';
-            document.getElementById('deleteModal').style.display = 'block';
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').style.display = 'none';
-            deleteStudentId = null;
-        }
-
-        function deleteStudent() {
-            if (deleteStudentId) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.innerHTML = `
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="student_id_hidden" value="${deleteStudentId}">
-                `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-
+        // Search and filter functions
         function searchTable() {
             const input = document.getElementById('searchInput');
             const filter = input.value.toLowerCase();
             const table = document.getElementById('studentsTable');
-            const rows = table.getElementsByTagName('tr');
+            const tr = table.getElementsByTagName('tr');
 
-            for (let i = 1; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                let found = false;
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td');
+                let rowContainsSearchTerm = false;
 
-                for (let j = 0; j < cells.length - 1; j++) {
-                    if (cells[j] && cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
-                        found = true;
-                        break;
+                for (let j = 0; j < td.length; j++) {
+                    const cell = td[j];
+                    if (cell) {
+                        const txtValue = cell.textContent || cell.innerText;
+                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                            rowContainsSearchTerm = true;
+                            break;
+                        }
                     }
                 }
 
-                rows[i].style.display = found ? '' : 'none';
+                tr[i].style.display = rowContainsSearchTerm ? '' : 'none';
             }
         }
 
         function filterTable() {
-            const courseFilter = document.getElementById('courseFilter').value;
-            const yearFilter = document.getElementById('yearFilter').value;
+            const courseFilter = document.getElementById('courseFilter');
+            const yearFilter = document.getElementById('yearFilter');
+            const courseValue = courseFilter.value;
+            const yearValue = yearFilter.value;
             const table = document.getElementById('studentsTable');
-            const rows = table.getElementsByTagName('tr');
+            const tr = table.getElementsByTagName('tr');
 
-            for (let i = 1; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                if (cells.length >= 4) {
-                    const course = cells[2].textContent;
-                    const year = cells[3].textContent;
+            for (let i = 1; i < tr.length; i++) {
+                const tdCourse = tr[i].getElementsByTagName('td')[2];
+                const tdYear = tr[i].getElementsByTagName('td')[3];
+                const courseText = tdCourse.textContent || tdCourse.innerText;
+                const yearText = tdYear.textContent || tdYear.innerText;
 
-                    let showRow = true;
+                const courseMatch = courseValue === '' || courseText.indexOf(courseValue) > -1;
+                const yearMatch = yearValue === '' || yearText.indexOf(yearValue) > -1;
 
-                    if (courseFilter && course !== courseFilter) {
-                        showRow = false;
-                    }
-
-                    if (yearFilter && year !== yearFilter) {
-                        showRow = false;
-                    }
-
-                    rows[i].style.display = showRow ? '' : 'none';
-                }
+                tr[i].style.display = courseMatch && yearMatch ? '' : 'none';
             }
         }
 
+        // Modal functions
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'Add Student';
+            document.getElementById('studentForm').reset();
+            document.getElementById('formAction').value = 'add';
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
+        function openEditModalFromData(button) {
+            const studentId = button.getAttribute('data-student-id');
+            const studentNumber = button.getAttribute('data-student-number');
+            const name = button.getAttribute('data-name');
+            const course = button.getAttribute('data-course');
+            const yearLevel = button.getAttribute('data-year-level');
+            const sectionId = button.getAttribute('data-section-id');
+            const email = button.getAttribute('data-email');
+
+            document.getElementById('studentId').value = studentId;
+            document.getElementById('student_number').value = studentNumber;
+            document.getElementById('name').value = name;
+            document.getElementById('course').value = course;
+            document.getElementById('year_level').value = yearLevel;
+            document.getElementById('section_id').value = sectionId;
+            document.getElementById('email').value = email;
+            document.getElementById('modalTitle').innerText = 'Edit Student';
+            document.getElementById('formAction').value = 'edit';
+
+            document.getElementById('studentModal').style.display = 'block';
+        } function closeModal() {
+            document.getElementById('studentModal').style.display = 'none';
+        }
+
+        function confirmDeleteFromData(button) {
+            const studentId = button.getAttribute('data-student-id');
+            const studentName = button.getAttribute('data-name');
+
+            document.getElementById('deleteStudentName').innerText = studentName;
+            document.getElementById('deleteModal').setAttribute('data-student-id', studentId);
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        function deleteStudent() {
+            const studentId = document.getElementById('deleteModal').getAttribute('data-student-id');
+
+            fetch(`{{ url_for('admin_students') }}/${studentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ student_id: studentId })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting student');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting student');
+                });
+        }
+
+        // Profile Modal Functions
+        function openProfileModal(studentId) {
+            const modal = document.getElementById('profileModal');
+            const loadingDiv = modal.querySelector('.profile-loading');
+            const contentDiv = modal.querySelector('.profile-content');
+
+            // Show modal and loading state
+            modal.style.display = 'block';
+            loadingDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+
+            console.log('Fetching profile for student ID:', studentId);            // Fetch student profile data (using simple robust endpoint)
+            fetch(`/admin/students/${studentId}/profile-simple`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Profile data received:', data);
+                    if (data.success) {
+                        displayStudentProfileData(data.student);
+                        loadingDiv.style.display = 'none';
+                        contentDiv.style.display = 'block';
+                    } else {
+                        throw new Error(data.message || 'Failed to load profile');
+                    }
+                }).catch(error => {
+                    console.error('Detailed error:', error);
+                    loadingDiv.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Error loading profile</p>
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${error.message}</p>
+                    `;
+                });
+        }
+
+        function displayStudentProfileData(student) {
+            // Populate basic student information
+            document.getElementById('student-name').textContent = student.name || 'N/A';
+            document.getElementById('student-number').textContent = student.student_number || 'N/A';
+            document.getElementById('student-section').textContent = student.section_name || 'N/A';
+            document.getElementById('student-year').textContent = student.year_level || 'N/A';
+            document.getElementById('student-course').textContent = student.course_name || 'N/A';
+            document.getElementById('student-email').textContent = student.email || 'N/A';
+            document.getElementById('student-status').textContent = student.status || 'Active';
+
+            // Populate schedule table
+            const scheduleTable = document.getElementById('schedule-table');
+            if (student.schedule && student.schedule.length > 0) {
+                scheduleTable.innerHTML = student.schedule.map(sch => `
+                    <tr>
+                        <td>${sch.time_range || 'N/A'}</td>
+                        <td>${sch.day || 'N/A'}</td>
+                        <td>${sch.subject_name || 'N/A'}</td>
+                        <td>${sch.faculty_name || 'N/A'}</td>
+                        <td>${sch.room_name || 'N/A'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                scheduleTable.innerHTML = '<tr><td colspan="5" class="no-data">No schedule available</td></tr>';
+            }
+
+            // Populate activity log table (Admin only)
+            const activityTable = document.getElementById('activity-table');
+            if (student.activity_log && student.activity_log.length > 0) {
+                activityTable.innerHTML = student.activity_log.map(log => `
+                    <tr>
+                        <td>${log.pc_number || 'N/A'}</td>
+                        <td>${log.professor_name || 'N/A'}</td>
+                        <td>${log.check_in_time || log.timestamp || 'N/A'}</td>
+                        <td>${log.room_name || log.room || 'N/A'}</td>
+                        <td>${log.session_id || 'N/A'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                activityTable.innerHTML = '<tr><td colspan="5" class="no-data">No recent activity</td></tr>';
+            }
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }// Close modals when clicking outside of them
         window.onclick = function (event) {
             const studentModal = document.getElementById('studentModal');
             const deleteModal = document.getElementById('deleteModal');
+            const profileModal = document.getElementById('profileModal');
 
             if (event.target == studentModal) {
                 closeModal();
             }
             if (event.target == deleteModal) {
                 closeDeleteModal();
+            }
+            if (event.target == profileModal) {
+                closeProfileModal();
             }
         }
     </script>

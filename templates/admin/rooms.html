@@ -440,6 +440,16 @@
             transform: scale(1.1);
         }
 
+        .btn-view {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .btn-view:hover {
+            background: rgba(40, 167, 69, 0.4);
+            transform: scale(1.1);
+        }
+
         .no-data {
             text-align: center;
             color: rgba(255, 255, 255, 0.5);
@@ -764,6 +774,10 @@
                             <td>{{ room.floor or 'N/A' }}</td>
                             <td>{{ room.capacity or 'N/A' }}</td>
                             <td class="actions">
+                                <button class="btn-action btn-view" data-room-id="{{ room.room_id }}" title="View Room"
+                                    onclick="openProfileModal('{{ room.room_id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                                 <button class="btn-action btn-edit" data-room-id="{{ room.room_id }}"
                                     data-room-name="{{ room.room_name|e }}" data-floor="{{ room.floor or '' }}"
                                     data-capacity="{{ room.capacity or '' }}" onclick="openEditModalFromData(this)">
