@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mayoral Dashboard</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             margin: 0;
             color: white;
+            padding: 20px;
         }
 
         .dashboard-container {
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            width: 450px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            min-width: 280px;
             text-align: center;
         }
 
@@ -83,9 +91,20 @@
         }
 
         @keyframes alarmPulse {
-            0% { background: #ff4444; transform: scale(1); }
-            50% { background: #ff0000; transform: scale(1.02); }
-            100% { background: #ff4444; transform: scale(1); }
+            0% {
+                background: #ff4444;
+                transform: scale(1);
+            }
+
+            50% {
+                background: #ff0000;
+                transform: scale(1.02);
+            }
+
+            100% {
+                background: #ff4444;
+                transform: scale(1);
+            }
         }
 
         .acknowledge-btn {
@@ -100,9 +119,12 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 20px;
+            min-height: 50px;
+            touch-action: manipulation;
         }
 
-        .acknowledge-btn:hover {
+        .acknowledge-btn:hover,
+        .acknowledge-btn:active {
             background: #218838;
             transform: translateY(-2px);
         }
@@ -119,13 +141,16 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-height: 60px;
+            touch-action: manipulation;
         }
 
-        .professor-login-btn:hover {
+        .professor-login-btn:hover,
+        .professor-login-btn:active {
             background: #0056b3;
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
         .status-info {
@@ -146,18 +171,250 @@
             color: #dc3545;
             text-decoration: none;
             font-size: 16px;
+            padding: 10px;
+            display: inline-block;
         }
 
         .logout-link a:hover {
             text-decoration: underline;
         }
+
+        .logout-link a:focus {
+            outline: 2px solid #dc3545;
+            outline-offset: 2px;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .dashboard-container {
+                padding: 25px 20px;
+            }
+
+            .dashboard-title {
+                font-size: 26px;
+                margin-bottom: 8px;
+            }
+
+            .dashboard-subtitle {
+                font-size: 14px;
+                margin-bottom: 25px;
+            }
+
+            .timer-display {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .timer-title {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+
+            .timer-countdown {
+                font-size: 36px;
+                margin-bottom: 8px;
+            }
+
+            .timer-status {
+                font-size: 13px;
+            }
+
+            .alarm-alert {
+                padding: 15px;
+                margin-bottom: 15px;
+                font-size: 14px;
+            }
+
+            .acknowledge-btn {
+                padding: 16px;
+                font-size: 16px;
+                margin-bottom: 15px;
+                min-height: 52px;
+            }
+
+            .professor-login-btn {
+                padding: 18px;
+                font-size: 18px;
+                margin-bottom: 15px;
+                min-height: 58px;
+            }
+
+            .status-info {
+                padding: 12px;
+                margin-bottom: 15px;
+                font-size: 14px;
+            }
+
+            .logout-link a {
+                font-size: 15px;
+                padding: 12px;
+            }
+        }
+
+        /* Tablet-specific styles */
+        @media (min-width: 481px) and (max-width: 1024px) {
+            .dashboard-container {
+                max-width: 500px;
+                padding: 45px 30px;
+            }
+
+            .dashboard-title {
+                font-size: 34px;
+            }
+
+            .dashboard-subtitle {
+                font-size: 17px;
+            }
+
+            .timer-display {
+                padding: 25px;
+            }
+
+            .timer-title {
+                font-size: 19px;
+            }
+
+            .timer-countdown {
+                font-size: 52px;
+            }
+
+            .timer-status {
+                font-size: 15px;
+            }
+
+            .alarm-alert {
+                padding: 22px;
+                font-size: 16px;
+            }
+
+            .acknowledge-btn {
+                padding: 18px;
+                font-size: 19px;
+                min-height: 54px;
+            }
+
+            .professor-login-btn {
+                padding: 22px;
+                font-size: 21px;
+                min-height: 64px;
+            }
+
+            .status-info {
+                padding: 18px;
+                font-size: 15px;
+            }
+
+            .logout-link a {
+                font-size: 17px;
+            }
+        }
+
+        /* Landscape orientation adjustments */
+        @media (orientation: landscape) and (max-height: 600px) {
+            body {
+                min-height: auto;
+                padding: 10px;
+            }
+
+            .dashboard-container {
+                margin: 10px 0;
+                padding: 20px;
+            }
+
+            .dashboard-title {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+
+            .dashboard-subtitle {
+                margin-bottom: 15px;
+            }
+
+            .timer-display {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .timer-countdown {
+                font-size: 32px;
+                margin-bottom: 5px;
+            }
+
+            .status-info,
+            .alarm-alert {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .acknowledge-btn,
+            .professor-login-btn {
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* High DPI/Retina display adjustments */
+        @media (-webkit-min-device-pixel-ratio: 2),
+        (min-resolution: 192dpi) {
+
+            .acknowledge-btn,
+            .professor-login-btn {
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        .acknowledge-btn:focus,
+        .professor-login-btn:focus {
+            outline: 3px solid rgba(255, 255, 255, 0.5);
+            outline-offset: 2px;
+        }
+
+        /* Improve touch targets */
+        @media (pointer: coarse) {
+            .acknowledge-btn {
+                min-height: 52px;
+                padding: 16px;
+            }
+
+            .professor-login-btn {
+                min-height: 60px;
+                padding: 20px;
+            }
+
+            .logout-link a {
+                min-height: 44px;
+                padding: 12px;
+            }
+        }
+
+        /* Prevent text selection on buttons */
+        .acknowledge-btn,
+        .professor-login-btn {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Better button feedback for touch */
+        .acknowledge-btn:active,
+        .professor-login-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
+
 <body>
     <div class="dashboard-container">
         <h2 class="dashboard-title">👨🏻‍🎓 Mayoral Dashboard</h2>
         <p class="dashboard-subtitle">Room access granted - Waiting for professor</p>
-        
+
         <div class="status-info">
             ✅ Room Access: Active<br>
             📍 Status: Waiting for Professor Login
@@ -168,7 +425,6 @@
             5-minute check-in period expired!<br>
             Please acknowledge to continue access.
         </div>
-
 
         <div class="timer-display">
             <div class="timer-title">Next Check-in Required</div>
@@ -207,7 +463,7 @@
                     if (data.active && data.time_left > 0) {
                         const minutes = Math.floor(data.time_left / 60);
                         const seconds = data.time_left % 60;
-                        document.getElementById('timer-countdown').textContent = 
+                        document.getElementById('timer-countdown').textContent =
                             `${minutes}:${seconds.toString().padStart(2, '0')}`;
                         document.getElementById('timer-countdown').style.color = '#8b0000';
                     } else if (data.active && data.time_left <= 0) {
@@ -227,10 +483,10 @@
 
         function triggerAlarm() {
             alarmActive = true;
-            
+
             document.getElementById('alarm-alert').classList.add('active');
             document.getElementById('acknowledge-btn').style.display = 'block';
-            
+
             const alarmSound = document.getElementById('alarmSound');
             alarmSound.volume = 0.8;
             alarmSound.play().catch(e => {
@@ -240,10 +496,10 @@
                     document.removeEventListener('click', playOnClick);
                 }, { once: true });
             });
-            
+
             document.getElementById('timer-countdown').textContent = '⚠️ ALARM';
             document.getElementById('timer-countdown').style.color = '#ff0000';
-            
+
             console.log('Mayoral 5-minute alarm triggered!');
         }
 
@@ -254,31 +510,31 @@
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alarmActive = false;
-                    
-                    document.getElementById('alarm-alert').classList.remove('active');
-                    document.getElementById('acknowledge-btn').style.display = 'none';
-                    
-                    const alarmSound = document.getElementById('alarmSound');
-                    alarmSound.pause();
-                    alarmSound.currentTime = 0;
-                    
-                    console.log('Mayoral alarm acknowledged - Timer restarted');
-                }
-            })
-            .catch(error => {
-                console.log('Error acknowledging alarm:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alarmActive = false;
+
+                        document.getElementById('alarm-alert').classList.remove('active');
+                        document.getElementById('acknowledge-btn').style.display = 'none';
+
+                        const alarmSound = document.getElementById('alarmSound');
+                        alarmSound.pause();
+                        alarmSound.currentTime = 0;
+
+                        console.log('Mayoral alarm acknowledged - Timer restarted');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error acknowledging alarm:', error);
+                });
         }
 
         function goToProfessorLogin() {
             const alarmSound = document.getElementById('alarmSound');
             alarmSound.pause();
             alarmSound.currentTime = 0;
-            
+
             window.location.href = '/professor_login?from=mayoral_screen';
         }
 
@@ -290,7 +546,7 @@
                         const alarmSound = document.getElementById('alarmSound');
                         alarmSound.pause();
                         alarmSound.currentTime = 0;
-                        
+
                         alert('Professor has logged in! Mayoral timer deactivated.');
                         window.location.href = '/';
                     }
@@ -303,9 +559,10 @@
         // Update timer every second
         setInterval(updateMayoralTimer, 1000);
         setInterval(checkProfessorLogin, 2000);
-        
+
         // Initial update
         updateMayoralTimer();
     </script>
 </body>
+
 </html>

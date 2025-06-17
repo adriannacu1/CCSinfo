@@ -1,32 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Access Login</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             margin: 0;
             flex-direction: column;
+            padding: 20px;
         }
 
         .timer-warning {
             background: #ff4444;
             color: white;
-            padding: 15px 30px;
+            padding: 12px 20px;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 20px;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             animation: pulse 2s infinite;
+            width: 100%;
+            max-width: 400px;
         }
 
         .timer-warning.hidden {
@@ -34,60 +42,75 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.8; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         .login-container {
             background: white;
-            padding: 40px;
+            padding: 30px 20px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            width: 300px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            min-width: 280px;
         }
 
         .login-title {
             text-align: center;
             margin-bottom: 30px;
             color: #333;
-            font-size: 24px;
+            font-size: 22px;
         }
 
         .button-group {
             margin-bottom: 20px;
         }
 
-        .login-btn, .temporary-key {
+        .login-btn,
+        .temporary-key {
             width: 100%;
             color: white;
             border: none;
-            padding: 15px;
-            border-radius: 5px;
+            padding: 18px 15px;
+            border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 15px;
+            min-height: 50px;
+            touch-action: manipulation;
         }
 
         .login-btn {
             background: #00aa44;
         }
 
-        .login-btn:hover {
+        .login-btn:hover,
+        .login-btn:active {
             background: #008833;
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
         .temporary-key {
             background: #ff8800;
         }
 
-        .temporary-key:hover {
+        .temporary-key:hover,
+        .temporary-key:active {
             background: #cc6600;
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
         .back-link {
@@ -98,13 +121,107 @@
         .back-link a {
             color: #2a5298;
             text-decoration: none;
+            font-size: 16px;
+            padding: 10px;
+            display: inline-block;
         }
 
         .back-link a:hover {
             text-decoration: underline;
         }
+
+        /* Mobile-specific styles */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .login-container {
+                padding: 25px 15px;
+            }
+
+            .login-title {
+                font-size: 20px;
+                margin-bottom: 25px;
+            }
+
+            .timer-warning {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+
+            .login-btn,
+            .temporary-key {
+                padding: 16px 12px;
+                font-size: 15px;
+                margin-bottom: 12px;
+            }
+        }
+
+        /* Tablet-specific styles */
+        @media (min-width: 481px) and (max-width: 1024px) {
+            .login-container {
+                max-width: 450px;
+                padding: 35px 25px;
+            }
+
+            .login-title {
+                font-size: 24px;
+            }
+
+            .timer-warning {
+                font-size: 17px;
+                padding: 14px 25px;
+            }
+
+            .login-btn,
+            .temporary-key {
+                padding: 20px 18px;
+                font-size: 17px;
+                min-height: 55px;
+            }
+        }
+
+        /* Landscape orientation adjustments */
+        @media (orientation: landscape) and (max-height: 600px) {
+            body {
+                min-height: auto;
+                padding: 10px;
+            }
+
+            .login-container {
+                margin: 10px 0;
+            }
+
+            .login-title {
+                margin-bottom: 20px;
+            }
+        }
+
+        /* High DPI/Retina display adjustments */
+        @media (-webkit-min-device-pixel-ratio: 2),
+        (min-resolution: 192dpi) {
+
+            .login-btn,
+            .temporary-key {
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        .login-btn:focus,
+        .temporary-key:focus {
+            outline: 3px solid rgba(255, 255, 255, 0.5);
+            outline-offset: 2px;
+        }
+
+        .back-link a:focus {
+            outline: 2px solid #2a5298;
+            outline-offset: 2px;
+        }
     </style>
 </head>
+
 <body>
     <div class="timer-warning hidden" id="timerWarning">
         ⚠️ SENSOR TRIGGERED - Time remaining: <span id="timeRemaining">5:00</span>
@@ -112,7 +229,7 @@
 
     <div class="login-container">
         <h2 class="login-title">🔐 Room Access</h2>
-        
+
         <div class="button-group">
             <button class="login-btn" onclick="showProfessorLogin()">Professor Login</button>
             <button class="temporary-key" onclick="showTemporaryKey()">Temporary Key</button>
@@ -120,10 +237,11 @@
 
         <div class="back-link">
             <a href="/">← Back to Security Screen</a>
-        </div>  
+        </div>
     </div>
 
     <script>
+        // ...existing code...
         let countdownTimer;
         let timeLeft = 300;
 
@@ -141,21 +259,21 @@
                 .then(data => {
                     const timerWarning = document.getElementById('timerWarning');
                     const timeRemaining = document.getElementById('timeRemaining');
-                    
+
                     if (data.active && data.time_left > 0) {
                         timeLeft = data.time_left;
-                        
+
                         if (timerWarning.classList.contains('hidden')) {
                             timerWarning.classList.remove('hidden');
-                            
+
                             if (!countdownTimer) {
                                 countdownTimer = setInterval(() => {
                                     timeLeft--;
-                                    
+
                                     const minutes = Math.floor(timeLeft / 60);
                                     const seconds = timeLeft % 60;
                                     timeRemaining.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                                    
+
                                     if (timeLeft <= 0) {
                                         clearInterval(countdownTimer);
                                         countdownTimer = null;
@@ -165,7 +283,7 @@
                                 }, 1000);
                             }
                         }
-                        
+
                         const minutes = Math.floor(data.time_left / 60);
                         const seconds = data.time_left % 60;
                         timeRemaining.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -184,7 +302,7 @@
         }
 
         // Check timer status on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('sensor_triggered') === 'true') {
                 // Only check timer status, don't start a new one
@@ -192,10 +310,11 @@
             } else {
                 checkTimerStatus();
             }
-            
+
             // Continue checking timer status every second
             setInterval(checkTimerStatus, 1000);
         });
     </script>
 </body>
+
 </html>

@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professor Dashboard - Student Attendance</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
@@ -19,7 +24,7 @@
             margin: 0 auto;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
 
@@ -33,6 +38,12 @@
         .header h1 {
             margin: 0;
             font-size: 28px;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
         }
 
         .professor-info {
@@ -91,9 +102,17 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         /* Student Attendance Form */
@@ -129,6 +148,8 @@
             font-size: 16px;
             box-sizing: border-box;
             transition: border-color 0.3s;
+            min-height: 48px;
+            touch-action: manipulation;
         }
 
         .form-group input:focus,
@@ -148,13 +169,42 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.3s;
+            min-height: 50px;
+            touch-action: manipulation;
         }
 
-        .check-in-btn:hover {
+        .check-in-btn:hover,
+        .check-in-btn:active {
             background: #219a52;
         }
 
         .check-in-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: #fd7e14;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin: 10px 0;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        .checkout-btn:hover,
+        .checkout-btn:active {
+            background: #e8590c;
+        }
+
+        .checkout-btn:disabled {
             background: #95a5a6;
             cursor: not-allowed;
         }
@@ -205,6 +255,11 @@
             align-items: center;
         }
 
+        .student-item.checked-out {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+        }
+
         .student-info {
             flex-grow: 1;
         }
@@ -219,54 +274,129 @@
             font-size: 14px;
         }
 
-        .timestamp {
-            color: #888;
+        .attendance-times {
+            text-align: right;
             font-size: 12px;
         }
 
-        /* Control Buttons */
-        .control-buttons {
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #ddd;
-            text-align: center;
+        .check-in-time {
+            color: #28a745;
+            font-weight: bold;
         }
 
-        .btn {
-            padding: 12px 25px;
-            margin: 0 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: background 0.3s;
+        .check-out-time {
+            color: #6c757d;
+            margin-top: 2px;
         }
 
-        .btn-logout {
-            background: #e74c3c;
-            color: white;
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 4px;
         }
 
-        .btn-logout:hover {
-            background: #c0392b;
+        .status-active {
+            background: #d4edda;
+            color: #155724;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
+        .status-completed {
+            background: #e2e3e5;
+            color: #495057;
         }
 
-        .btn-secondary:hover {
-            background: #545b62;
+        /* Mobile adjustments for new layout */
+        @media (max-width: 480px) {
+            .student-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .attendance-times {
+                align-self: flex-end;
+                text-align: right;
+            }
+
+            .checkout-btn {
+                padding: 16px;
+                font-size: 16px;
+                margin: 8px 0;
+                min-height: 52px;
+            }
         }
 
-        .hidden {
-            display: none;
+        @media (min-width: 481px) and (max-width: 1024px) {
+            .checkout-btn {
+                padding: 17px;
+                font-size: 17px;
+                margin: 12px 0;
+                min-height: 54px;
+            }
+        }
+
+        /* Landscape orientation adjustments */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .timer-section {
+                padding: 12px;
+                font-size: 18px;
+            }
+
+            .timer-display {
+                font-size: 24px;
+                margin: 5px 0;
+            }
+
+            .attendance-section {
+                padding: 20px;
+            }
+
+            .attendance-title {
+                margin-bottom: 20px;
+            }
+        }
+
+        /* High DPI/Retina display adjustments */
+        @media (-webkit-min-device-pixel-ratio: 2),
+        (min-resolution: 192dpi) {
+
+            .form-group input,
+            .form-group select,
+            .btn {
+                border: 1px solid rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        .form-group input:focus,
+        .form-group select:focus,
+        .btn:focus {
+            outline: 2px solid #2a5298;
+            outline-offset: 2px;
+        }
+
+        /* Improve touch targets */
+        @media (pointer: coarse) {
+
+            .form-group input,
+            .form-group select {
+                min-height: 48px;
+            }
+
+            .btn {
+                min-height: 48px;
+                padding: 14px 20px;
+            }
+
+            .check-in-btn {
+                min-height: 52px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard-container">
         <!-- Header -->
@@ -308,14 +438,14 @@
 
         <div class="attendance-section">
             <h2 class="attendance-title">📋 Student Check-In</h2>
-            
+
             <div id="message-container"></div>
 
             <form id="attendance-form">
                 <div class="form-group">
                     <label for="student_number">Student Number</label>
-                    <input type="text" id="student_number" name="student_number" 
-                           placeholder="Enter student number" required>
+                    <input type="text" id="student_number" name="student_number" placeholder="Enter student number"
+                        required>
                 </div>
 
                 <div class="form-group">
@@ -331,18 +461,34 @@
                 <button type="submit" class="check-in-btn" id="check-in-btn">
                     ✓ Check In Student
                 </button>
+
+                <button type="button" class="checkout-btn" id="checkout-btn" onclick="checkoutAllStudents()">
+                    📤 Check Out All Students
+                </button>
             </form>
 
             <div class="attendance-list">
                 <h3>📝 Today's Attendance ({{ attendance_count }} students)</h3>
                 <div id="attendance-list-container">
                     {% for record in attendance_records %}
-                    <div class="student-item">
+                    <div class="student-item {% if record.check_out_timestamp %}checked-out{% endif %}">
                         <div class="student-info">
                             <div class="student-number">{{ record.student_number }}</div>
                             <div class="pc-number">{{ record.pc_number }}</div>
+                            {% if record.check_out_timestamp %}
+                            <div class="status-badge status-completed">✓ Completed</div>
+                            {% else %}
+                            <div class="status-badge status-active">● Active</div>
+                            {% endif %}
                         </div>
-                        <div class="timestamp">{{ record.timestamp }}</div>
+                        <div class="attendance-times">
+                            <div class="check-in-time">In: {{ record.check_in_timestamp }}</div>
+                            {% if record.check_out_timestamp %}
+                            <div class="check-out-time">Out: {{ record.check_out_timestamp }}</div>
+                            {% else %}
+                            <div class="check-out-time">Still in class</div>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -355,20 +501,19 @@
         </div>
     </div>
 
-    <div id="class-timer-data" 
-         data-start-time="{{ class_start_time }}"
-         data-duration="{{ class_duration_minutes }}">
+    <div id="class-timer-data" data-start-time="{{ class_start_time }}" data-duration="{{ class_duration_minutes }}">
     </div>
 
     <script>
+        // ...existing code...
         // Debug: Check if timer data is being passed correctly
         console.log('Timer Data Debug:', {
             class_start_time: '{{ class_start_time }}',
             class_duration_minutes: '{{ class_duration_minutes }}',
             raw_start_time: {{ class_start_time }},
-            raw_duration: {{ class_duration_minutes }}    ///ignore error
+            raw_duration: {{ class_duration_minutes }}
         });
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('Timer elements check:', {
                 timerData: document.getElementById('class-timer-data'),
                 timerDisplay: document.getElementById('timer-display'),
@@ -389,10 +534,10 @@
         function playTimerAlert() {
             const timerSound = new Audio('/static/alarmingsound.mp3');
             timerSound.volume = 0.8;
-            
+
             let playCount = 0;
             const maxPlays = 4;
-            
+
             function playBeep() {
                 if (playCount < maxPlays) {
                     timerSound.currentTime = 0;
@@ -404,13 +549,13 @@
                             console.log('Could not play sound:', e);
                         });
                     playCount++;
-                    
+
                     if (playCount < maxPlays) {
                         setTimeout(playBeep, 500);
                     }
                 }
             }
-            
+
             playBeep();
             console.log('Playing 2-second timer alert before notification...');
         }
@@ -458,44 +603,54 @@
                 timerDisplay.textContent = '0:00';
                 timerSection.classList.add('timer-warning');
                 timerStatus.textContent = 'Class time has ended';
-                
+
                 if (!sessionStorage.getItem('classEndedNotified')) {
                     console.log('Playing audio alert first...');
                     sessionStorage.setItem('classEndedNotified', 'true');
 
                     playTimerAlert();
-                    
+
                     setTimeout(() => {
                         const userChoice = confirm(
                             `Class time has ended!\n\n` +
                             `Click "OK" to extend class by 10 minutes\n` +
                             `Click "Cancel" to end class now\n\n` +
-                            `Extensions used: ${extensionsUsed}/3`
+                            `Extensions used: ${extensionsUsed}/3\n\n` +
+                            `Note: All students will be automatically checked out when class ends.`
                         );
-                        
+
                         console.log('User choice:', userChoice);
-                        
+
                         if (userChoice && extensionsUsed < 3) {
                             classDurationMinutes += 10;
                             extensionsUsed++;
                             sessionStorage.removeItem('classEndedNotified');
-                            
+
                             timerSection.classList.remove('timer-warning');
                             timerStatus.textContent = `Class extended (+10 min) - Extension ${extensionsUsed}/3`;
-                            
+
                             showMessage(`Class extended by 10 minutes! (Extension ${extensionsUsed}/3)`, 'success');
-                            
+
                         } else if (extensionsUsed >= 3 && userChoice) {
-                            showMessage('Maximum extensions (3) reached. Class must end now.', 'error');
+                            showMessage('Maximum extensions (3) reached. Class must end now. Checking out all students...', 'error');
+                            // Auto checkout before redirect
+                            checkoutAllStudents();
                             setTimeout(() => {
                                 window.location.href = '/logout';
-                            }, 2000);
+                            }, 3000);
                         } else {
-                            console.log('Redirecting to logout...');
-                            window.location.href = '/logout';
+                            console.log('Auto-checking out students before logout...');
+                            // Auto checkout before redirect
+                            fetch('/checkout_all_students', { method: 'POST' })
+                                .then(() => {
+                                    window.location.href = '/logout';
+                                })
+                                .catch(() => {
+                                    window.location.href = '/logout';
+                                });
                         }
-                    }, 2500); // Wait 2.5 seconds for audio to play + small buffer
-                    
+                    }, 2500);
+
                 } else {
                     console.log('Already notified, skipping alert');
                 }
@@ -519,12 +674,12 @@
             window.location.reload();
         }
 
-        document.getElementById('attendance-form').addEventListener('submit', function(e) {
+        document.getElementById('attendance-form').addEventListener('submit', function (e) {
             e.preventDefault();
-            
+
             const formData = new FormData(this);
             const checkInBtn = document.getElementById('check-in-btn');
-            
+
             checkInBtn.disabled = true;
             checkInBtn.textContent = 'Processing...';
 
@@ -532,66 +687,121 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showMessage(data.message, 'success');
-                    this.reset();
-                    
-                    const listContainer = document.getElementById('attendance-list-container');
-                    const studentItem = document.createElement('div');
-                    studentItem.className = 'student-item';
-                    studentItem.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showMessage(data.message, 'success');
+                        this.reset();
+
+                        const listContainer = document.getElementById('attendance-list-container');
+                        const studentItem = document.createElement('div');
+                        studentItem.className = 'student-item';
+                        studentItem.innerHTML = `
                         <div class="student-info">
                             <div class="student-number">${data.student_number}</div>
                             <div class="pc-number">${data.pc_number}</div>
                         </div>
                         <div class="timestamp">Just now</div>
                     `;
-                    listContainer.insertBefore(studentItem, listContainer.firstChild);
-                    
-                    setTimeout(() => {
-                        studentItem.style.transition = 'opacity 0.5s ease-out';
-                        studentItem.style.opacity = '0';
-                        
+                        listContainer.insertBefore(studentItem, listContainer.firstChild);
+
                         setTimeout(() => {
-                            if (studentItem.parentNode) {
-                                studentItem.parentNode.removeChild(studentItem);
-                            }
-                        }, 500);
-                    }, 2000);
-                    
-                    const countElement = document.querySelector('.attendance-list h3');
-                    const currentCount = parseInt(countElement.textContent.match(/\d+/)[0]) + 1;
-                    countElement.textContent = `📝 Today's Attendance (${currentCount} students)`;
-                    
-                } else {
-                    showMessage(data.message, 'error');
+                            studentItem.style.transition = 'opacity 0.5s ease-out';
+                            studentItem.style.opacity = '0';
+
+                            setTimeout(() => {
+                                if (studentItem.parentNode) {
+                                    studentItem.parentNode.removeChild(studentItem);
+                                }
+                            }, 500);
+                        }, 2000);
+
+                        const countElement = document.querySelector('.attendance-list h3');
+                        const currentCount = parseInt(countElement.textContent.match(/\d+/)[0]) + 1;
+                        countElement.textContent = `📝 Today's Attendance (${currentCount} students)`;
+
+                    } else {
+                        showMessage(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('An error occurred while checking in student', 'error');
+                })
+                .finally(() => {
+                    checkInBtn.disabled = false;
+                    checkInBtn.textContent = '✓ Check In Student';
+                });
+        });
+
+        function checkoutAllStudents() {
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            // Confirm action
+            if (!confirm('Are you sure you want to check out all students? This action cannot be undone.')) {
+                return;
+            }
+
+            checkoutBtn.disabled = true;
+            checkoutBtn.textContent = 'Checking out...';
+
+            fetch('/checkout_all_students', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                showMessage('An error occurred while checking in student', 'error');
-            })
-            .finally(() => {
-                checkInBtn.disabled = false;
-                checkInBtn.textContent = '✓ Check In Student';
-            });
-        });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showMessage(`✅ ${data.message} at ${data.checkout_time}`, 'success');
+
+                        // Update UI to show all students as checked out
+                        const studentItems = document.querySelectorAll('.student-item:not(.checked-out)');
+                        studentItems.forEach(item => {
+                            item.classList.add('checked-out');
+
+                            // Update status badge
+                            const statusBadge = item.querySelector('.status-badge');
+                            if (statusBadge) {
+                                statusBadge.className = 'status-badge status-completed';
+                                statusBadge.textContent = '✓ Completed';
+                            }
+
+                            // Update check-out time
+                            const checkOutDiv = item.querySelector('.check-out-time');
+                            if (checkOutDiv && checkOutDiv.textContent === 'Still in class') {
+                                checkOutDiv.textContent = `Out: ${data.checkout_time}`;
+                            }
+                        });
+
+                    } else {
+                        showMessage(`❌ Error: ${data.message}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('❌ Network error during checkout', 'error');
+                })
+                .finally(() => {
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = '📤 Check Out All Students';
+                });
+        }
 
         updateClassTimer();
         timerInterval = setInterval(updateClassTimer, 1000);
 
         document.getElementById('student_number').focus();
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const existingItems = document.querySelectorAll('#attendance-list-container .student-item');
-            
+
             existingItems.forEach(item => {
                 setTimeout(() => {
                     item.style.transition = 'opacity 0.5s ease-out';
                     item.style.opacity = '0';
-                    
+
                     setTimeout(() => {
                         if (item.parentNode) {
                             item.parentNode.removeChild(item);
@@ -602,4 +812,5 @@
         });
     </script>
 </body>
+
 </html>

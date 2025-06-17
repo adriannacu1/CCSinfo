@@ -344,7 +344,7 @@ def professor_dashboard():
         
         with connection.cursor() as cursor:
             attendance_sql = """
-                SELECT student_number, pc_number, check_in_time as timestamp 
+                SELECT student_number, pc_number, check_in_time, check_out_time
                 FROM student_attendance 
                 WHERE professor_id = %s AND class_session_id = %s
                 ORDER BY check_in_time DESC
@@ -353,8 +353,12 @@ def professor_dashboard():
             attendance_records = cursor.fetchall()
             
             for record in attendance_records:
-                if record['timestamp']:
-                    record['timestamp'] = record['timestamp'].strftime('%H:%M:%S')
+                if record['check_in_time']:
+                    record['check_in_timestamp'] = record['check_in_time'].strftime('%H:%M:%S')
+                if record['check_out_time']:
+                    record['check_out_timestamp'] = record['check_out_time'].strftime('%H:%M:%S')
+                else:
+                    record['check_out_timestamp'] = None
             
             attendance_count = len(attendance_records)
             
@@ -469,6 +473,46 @@ def student_checkin():
         print(f"Student check-in error: {e}")
         return jsonify({'status': 'error', 'message': f'Database error: {str(e)}'})
 
+# Add this new route for handling check-out
+@app.route('/checkout_all_students', methods=['POST'])
+def checkout_all_students():
+    if 'faculty_id' not in session or 'class_session_id' not in session:
+        return jsonify({'status': 'error', 'message': 'Professor not logged in'})
+    
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'})
+        
+        with connection.cursor() as cursor:
+            # Update all students in current session with check_out_time
+            checkout_sql = """
+                UPDATE student_attendance 
+                SET check_out_time = %s 
+                WHERE professor_id = %s AND class_session_id = %s AND check_out_time IS NULL
+            """
+            current_time = datetime.now()
+            cursor.execute(checkout_sql, (current_time, session['faculty_id'], session['class_session_id']))
+            
+            # Get count of checked out students
+            affected_rows = cursor.rowcount
+            
+            connection.commit()
+            connection.close()
+            
+            print(f"Checked out {affected_rows} students at {current_time}")
+            
+            return jsonify({
+                'status': 'success', 
+                'message': f'Successfully checked out {affected_rows} students',
+                'checkout_time': current_time.strftime('%H:%M:%S'),
+                'students_count': affected_rows
+            })
+            
+    except Exception as e:
+        print(f"Error during checkout: {e}")
+        return jsonify({'status': 'error', 'message': f'Database error: {str(e)}'})
+
 @app.route('/logout')
 def logout():
     if 'faculty_id' in session:
@@ -478,9 +522,21 @@ def logout():
             connection = get_db_connection()
             if connection:
                 with connection.cursor() as cursor:
+                    # First, check out all students who haven't been checked out
+                    current_time = datetime.now()
+                    checkout_sql = """
+                        UPDATE student_attendance 
+                        SET check_out_time = %s 
+                        WHERE professor_id = %s AND class_session_id = %s AND check_out_time IS NULL
+                    """
+                    cursor.execute(checkout_sql, (current_time, session['faculty_id'], session.get('class_session_id', '')))
+                    checked_out_count = cursor.rowcount
+                    
+                    # Update faculty status
                     update_sql = "UPDATE faculty SET status_state = %s WHERE faculty_id = %s"
                     cursor.execute(update_sql, ('AVAILABLE', session['faculty_id']))
                     
+                    # Reset student status to AVAILABLE
                     today = datetime.now().strftime('%Y-%m-%d')
                     reset_students_sql = """
                         UPDATE students SET status = 'AVAILABLE' 
@@ -492,6 +548,7 @@ def logout():
                     cursor.execute(reset_students_sql, (session['faculty_id'], today))
                     
                     connection.commit()
+                    print(f"Automatically checked out {checked_out_count} students during logout")
                     print(f"Reset status for faculty_id: {session['faculty_id']} and their students")
                 connection.close()
         except Exception as e:
@@ -774,8 +831,8 @@ def mayoral_screen():
 if __name__ == '__main__':
     print("🚀 Starting Room Security Server...")
     print("📡 Server accessible at:")
-    print("   - Local: http://127.0.0.1:5000")
-    print("   - Network: http://192.168.1.9:5000")
-    print("   - ESP32 Test: http://192.168.1.9:5000/api/esp32/test")
+    print("   - Local: http://127.0.0.1:6969")
+    print("   - Network: http://192.168.1.9:6969")
+    print("   - ESP32 Test: http://192.168.1.9:6969/api/esp32/test")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=6969, debug=True)

@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mayoral Key Access</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             margin: 0;
             color: white;
+            padding: 20px;
         }
 
         .key-container {
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            min-width: 280px;
             text-align: center;
         }
 
@@ -54,9 +62,17 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         .code-input-section {
@@ -76,6 +92,8 @@
             border-radius: 5px;
             margin-bottom: 15px;
             letter-spacing: 2px;
+            min-height: 52px;
+            touch-action: manipulation;
         }
 
         .code-input:focus {
@@ -95,9 +113,12 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 10px;
+            min-height: 52px;
+            touch-action: manipulation;
         }
 
-        .access-btn:hover {
+        .access-btn:hover,
+        .access-btn:active {
             background: #218838;
             transform: translateY(-2px);
         }
@@ -120,13 +141,16 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-height: 60px;
+            touch-action: manipulation;
         }
 
-        .generate-btn:hover {
+        .generate-btn:hover,
+        .generate-btn:active {
             background: #660000;
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
         .generate-btn:disabled {
@@ -163,10 +187,17 @@
             color: #2a5298;
             text-decoration: none;
             font-size: 16px;
+            padding: 10px;
+            display: inline-block;
         }
 
         .back-link a:hover {
             text-decoration: underline;
+        }
+
+        .back-link a:focus {
+            outline: 2px solid #2a5298;
+            outline-offset: 2px;
         }
 
         .instructions {
@@ -177,6 +208,15 @@
             margin: 20px 0;
             border: 1px solid #ffeaa7;
             text-align: left;
+        }
+
+        .instructions ul {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
         }
 
         .section-divider {
@@ -196,13 +236,267 @@
             color: #666;
             font-weight: bold;
         }
+
+        /* Mobile-specific styles */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .key-container {
+                padding: 25px 20px;
+            }
+
+            .key-title {
+                font-size: 26px;
+                margin-bottom: 8px;
+            }
+
+            .key-subtitle {
+                font-size: 14px;
+                margin-bottom: 25px;
+            }
+
+            .timer-alert {
+                padding: 12px;
+                margin-bottom: 15px;
+                font-size: 14px;
+            }
+
+            .code-input-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .code-input-section h4 {
+                font-size: 16px;
+                margin-top: 0;
+                margin-bottom: 12px;
+            }
+
+            .code-input {
+                padding: 14px 12px;
+                font-size: 16px;
+                margin-bottom: 12px;
+                min-height: 50px;
+            }
+
+            .access-btn {
+                padding: 16px;
+                font-size: 16px;
+                margin-bottom: 8px;
+                min-height: 52px;
+            }
+
+            .generate-btn {
+                padding: 18px;
+                font-size: 18px;
+                margin-bottom: 15px;
+                min-height: 58px;
+            }
+
+            .instructions {
+                padding: 12px;
+                margin: 15px 0;
+                font-size: 14px;
+            }
+
+            .instructions ul {
+                padding-left: 18px;
+            }
+
+            .instructions li {
+                margin-bottom: 4px;
+            }
+
+            .section-divider {
+                margin: 20px 0;
+            }
+
+            .message {
+                padding: 12px;
+                margin: 15px 0;
+                font-size: 14px;
+            }
+
+            .back-link a {
+                font-size: 15px;
+                padding: 12px;
+            }
+        }
+
+        /* Tablet-specific styles */
+        @media (min-width: 481px) and (max-width: 1024px) {
+            .key-container {
+                max-width: 500px;
+                padding: 45px 30px;
+            }
+
+            .key-title {
+                font-size: 34px;
+            }
+
+            .key-subtitle {
+                font-size: 17px;
+            }
+
+            .timer-alert {
+                padding: 18px;
+                font-size: 15px;
+            }
+
+            .code-input-section {
+                padding: 25px;
+            }
+
+            .code-input-section h4 {
+                font-size: 18px;
+            }
+
+            .code-input {
+                padding: 18px 15px;
+                font-size: 19px;
+                min-height: 54px;
+            }
+
+            .access-btn {
+                padding: 18px;
+                font-size: 19px;
+                min-height: 54px;
+            }
+
+            .generate-btn {
+                padding: 22px;
+                font-size: 21px;
+                min-height: 64px;
+            }
+
+            .instructions {
+                padding: 18px;
+                font-size: 15px;
+            }
+
+            .message {
+                padding: 18px;
+                font-size: 15px;
+            }
+
+            .back-link a {
+                font-size: 17px;
+            }
+        }
+
+        /* Landscape orientation adjustments */
+        @media (orientation: landscape) and (max-height: 600px) {
+            body {
+                min-height: auto;
+                padding: 10px;
+            }
+
+            .key-container {
+                margin: 10px 0;
+                padding: 20px;
+            }
+
+            .key-title {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+
+            .key-subtitle {
+                margin-bottom: 15px;
+            }
+
+            .timer-alert {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .code-input-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .instructions {
+                padding: 10px;
+                margin: 10px 0;
+            }
+
+            .section-divider {
+                margin: 15px 0;
+            }
+
+            .generate-btn {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+        }
+
+        /* High DPI/Retina display adjustments */
+        @media (-webkit-min-device-pixel-ratio: 2),
+        (min-resolution: 192dpi) {
+
+            .code-input,
+            .access-btn,
+            .generate-btn {
+                border: 1px solid rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        .code-input:focus,
+        .access-btn:focus,
+        .generate-btn:focus {
+            outline: 2px solid #8b0000;
+            outline-offset: 2px;
+        }
+
+        /* Improve touch targets */
+        @media (pointer: coarse) {
+            .code-input {
+                min-height: 50px;
+                padding: 16px;
+            }
+
+            .access-btn {
+                min-height: 52px;
+                padding: 16px;
+            }
+
+            .generate-btn {
+                min-height: 60px;
+                padding: 20px;
+            }
+
+            .back-link a {
+                min-height: 44px;
+                padding: 12px;
+            }
+        }
+
+        /* Prevent text selection on buttons */
+        .access-btn,
+        .generate-btn {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Better button feedback for touch */
+        .access-btn:active,
+        .generate-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
+
 <body>
     <div class="key-container">
         <h2 class="key-title">👨🏻‍🎓 Mayoral Key</h2>
         <p class="key-subtitle">Generate or Enter access code</p>
-        
+
         <!-- Timer Alert (shown when timer is active) -->
         <div id="timer-alert" class="timer-alert hidden">
             🚨 SECURITY ALERT ACTIVE<br>
@@ -219,7 +513,7 @@
         </div>
 
         <div class="section-divider"></div>
-        
+
         <!-- Code Generation Section -->
         <div class="instructions">
             <strong>Need a new code?</strong>
@@ -247,7 +541,7 @@
             const accessBtn = document.getElementById('accessBtn');
             const messageDiv = document.getElementById('message');
             const code = codeInput.value.trim();
-            
+
             if (code.length !== 7) {
                 messageDiv.innerHTML = `
                     <div class="message error">
@@ -256,90 +550,90 @@
                 `;
                 return;
             }
-            
+
             accessBtn.disabled = true;
             accessBtn.textContent = 'Verifying...';
-            
+
             fetch('/verify_mayoral_code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({code: code})
+                body: JSON.stringify({ code: code })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    messageDiv.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        messageDiv.innerHTML = `
                         <div class="message success">
                             ✅ Access granted! Redirecting to dashboard...
                         </div>
                     `;
-                    setTimeout(() => {
-                        window.location.href = data.redirect || '/mayoral_screen';
-                    }, 1500);
-                } else {
-                    messageDiv.innerHTML = `
+                        setTimeout(() => {
+                            window.location.href = data.redirect || '/mayoral_screen';
+                        }, 1500);
+                    } else {
+                        messageDiv.innerHTML = `
                         <div class="message error">
                             ❌ ${data.message}
                         </div>
                     `;
-                }
-            })
-            .catch(error => {
-                messageDiv.innerHTML = `
+                    }
+                })
+                .catch(error => {
+                    messageDiv.innerHTML = `
                     <div class="message error">
                         ❌ Network error. Please try again.
                     </div>
                 `;
-            })
-            .finally(() => {
-                accessBtn.disabled = false;
-                accessBtn.textContent = '🔓 Access Room';
-            });
+                })
+                .finally(() => {
+                    accessBtn.disabled = false;
+                    accessBtn.textContent = '🔓 Access Room';
+                });
         }
 
         function generateCode() {
             const btn = document.getElementById('generateBtn');
             const messageDiv = document.getElementById('message');
-            
+
             btn.disabled = true;
             btn.textContent = 'Generating...';
-            
+
             fetch('/generate_mayoral_code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    messageDiv.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        messageDiv.innerHTML = `
                         <div class="message success">
                             ✅ Code generated successfully!<br>
                             Please visit the administration office to retrieve your access code.
                         </div>
                     `;
-                } else {
-                    messageDiv.innerHTML = `
+                    } else {
+                        messageDiv.innerHTML = `
                         <div class="message error">
                             ❌ Error: ${data.message}
                         </div>
                     `;
-                }
-            })
-            .catch(error => {
-                messageDiv.innerHTML = `
+                    }
+                })
+                .catch(error => {
+                    messageDiv.innerHTML = `
                     <div class="message error">
                         ❌ Network error. Please try again.
                     </div>
                 `;
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.textContent = '🔑 Generate New Code';
-            });
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.textContent = '🔑 Generate New Code';
+                });
         }
 
         // Timer functionality
@@ -349,7 +643,7 @@
                 .then(data => {
                     const timerAlert = document.getElementById('timer-alert');
                     const timerDisplay = document.getElementById('timer-display');
-                    
+
                     if (data.active && data.time_left > 0) {
                         timerAlert.classList.remove('hidden');
                         const minutes = Math.floor(data.time_left / 60);
@@ -374,4 +668,5 @@
         document.getElementById('codeInput').focus();
     </script>
 </body>
+
 </html>
