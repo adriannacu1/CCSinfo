@@ -1466,6 +1466,7 @@ def register_routes(app):
                     SELECT sa.pc_number,
                            f.name AS professor_name,
                            DATE_FORMAT(sa.check_in_time, '%Y-%m-%d %H:%i:%s') as check_in_time,
+                           DATE_FORMAT(sa.check_out_time, '%Y-%m-%d %H:%i:%s') as check_out_time,
                            sa.room_number as room_name,
                            sa.class_session_id as session_id
                     FROM student_attendance sa

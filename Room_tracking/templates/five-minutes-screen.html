@@ -1,35 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5-Minute Access</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #4169e1, #1e3cb8);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             margin: 0;
             color: white;
-            padding: 20px;
         }
 
         .access-container {
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 450px;
-            min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 400px;
             text-align: center;
         }
 
@@ -62,17 +54,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.7;
-            }
-
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
 
         .code-input-section {
@@ -92,8 +76,6 @@
             border-radius: 5px;
             margin-bottom: 15px;
             letter-spacing: 2px;
-            min-height: 52px;
-            touch-action: manipulation;
         }
 
         .code-input:focus {
@@ -113,12 +95,9 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 10px;
-            min-height: 52px;
-            touch-action: manipulation;
         }
 
-        .access-btn:hover,
-        .access-btn:active {
+        .access-btn:hover {
             background: #218838;
             transform: translateY(-2px);
         }
@@ -141,16 +120,13 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            min-height: 60px;
-            touch-action: manipulation;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        .generate-btn:hover,
-        .generate-btn:active {
+        .generate-btn:hover {
             background: #1e3cb8;
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
         }
 
         .generate-btn:disabled {
@@ -187,17 +163,10 @@
             color: #4169e1;
             text-decoration: none;
             font-size: 16px;
-            padding: 10px;
-            display: inline-block;
         }
 
         .back-link a:hover {
             text-decoration: underline;
-        }
-
-        .back-link a:focus {
-            outline: 2px solid #4169e1;
-            outline-offset: 2px;
         }
 
         .instructions {
@@ -208,15 +177,6 @@
             margin: 20px 0;
             border: 1px solid #ffeaa7;
             text-align: left;
-        }
-
-        .instructions ul {
-            margin: 10px 0 0 0;
-            padding-left: 20px;
-        }
-
-        .instructions li {
-            margin-bottom: 5px;
         }
 
         .section-divider {
@@ -236,290 +196,13 @@
             color: #666;
             font-weight: bold;
         }
-
-        /* Mobile-specific styles */
-        @media (max-width: 480px) {
-            body {
-                padding: 15px;
-            }
-
-            .access-container {
-                padding: 25px 20px;
-            }
-
-            .access-title {
-                font-size: 26px;
-                margin-bottom: 8px;
-            }
-
-            .access-subtitle {
-                font-size: 14px;
-                margin-bottom: 25px;
-            }
-
-            .timer-alert {
-                padding: 12px;
-                margin-bottom: 15px;
-                font-size: 14px;
-            }
-
-            .code-input-section {
-                padding: 15px;
-                margin-bottom: 15px;
-            }
-
-            .code-input-section h4 {
-                font-size: 16px;
-                margin-top: 0;
-                margin-bottom: 12px;
-            }
-
-            .code-input {
-                padding: 14px 12px;
-                font-size: 16px;
-                margin-bottom: 12px;
-                min-height: 50px;
-            }
-
-            .access-btn {
-                padding: 16px;
-                font-size: 16px;
-                margin-bottom: 8px;
-                min-height: 52px;
-            }
-
-            .generate-btn {
-                padding: 18px;
-                font-size: 18px;
-                margin-bottom: 15px;
-                min-height: 58px;
-            }
-
-            .instructions {
-                padding: 12px;
-                margin: 15px 0;
-                font-size: 14px;
-            }
-
-            .instructions ul {
-                padding-left: 18px;
-            }
-
-            .instructions li {
-                margin-bottom: 4px;
-            }
-
-            .section-divider {
-                margin: 20px 0;
-            }
-
-            .message {
-                padding: 12px;
-                margin: 15px 0;
-                font-size: 14px;
-            }
-
-            .back-link a {
-                font-size: 15px;
-                padding: 12px;
-            }
-        }
-
-        /* Tablet-specific styles */
-        @media (min-width: 481px) and (max-width: 1024px) {
-            .access-container {
-                max-width: 500px;
-                padding: 45px 30px;
-            }
-
-            .access-title {
-                font-size: 34px;
-            }
-
-            .access-subtitle {
-                font-size: 17px;
-            }
-
-            .timer-alert {
-                padding: 18px;
-                font-size: 15px;
-            }
-
-            .code-input-section {
-                padding: 25px;
-            }
-
-            .code-input-section h4 {
-                font-size: 18px;
-            }
-
-            .code-input {
-                padding: 18px 15px;
-                font-size: 19px;
-                min-height: 54px;
-            }
-
-            .access-btn {
-                padding: 18px;
-                font-size: 19px;
-                min-height: 54px;
-            }
-
-            .generate-btn {
-                padding: 22px;
-                font-size: 21px;
-                min-height: 64px;
-            }
-
-            .instructions {
-                padding: 18px;
-                font-size: 15px;
-            }
-
-            .message {
-                padding: 18px;
-                font-size: 15px;
-            }
-
-            .back-link a {
-                font-size: 17px;
-            }
-        }
-
-        /* Landscape orientation adjustments */
-        @media (orientation: landscape) and (max-height: 600px) {
-            body {
-                min-height: auto;
-                padding: 10px;
-            }
-
-            .access-container {
-                margin: 10px 0;
-                padding: 20px;
-            }
-
-            .access-title {
-                font-size: 24px;
-                margin-bottom: 5px;
-            }
-
-            .access-subtitle {
-                margin-bottom: 15px;
-            }
-
-            .timer-alert {
-                padding: 10px;
-                margin-bottom: 10px;
-            }
-
-            .code-input-section {
-                padding: 15px;
-                margin-bottom: 15px;
-            }
-
-            .instructions {
-                padding: 10px;
-                margin: 10px 0;
-            }
-
-            .section-divider {
-                margin: 15px 0;
-            }
-
-            .generate-btn {
-                padding: 15px;
-                margin-bottom: 15px;
-            }
-        }
-
-        /* High DPI/Retina display adjustments */
-        @media (-webkit-min-device-pixel-ratio: 2),
-        (min-resolution: 192dpi) {
-
-            .code-input,
-            .access-btn,
-            .generate-btn {
-                border: 1px solid rgba(0, 0, 0, 0.1);
-            }
-        }
-
-        /* Focus styles for accessibility */
-        .code-input:focus,
-        .access-btn:focus,
-        .generate-btn:focus {
-            outline: 2px solid #4169e1;
-            outline-offset: 2px;
-        }
-
-        /* Improve touch targets */
-        @media (pointer: coarse) {
-            .code-input {
-                min-height: 50px;
-                padding: 16px;
-            }
-
-            .access-btn {
-                min-height: 52px;
-                padding: 16px;
-            }
-
-            .generate-btn {
-                min-height: 60px;
-                padding: 20px;
-            }
-
-            .back-link a {
-                min-height: 44px;
-                padding: 12px;
-            }
-        }
-
-        /* Prevent text selection on buttons */
-        .access-btn,
-        .generate-btn {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Better button feedback for touch */
-        .access-btn:active,
-        .generate-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Better text wrapping for small screens */
-        .instructions {
-            word-wrap: break-word;
-            hyphens: auto;
-        }
-
-        /* Responsive text scaling */
-        @media (max-width: 320px) {
-            .access-title {
-                font-size: 22px;
-            }
-
-            .instructions,
-            .message {
-                font-size: 13px;
-            }
-
-            .access-btn,
-            .generate-btn {
-                font-size: 16px;
-            }
-        }
     </style>
 </head>
-
 <body>
     <div class="access-container">
         <h2 class="access-title">⏱️ 5-Minute Access</h2>
         <p class="access-subtitle">Generate or Enter 5-minute access code</p>
-
+        
         <div id="timer-alert" class="timer-alert hidden">
             🚨 SECURITY ALERT ACTIVE<br>
             Time remaining: <span id="timer-display">0:00</span>
@@ -534,7 +217,7 @@
         </div>
 
         <div class="section-divider"></div>
-
+        
         <div class="instructions">
             <strong>Need a new code?</strong>
             <ul>
@@ -562,7 +245,7 @@
             const accessBtn = document.getElementById('accessBtn');
             const messageDiv = document.getElementById('message');
             const code = codeInput.value.trim();
-
+            
             if (code.length !== 7) {
                 messageDiv.innerHTML = `
                     <div class="message error">
@@ -571,90 +254,90 @@
                 `;
                 return;
             }
-
+            
             accessBtn.disabled = true;
             accessBtn.textContent = 'Verifying...';
-
+            
             fetch('/verify_five_minute_code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ code: code })
+                body: JSON.stringify({code: code})
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        messageDiv.innerHTML = `
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    messageDiv.innerHTML = `
                         <div class="message success">
                             ✅ 5-minute access granted! Redirecting...
                         </div>
                     `;
-                        setTimeout(() => {
-                            window.location.href = data.redirect || '/five_minute_dashboard';
-                        }, 1500);
-                    } else {
-                        messageDiv.innerHTML = `
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/five_minute_dashboard';
+                    }, 1500);
+                } else {
+                    messageDiv.innerHTML = `
                         <div class="message error">
                             ❌ ${data.message}
                         </div>
                     `;
-                    }
-                })
-                .catch(error => {
-                    messageDiv.innerHTML = `
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = `
                     <div class="message error">
                         ❌ Network error. Please try again.
                     </div>
                 `;
-                })
-                .finally(() => {
-                    accessBtn.disabled = false;
-                    accessBtn.textContent = '🔓 Access for 5 Minutes';
-                });
+            })
+            .finally(() => {
+                accessBtn.disabled = false;
+                accessBtn.textContent = '🔓 Access for 5 Minutes';
+            });
         }
 
         function generateCode() {
             const btn = document.getElementById('generateBtn');
             const messageDiv = document.getElementById('message');
-
+            
             btn.disabled = true;
             btn.textContent = 'Generating...';
-
+            
             fetch('/generate_five_minute_code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        messageDiv.innerHTML = `
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    messageDiv.innerHTML = `
                         <div class="message success">
                             ✅ Code generated successfully!<br>
                             Please visit the administration office to retrieve your 5-minute access code.
                         </div>
                     `;
-                    } else {
-                        messageDiv.innerHTML = `
+                } else {
+                    messageDiv.innerHTML = `
                         <div class="message error">
                             ❌ Error: ${data.message}
                         </div>
                     `;
-                    }
-                })
-                .catch(error => {
-                    messageDiv.innerHTML = `
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = `
                     <div class="message error">
                         ❌ Network error. Please try again.
                     </div>
                 `;
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.textContent = '⏱️ Generate New Code';
-                });
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = '⏱️ Generate New Code';
+            });
         }
 
         function updateTimer() {
@@ -663,7 +346,7 @@
                 .then(data => {
                     const timerAlert = document.getElementById('timer-alert');
                     const timerDisplay = document.getElementById('timer-display');
-
+                    
                     if (data.active && data.time_left > 0) {
                         timerAlert.classList.remove('hidden');
                         const minutes = Math.floor(data.time_left / 60);
@@ -686,5 +369,4 @@
         document.getElementById('codeInput').focus();
     </script>
 </body>
-
 </html>

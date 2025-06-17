@@ -1,35 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5-Minute Access Dashboard</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #4169e1, #1e3cb8);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             margin: 0;
             color: white;
-            padding: 20px;
         }
 
         .dashboard-container {
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 450px;
-            min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 400px;
             text-align: center;
         }
 
@@ -47,8 +39,6 @@
             border-radius: 8px;
             margin: 20px 0;
             border: 1px solid #c3e6cb;
-            font-weight: bold;
-            line-height: 1.5;
         }
 
         .timer-display {
@@ -70,17 +60,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.7;
-            }
-
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
 
         .extend-btn {
@@ -95,12 +77,9 @@
             cursor: pointer;
             transition: all 0.3s;
             margin: 10px 0;
-            min-height: 52px;
-            touch-action: manipulation;
         }
 
-        .extend-btn:hover,
-        .extend-btn:active {
+        .extend-btn:hover {
             background: #e0a800;
             transform: translateY(-2px);
         }
@@ -123,12 +102,9 @@
             cursor: pointer;
             transition: all 0.3s;
             margin: 10px 0;
-            min-height: 52px;
-            touch-action: manipulation;
         }
 
-        .return-btn:hover,
-        .return-btn:active {
+        .return-btn:hover {
             background: #5a6268;
             transform: translateY(-2px);
         }
@@ -156,260 +132,13 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-
-        /* Mobile-specific styles */
-        @media (max-width: 480px) {
-            body {
-                padding: 15px;
-            }
-
-            .dashboard-container {
-                padding: 25px 20px;
-            }
-
-            .dashboard-title {
-                font-size: 26px;
-                margin-bottom: 8px;
-            }
-
-            .access-icon {
-                font-size: 36px;
-                margin-bottom: 15px;
-            }
-
-            .status-info {
-                padding: 15px;
-                margin: 15px 0;
-                font-size: 14px;
-                line-height: 1.4;
-            }
-
-            .timer-display {
-                padding: 15px;
-                margin: 15px 0;
-                font-size: 20px;
-            }
-
-            .extend-btn {
-                padding: 16px;
-                font-size: 16px;
-                margin: 8px 0;
-                min-height: 52px;
-            }
-
-            .return-btn {
-                padding: 16px;
-                font-size: 16px;
-                margin: 8px 0;
-                min-height: 52px;
-            }
-
-            .message {
-                padding: 12px;
-                margin: 15px 0;
-                font-size: 14px;
-            }
-        }
-
-        /* Tablet-specific styles */
-        @media (min-width: 481px) and (max-width: 1024px) {
-            .dashboard-container {
-                max-width: 500px;
-                padding: 45px 30px;
-            }
-
-            .dashboard-title {
-                font-size: 34px;
-            }
-
-            .access-icon {
-                font-size: 52px;
-                margin-bottom: 25px;
-            }
-
-            .status-info {
-                padding: 22px;
-                margin: 22px 0;
-                font-size: 15px;
-            }
-
-            .timer-display {
-                padding: 22px;
-                margin: 22px 0;
-                font-size: 26px;
-            }
-
-            .extend-btn {
-                padding: 18px;
-                font-size: 19px;
-                margin: 12px 0;
-                min-height: 54px;
-            }
-
-            .return-btn {
-                padding: 18px;
-                font-size: 19px;
-                margin: 12px 0;
-                min-height: 54px;
-            }
-
-            .message {
-                padding: 18px;
-                margin: 22px 0;
-                font-size: 15px;
-            }
-        }
-
-        /* Landscape orientation adjustments */
-        @media (orientation: landscape) and (max-height: 600px) {
-            body {
-                min-height: auto;
-                padding: 10px;
-            }
-
-            .dashboard-container {
-                margin: 10px 0;
-                padding: 20px;
-            }
-
-            .dashboard-title {
-                font-size: 24px;
-                margin-bottom: 5px;
-            }
-
-            .access-icon {
-                font-size: 32px;
-                margin-bottom: 10px;
-            }
-
-            .status-info {
-                padding: 12px;
-                margin: 12px 0;
-            }
-
-            .timer-display {
-                padding: 12px;
-                margin: 12px 0;
-                font-size: 18px;
-            }
-
-            .extend-btn,
-            .return-btn {
-                padding: 12px;
-                margin: 8px 0;
-                font-size: 16px;
-            }
-
-            .message {
-                padding: 10px;
-                margin: 12px 0;
-            }
-        }
-
-        /* High DPI/Retina display adjustments */
-        @media (-webkit-min-device-pixel-ratio: 2),
-        (min-resolution: 192dpi) {
-
-            .extend-btn,
-            .return-btn {
-                border: 1px solid rgba(0, 0, 0, 0.1);
-            }
-        }
-
-        /* Focus styles for accessibility */
-        .extend-btn:focus,
-        .return-btn:focus {
-            outline: 2px solid #4169e1;
-            outline-offset: 2px;
-        }
-
-        /* Improve touch targets */
-        @media (pointer: coarse) {
-            .extend-btn {
-                min-height: 52px;
-                padding: 16px;
-            }
-
-            .return-btn {
-                min-height: 52px;
-                padding: 16px;
-            }
-        }
-
-        /* Prevent text selection on buttons */
-        .extend-btn,
-        .return-btn {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Better button feedback for touch */
-        .extend-btn:active,
-        .return-btn:active {
-            transform: translateY(1px);
-        }
-
-        /* Better text wrapping for small screens */
-        .status-info,
-        .timer-display,
-        .message {
-            word-wrap: break-word;
-            hyphens: auto;
-        }
-
-        /* Responsive text scaling */
-        @media (max-width: 320px) {
-            .dashboard-title {
-                font-size: 22px;
-            }
-
-            .access-icon {
-                font-size: 28px;
-            }
-
-            .timer-display {
-                font-size: 18px;
-            }
-
-            .extend-btn,
-            .return-btn {
-                font-size: 15px;
-            }
-
-            .status-info,
-            .message {
-                font-size: 13px;
-            }
-        }
-
-        /* Better spacing for very small screens */
-        @media (max-width: 320px) {
-            .dashboard-container {
-                padding: 20px 15px;
-            }
-
-            .status-info,
-            .timer-display,
-            .message {
-                margin: 12px 0;
-                padding: 12px;
-            }
-
-            .extend-btn,
-            .return-btn {
-                margin: 6px 0;
-            }
-        }
     </style>
 </head>
-
 <body>
     <div class="dashboard-container">
         <div class="access-icon">⏱️</div>
         <h2 class="dashboard-title">5-Minute Access</h2>
-
+        
         <div class="status-info">
             ✅ 5-minute access granted<br>
             Sensors disabled for temporary access
@@ -439,17 +168,17 @@
             const seconds = timeLeft % 60;
             const display = document.getElementById('time-left');
             const timerDiv = document.getElementById('timer-display');
-
+            
             display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
+            
             if (timeLeft <= 60) {
                 timerDiv.classList.add('warning');
             } else {
                 timerDiv.classList.remove('warning');
             }
-
+            
             timeLeft--;
-
+            
             if (timeLeft < 0) {
                 clearInterval(timerInterval);
                 document.getElementById('message').innerHTML = `
@@ -472,10 +201,10 @@
 
         function returnToMain() {
             const btn = document.getElementById('returnBtn');
-
+            
             btn.disabled = true;
             btn.textContent = 'Returning...';
-
+            
             fetch('/expire_five_minute_access', { method: 'POST' })
                 .then(() => {
                     window.location.href = '/';
@@ -497,5 +226,4 @@
         }, 10000);
     </script>
 </body>
-
 </html>

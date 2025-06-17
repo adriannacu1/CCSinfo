@@ -9,4 +9,3 @@ click==8.1.8
 pymysql==1.1.0
 cryptography==42.0.2
 pyserial==3.5
-pybluez==0.23
