@@ -505,21 +505,22 @@
     </div>
 
     <script>
-        // ...existing code...
         // Debug: Check if timer data is being passed correctly
         console.log('Timer Data Debug:', {
             class_start_time: '{{ class_start_time }}',
             class_duration_minutes: '{{ class_duration_minutes }}',
             raw_start_time: {{ class_start_time }},
             raw_duration: {{ class_duration_minutes }}
-        })        document.addEventListener('DOMContentLoaded', function () {
-                console.log('Timer elements check:', {
-                    timerData: document.getElementById('class-timer-data'),
-                    timerDisplay: document.getElementById('timer-display'),
-                    timerSection: document.getElementById('timer-section'),
-                    timerStatus: document.getElementById('timer-status')
-                });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Timer elements check:', {
+                timerData: document.getElementById('class-timer-data'),
+                timerDisplay: document.getElementById('timer-display'),
+                timerSection: document.getElementById('timer-section'),
+                timerStatus: document.getElementById('timer-status')
             });
+        });
 
         const timerData = document.getElementById('class-timer-data');
         let classStartTime = parseInt(timerData.dataset.startTime || '0', 10);
@@ -810,27 +811,6 @@
             });
         });
     </script>
-</body>
-
-yId('student_number').focus();
-
-document.addEventListener('DOMContentLoaded', function() {
-const existingItems = document.querySelectorAll('#attendance-list-container .student-item');
-
-existingItems.forEach(item => {
-setTimeout(() => {
-item.style.transition = 'opacity 0.5s ease-out';
-item.style.opacity = '0';
-
-setTimeout(() => {
-if (item.parentNode) {
-item.parentNode.removeChild(item);
-}
-}, 500);
-}, 2000);
-});
-});
-</script>
 </body>
 
 </html>

@@ -94,32 +94,6 @@
                     </a>
                 </div>
             </div>
-
-            <!-- PC Tracking -->
-            <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-aos="fade-up" data-aos-delay="500">
-                    <div class="service-icon">
-                        <i class="fas fa-desktop"></i>
-                    </div>
-                    <h4>PC Tracking</h4>
-                    <p>Monitor computer lab usage and availability</p>
-                    <a href="{{ url_for('pc_tracking') }}" class="service-link">
-                        Track PCs <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Document Submission -->
-            <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-aos="fade-up" data-aos-delay="600">
-                    <div class="service-icon">
-                        <i class="fas fa-file-upload"></i>
-                    </div>
-                    <h4>Submit Documents</h4>
-                    <p>Submit academic documents and forms online</p>
-                    {# <a href="{{ url_for('submit_documents') }}" class="service-link"> #}
-                </div>
-            </div>
         </div>
     </div>
 </section>
@@ -138,7 +112,8 @@
                         <i class="fas fa-user-graduate"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number" data-count="1500">0</div>
+                        <div class="stat-number"
+                            data-count="{{ stats.total_students if stats.total_students is not none else 0 }}">0</div>
                         <div class="stat-label">Students</div>
                         <div class="stat-description">Active learners</div>
                     </div>
@@ -150,7 +125,8 @@
                         <i class="fas fa-chalkboard-teacher"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number" data-count="50">0</div>
+                        <div class="stat-number"
+                            data-count="{{ stats.total_faculty if stats.total_faculty is not none else 0 }}">0</div>
                         <div class="stat-label">Faculty Members</div>
                         <div class="stat-description">Expert educators</div>
                     </div>
@@ -162,7 +138,8 @@
                         <i class="fas fa-door-open"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number" data-count="25">0</div>
+                        <div class="stat-number"
+                            data-count="{{ stats.total_rooms if stats.total_rooms is not none else 0 }}">0</div>
                         <div class="stat-label">Classrooms</div>
                         <div class="stat-description">Learning spaces</div>
                     </div>
@@ -174,7 +151,8 @@
                         <i class="fas fa-code"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number" data-count="10">0</div>
+                        <div class="stat-number"
+                            data-count="{{ stats.total_courses if stats.total_courses is not none else 0 }}">0</div>
                         <div class="stat-label">Programs</div>
                         <div class="stat-description">Career paths</div>
                     </div>

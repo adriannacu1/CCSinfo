@@ -45,6 +45,34 @@ def get_db_connection():
         print(f"Database connection error: {e}")
         return None
 
+def safe_strftime(datetime_obj, format_str='%H:%M:%S'):
+    """Safely format datetime objects or strings to the specified format"""
+    if not datetime_obj:
+        return None
+    
+    # If it's already a string, try to parse it first
+    if isinstance(datetime_obj, str):
+        try:
+            # Try to parse as datetime
+            parsed_dt = datetime.strptime(datetime_obj, '%Y-%m-%d %H:%M:%S')
+            return parsed_dt.strftime(format_str)
+        except ValueError:
+            try:
+                # If that fails, try to extract time part if it contains space
+                if ' ' in datetime_obj:
+                    time_part = datetime_obj.split(' ')[1]
+                    return time_part[:8]  # Return HH:MM:SS
+                else:
+                    return datetime_obj[:8]  # Assume it's already time format
+            except:
+                return str(datetime_obj)
+    
+    # If it's a datetime object, format it normally
+    try:
+        return datetime_obj.strftime(format_str)
+    except AttributeError:
+        return str(datetime_obj)
+
 def check_authentication():
     return 'faculty_id' in session and room_status['authenticated']
 
@@ -353,12 +381,15 @@ def professor_dashboard():
             attendance_records = cursor.fetchall()
             
             for record in attendance_records:
-                if record['check_in_time']:
-                    record['check_in_timestamp'] = record['check_in_time'].strftime('%H:%M:%S')
-                if record['check_out_time']:
-                    record['check_out_timestamp'] = record['check_out_time'].strftime('%H:%M:%S')
-                else:
-                    record['check_out_timestamp'] = None
+                try:
+                    record['check_in_timestamp'] = safe_strftime(record.get('check_in_time'))
+                    record['check_out_timestamp'] = safe_strftime(record.get('check_out_time'))
+                except Exception as timestamp_error:
+                    print(f"Timestamp formatting error: {timestamp_error}")
+                    print(f"Record data: {record}")
+                    # Fallback to string representation
+                    record['check_in_timestamp'] = str(record.get('check_in_time', ''))
+                    record['check_out_timestamp'] = str(record.get('check_out_time', ''))
             
             attendance_count = len(attendance_records)
             

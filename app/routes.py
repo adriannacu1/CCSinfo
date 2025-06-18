@@ -49,7 +49,46 @@ def register_routes(app):
     
     @app.route('/')
     def index():
-        return render_template('index.html')
+        # Get database statistics for the landing page
+        conn = get_db_connection()
+        stats = {
+            'total_students': 0,
+            'total_faculty': 0,
+            'total_rooms': 0,
+            'total_courses': 0
+        }
+        
+        if conn:
+            try:
+                cursor = conn.cursor()
+                
+                # Count students
+                cursor.execute("SELECT COUNT(*) FROM students")
+                stats['total_students'] = cursor.fetchone()[0] or 0
+                
+                # Count faculty
+                cursor.execute("SELECT COUNT(*) FROM faculty")
+                stats['total_faculty'] = cursor.fetchone()[0] or 0
+                
+                # Count rooms
+                cursor.execute("SELECT COUNT(*) FROM rooms")
+                stats['total_rooms'] = cursor.fetchone()[0] or 0
+                
+                # Count courses/programs
+                cursor.execute("SELECT COUNT(*) FROM courses")
+                stats['total_courses'] = cursor.fetchone()[0] or 0
+                
+                cursor.close()
+                conn.close()
+                
+            except Exception as e:
+                print(f"Error getting landing page stats: {e}")
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        
+        return render_template('index.html', stats=stats)
 
     # ==================== ROOM LOGIN ROUTES ====================
     
@@ -221,7 +260,9 @@ def register_routes(app):
             'total_rooms': 0,
             'available_rooms': 0,
             'total_sections': 0,
-            'active_sections': 0
+            'active_sections': 0,
+            'total_courses': 0,
+            'total_temp_keys': 0
         }
         
         if conn:
@@ -247,6 +288,14 @@ def register_routes(app):
                 cursor.execute("SELECT COUNT(*) FROM sections")
                 stats['total_sections'] = cursor.fetchone()[0] or 0
                 stats['active_sections'] = stats['total_sections']
+                
+                # Count courses
+                cursor.execute("SELECT COUNT(*) FROM courses")
+                stats['total_courses'] = cursor.fetchone()[0] or 0
+                
+                # Count temporary keys
+                cursor.execute("SELECT COUNT(*) FROM rand_strings")
+                stats['total_temp_keys'] = cursor.fetchone()[0] or 0
                 
                 cursor.close()
                 conn.close()
@@ -963,7 +1012,172 @@ def register_routes(app):
 
     @app.route('/admin/settings')
     def admin_settings():
-        return render_template('admin/settings.html')
+        """Admin settings page with profile management and system info"""
+        if 'admin_id' not in session:
+            return redirect(url_for('admin_login'))
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection failed', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get current admin profile
+            cursor.execute("""
+                SELECT admin_id, username, full_name, email, role, 
+                       last_login, created_at, login_attempts
+                FROM admin 
+                WHERE admin_id = %s
+            """, (session['admin_id'],))
+            admin_profile = cursor.fetchone()
+            
+            # Get system statistics
+            stats = {}
+            
+            # Get total counts
+            cursor.execute("SELECT COUNT(*) as count FROM students")
+            stats['total_students'] = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM faculty")
+            stats['total_faculty'] = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM rooms")
+            stats['total_rooms'] = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM sections")
+            stats['total_sections'] = cursor.fetchone()['count']
+            
+            # Count active temporary keys (generated in last 24 hours)
+            cursor.execute("SELECT COUNT(*) as count FROM rand_strings WHERE Date > DATE_SUB(NOW(), INTERVAL 24 HOUR)")
+            stats['active_temp_keys'] = cursor.fetchone()['count']
+            
+            # Get recent activity from student_attendance (last 10 check-ins)
+            cursor.execute("""
+                SELECT sa.student_number, s.name as full_name, sa.check_in_time as login_time, 
+                       sa.check_out_time as logout_time, sa.room_number, f.name as professor_name
+                FROM student_attendance sa
+                LEFT JOIN students s ON sa.student_number = s.student_number
+                LEFT JOIN faculty f ON sa.professor_id = f.faculty_id
+                ORDER BY sa.check_in_time DESC
+                LIMIT 10
+            """)
+            recent_activity = cursor.fetchall()
+            
+            return render_template('admin/settings.html', 
+                                 admin_profile=admin_profile,
+                                 stats=stats,
+                                 recent_activity=recent_activity)
+
+        except mysql.connector.Error as e:
+            flash(f'Database error: {str(e)}', 'error')
+            return redirect(url_for('admin_dashboard'))
+        finally:
+            if conn:
+                conn.close()
+
+    @app.route('/admin/settings/update-profile', methods=['POST'])
+    def admin_update_profile():
+        """Update admin profile information"""
+        if 'admin_id' not in session:
+            return redirect(url_for('admin_login'))
+
+        full_name = request.form.get('full_name', '').strip()
+        email = request.form.get('email', '').strip()
+
+        if not full_name or not email:
+            flash('Full name and email are required', 'error')
+            return redirect(url_for('admin_settings'))
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection failed', 'error')
+            return redirect(url_for('admin_settings'))
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE admin 
+                SET full_name = %s, email = %s, updated_at = NOW()
+                WHERE admin_id = %s
+            """, (full_name, email, session['admin_id']))
+            
+            flash('Profile updated successfully', 'success')
+
+        except mysql.connector.Error as e:
+            flash(f'Error updating profile: {str(e)}', 'error')
+        finally:
+            if conn:
+                conn.close()
+
+        return redirect(url_for('admin_settings'))
+
+    @app.route('/admin/settings/change-password', methods=['POST'])
+    def admin_change_password():
+        """Change admin password"""
+        if 'admin_id' not in session:
+            return redirect(url_for('admin_login'))
+
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        if not all([current_password, new_password, confirm_password]):
+            flash('All password fields are required', 'error')
+            return redirect(url_for('admin_settings'))
+
+        if new_password != confirm_password:
+            flash('New passwords do not match', 'error')
+            return redirect(url_for('admin_settings'))
+
+        if len(new_password) < 6:
+            flash('New password must be at least 6 characters long', 'error')
+            return redirect(url_for('admin_settings'))
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection failed', 'error')
+            return redirect(url_for('admin_settings'))
+
+        try:
+            from app import bcrypt
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get current password hash
+            cursor.execute("SELECT password FROM admin WHERE admin_id = %s", (session['admin_id'],))
+            admin_data = cursor.fetchone()
+            
+            if not admin_data:
+                flash('Admin not found', 'error')
+                return redirect(url_for('admin_settings'))
+
+            # Verify current password
+            if not verify_admin_password(admin_data['password'], current_password):
+                flash('Current password is incorrect', 'error')
+                return redirect(url_for('admin_settings'))
+
+            # Hash new password
+            new_password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
+            
+            # Update password
+            cursor.execute("""
+                UPDATE admin 
+                SET password = %s, updated_at = NOW()
+                WHERE admin_id = %s
+            """, (new_password_hash, session['admin_id']))
+            
+            flash('Password changed successfully', 'success')
+
+        except mysql.connector.Error as e:
+            flash(f'Error changing password: {str(e)}', 'error')
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
+        finally:
+            if conn:
+                conn.close()
+
+        return redirect(url_for('admin_settings'))
     
     @app.route('/admin/faculty/<int:faculty_id>')
     def admin_faculty_profile(faculty_id):
@@ -1208,9 +1422,10 @@ def register_routes(app):
             # Get activity log (recent attendance) for admin use
             activity_log = []
             cursor.execute('''
-                SELECT sa.*, 
+                SELECT sa.pc_number,
                        f.name AS professor_name,
-                       DATE_FORMAT(sa.check_in_time, '%Y-%m-%d %H:%i:%s') as timestamp,
+                       DATE_FORMAT(sa.check_in_time, '%Y-%m-%d %H:%i:%s') as check_in_time,
+                       DATE_FORMAT(sa.check_out_time, '%Y-%m-%d %H:%i:%s') as check_out_time,
                        sa.room_number as room_name,
                        sa.class_session_id as session_id
                 FROM student_attendance sa
@@ -1579,7 +1794,7 @@ def register_routes(app):
             activity_log = []
             if student.get('student_number'):
                 cursor.execute('''
-                    SELECT sa.pc_number, sa.check_in_time, sa.room_number, sa.class_session_id,
+                    SELECT sa.pc_number, sa.check_in_time, sa.check_out_time, sa.room_number, sa.class_session_id,
                            f.name as professor_name
                     FROM student_attendance sa
                     LEFT JOIN faculty f ON sa.professor_id = f.faculty_id
@@ -1595,6 +1810,7 @@ def register_routes(app):
                         'pc_number': item['pc_number'] or 'N/A',
                         'professor_name': item['professor_name'] or 'N/A',
                         'check_in_time': str(item['check_in_time']) if item['check_in_time'] else 'N/A',
+                        'check_out_time': str(item['check_out_time']) if item['check_out_time'] else None,
                         'room_name': item['room_number'] or 'N/A',
                         'session_id': item['class_session_id'] or 'N/A'
                     })
@@ -1633,3 +1849,308 @@ def register_routes(app):
                 except:
                     pass
             return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+    @app.route('/admin/generate_temp_key', methods=['POST'])
+    def admin_generate_temp_key():
+        """Generate temporary access keys for room access"""
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        try:
+            data = request.get_json()
+            key_type = data.get('key_type')
+            
+            # Validate key type
+            valid_types = ['5minutes', 'Mayoral', 'Maintenance']
+            if key_type not in valid_types:
+                return jsonify({'success': False, 'message': 'Invalid key type'}), 400
+            
+            # Generate random 7-digit code
+            import random
+            import string
+            from datetime import datetime
+            
+            random_code = ''.join(random.choices(string.digits, k=7))
+            current_time = datetime.now()
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                cursor = conn.cursor()
+                
+                # Insert the generated code into rand_strings table
+                sql = "INSERT INTO rand_strings (randomC, Date, State) VALUES (%s, %s, %s)"
+                cursor.execute(sql, (random_code, current_time, key_type))
+                conn.commit()
+                
+                cursor.close()
+                conn.close()
+                
+                # Map key types to display names
+                key_display_names = {
+                    '5minutes': '5-Minute Access',
+                    'Mayoral': 'Mayoral Access', 
+                    'Maintenance': 'Maintenance Access'
+                }
+                
+                return jsonify({
+                    'success': True, 
+                    'message': f'{key_display_names[key_type]} code generated successfully',
+                    'code': random_code,
+                    'type': key_display_names[key_type],
+                    'generated_at': current_time.strftime('%Y-%m-%d %H:%M:%S')
+                })
+                
+            except Exception as e:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+                return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
+                
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+    @app.route('/admin/get_temp_keys')
+    def admin_get_temp_keys():
+        """Get recent temporary keys generated by admin"""
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get recent keys from last 24 hours
+            cursor.execute("""
+                SELECT randomC, Date, State 
+                FROM rand_strings 
+                WHERE Date >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+                ORDER BY Date DESC 
+                LIMIT 10
+            """)
+            
+            keys = cursor.fetchall()
+            
+            # Format the keys for display
+            formatted_keys = []
+            for key in keys:
+                key_display_names = {
+                    '5minutes': '5-Minute Access',
+                    'Mayoral': 'Mayoral Access', 
+                    'Maintenance': 'Maintenance Access'
+                }
+                
+                formatted_keys.append({
+                    'code': key['randomC'],
+                    'type': key_display_names.get(key['State'], key['State']),
+                    'generated_at': key['Date'].strftime('%Y-%m-%d %H:%M:%S') if key['Date'] else 'Unknown',
+                    'state': key['State']
+                })
+            
+            cursor.close()
+            conn.close()
+            
+            return jsonify({'success': True, 'keys': formatted_keys})
+            
+        except Exception as e:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+    @app.route('/admin/temp-keys')
+    def admin_temp_keys():
+        """Temporary keys management page"""
+        if 'admin_id' not in session:
+            return redirect(url_for('admin_login'))
+        
+        # Get admin info from session
+        admin_info = {
+            'admin_id': session.get('admin_id'),
+            'username': session.get('admin_username'),
+            'full_name': session.get('admin_name', 'Administrator'),
+            'role': session.get('admin_role', 'admin')
+        }
+        
+        # Get recent generated keys for display
+        conn = get_db_connection()
+        recent_keys = []
+        
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("""
+                    SELECT randomC, Date, State, ID 
+                    FROM rand_strings 
+                    ORDER BY Date DESC 
+                    LIMIT 10
+                """)
+                recent_keys = cursor.fetchall()
+                cursor.close()
+                conn.close()
+            except Exception as e:
+                print(f"Error fetching recent keys: {e}")
+        
+        return render_template('admin/temp_keys.html', admin=admin_info, recent_keys=recent_keys)
+
+    # ==================== API ENDPOINTS ====================
+    
+    @app.route('/api/dashboard/stats')
+    def dashboard_stats_api():
+        """API endpoint for real-time dashboard statistics"""
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get total students
+            cursor.execute("SELECT COUNT(*) as total FROM students")
+            total_students = cursor.fetchone()['total']
+            
+            # Get active students (status = 'AVAILABLE')
+            cursor.execute("SELECT COUNT(*) as active FROM students WHERE status = 'AVAILABLE'")
+            active_students = cursor.fetchone()['active']
+            
+            # Get total faculty
+            cursor.execute("SELECT COUNT(*) as total FROM faculty")
+            total_faculty = cursor.fetchone()['total']
+            
+            # Get active faculty (status_state = 'AVAILABLE')
+            cursor.execute("SELECT COUNT(*) as active FROM faculty WHERE status_state = 'AVAILABLE'")
+            active_faculty = cursor.fetchone()['active']
+            
+            # Get total rooms
+            cursor.execute("SELECT COUNT(*) as total FROM rooms")
+            total_rooms = cursor.fetchone()['total']
+            
+            # Get available rooms (assuming all rooms are available for now)
+            available_rooms = total_rooms  # You can modify this logic based on your room booking system
+            
+            # Get total sections
+            cursor.execute("SELECT COUNT(*) as total FROM sections")
+            total_sections = cursor.fetchone()['total']
+            
+            # Get active sections (all sections are active for now)
+            active_sections = total_sections
+            
+            # Get total courses (programs)
+            cursor.execute("SELECT COUNT(*) as total FROM courses")
+            total_courses = cursor.fetchone()['total']
+            
+            # Get temporary keys count (current active keys)
+            cursor.execute("SELECT COUNT(*) as total FROM rand_strings")
+            temp_keys = cursor.fetchone()['total']
+            
+            # Get recent activity count (students checked in today)
+            cursor.execute("""
+                SELECT COUNT(*) as today_checkins 
+                FROM student_attendance 
+                WHERE DATE(check_in_time) = CURDATE()
+            """)
+            today_checkins = cursor.fetchone()['today_checkins']
+            
+            cursor.close()
+            conn.close()
+            
+            stats = {
+                'total_students': total_students,
+                'active_students': active_students,
+                'total_faculty': total_faculty,
+                'active_faculty': active_faculty,
+                'total_rooms': total_rooms,
+                'available_rooms': available_rooms,
+                'total_sections': total_sections,
+                'active_sections': active_sections,
+                'total_courses': total_courses,
+                'temp_keys': temp_keys,
+                'today_checkins': today_checkins,
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            return jsonify({'success': True, 'stats': stats})
+            
+        except Exception as e:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+    
+    @app.route('/api/admin/dashboard/stats')
+    def api_dashboard_stats():
+        """API endpoint for real-time dashboard statistics"""
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        conn = get_db_connection()
+        stats = {
+            'total_students': 0,
+            'active_students': 0,
+            'total_faculty': 0,
+            'active_faculty': 0,
+            'total_rooms': 0,
+            'available_rooms': 0,
+            'total_sections': 0,
+            'active_sections': 0,
+            'total_courses': 0,
+            'total_temp_keys': 0
+        }
+        
+        if conn:
+            try:
+                cursor = conn.cursor()
+                
+                # Count students
+                cursor.execute("SELECT COUNT(*) FROM students")
+                stats['total_students'] = cursor.fetchone()[0] or 0
+                stats['active_students'] = stats['total_students']
+                
+                # Count faculty
+                cursor.execute("SELECT COUNT(*) FROM faculty")
+                stats['total_faculty'] = cursor.fetchone()[0] or 0
+                stats['active_faculty'] = stats['total_faculty']
+                
+                # Count rooms
+                cursor.execute("SELECT COUNT(*) FROM rooms")
+                stats['total_rooms'] = cursor.fetchone()[0] or 0
+                stats['available_rooms'] = stats['total_rooms']
+                
+                # Count sections
+                cursor.execute("SELECT COUNT(*) FROM sections")
+                stats['total_sections'] = cursor.fetchone()[0] or 0
+                stats['active_sections'] = stats['total_sections']
+                
+                # Count courses/programs
+                cursor.execute("SELECT COUNT(*) FROM courses")
+                stats['total_courses'] = cursor.fetchone()[0] or 0
+                
+                # Count temporary keys
+                cursor.execute("SELECT COUNT(*) FROM rand_strings")
+                stats['total_temp_keys'] = cursor.fetchone()[0] or 0
+                
+                cursor.close()
+                conn.close()
+                
+                return jsonify({'success': True, 'stats': stats})
+                
+            except Exception as e:
+                print(f"Error getting stats: {e}")
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+                return jsonify({'success': False, 'message': 'Database error'}), 500
+        else:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500

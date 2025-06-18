@@ -198,14 +198,6 @@
                         Admin</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('room_login') }}"><i class="fas fa-door-open"></i> Login to
-                        Room</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('pc_tracking') }}"><i class="fas fa-desktop"></i> PC
-                        Tracking</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('student_list') }}"><i class="fas fa-user-graduate"></i>
                         Students</a>
                 </li>
@@ -230,10 +222,6 @@
     <div class="main-content">
         <div class="container-fluid mt-4">
             {% block content %}
-            <div class="container">
-                <h1>Submit Documents</h1>
-                <!-- Add your document submission form here -->
-            </div>
             {% endblock %}
         </div>
     </div>

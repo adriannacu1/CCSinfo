@@ -42,12 +42,13 @@
                                 <td>{{ log.pc_number }}</td>
                                 <td>{{ log.professor_name }}</td>
                                 <td>{{ log.check_in_time }}</td>
+                                <td>{{ log.check_out_time or 'Not checked out' }}</td>
                                 <td>{{ log.room_number }}</td>
                                 <td>{{ log.class_session_id or 'N/A' }}</td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5">No activity found.</td>
+                                <td colspan="6">No activity found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

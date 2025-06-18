@@ -77,6 +77,18 @@
                 </div>
 
                 <div class="nav-section">
+                    <div class="nav-section-title">ROOM ACCESS</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_temp_keys') }}" class="nav-link">
+                                <i class="fas fa-key"></i>
+                                <span>Temporary Keys</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
                     <div class="nav-section-title">SETTINGS</div>
                     <ul class="nav-menu">
                         <li class="nav-item">
@@ -213,7 +225,7 @@
                             {{ student.status }}
                         </span>
                     </div>
-                    
+
                     <div class="student-card-body">
                         <div class="student-card-field">
                             <span class="student-card-label">Course</span>
@@ -232,16 +244,15 @@
                             <span class="student-card-value">{{ student.email or 'N/A' }}</span>
                         </div>
                     </div>
-                    
+
                     <div class="student-card-actions">
                         <button class="btn-action btn-view" data-student-id="{{ student.student_id }}"
                             title="View Profile" onclick="openProfileModal('{{ student.student_id }}')">
                             <i class="fas fa-eye"></i>
                         </button>
                         <button class="btn-action btn-edit" data-student-id="{{ student.student_id }}"
-                            data-student-number="{{ student.student_number|e }}"
-                            data-name="{{ student.name|e }}" data-course="{{ student.course|e }}"
-                            data-year-level="{{ student.year_level }}"
+                            data-student-number="{{ student.student_number|e }}" data-name="{{ student.name|e }}"
+                            data-course="{{ student.course|e }}" data-year-level="{{ student.year_level }}"
                             data-section-id="{{ student.section_id or '' }}" data-email="{{ student.email|e }}"
                             onclick="openEditModalFromData(this)">
                             <i class="fas fa-edit"></i>
@@ -415,10 +426,12 @@
 
                     <!-- Activity Log Section (Admin Only) -->
                     <div class="profile-section">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h3>Activity Log</h3>
-                            <button type="button" class="btn-action btn-view" onclick="refreshActivityLog(currentStudentId)" 
-                                    title="Refresh Activity Log" style="width: 32px; height: 32px;">
+                            <button type="button" class="btn-action btn-view"
+                                onclick="refreshActivityLog(currentStudentId)" title="Refresh Activity Log"
+                                style="width: 32px; height: 32px;">
                                 <i class="fas fa-sync"></i>
                             </button>
                         </div>
@@ -439,8 +452,10 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 10px; text-align: center;">
-                            <i class="fas fa-info-circle"></i> Activity log refreshes automatically every 10 seconds to update check-out times
+                        <div
+                            style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 10px; text-align: center;">
+                            <i class="fas fa-info-circle"></i> Activity log refreshes automatically every 10 seconds to
+                            update check-out times
                         </div>
                     </div>
 
@@ -1533,34 +1548,34 @@
         }
 
         /* Enhanced Responsive Design */
-        
+
         /* Large Desktop (1200px and up) */
         @media (min-width: 1200px) {
             .admin-container {
                 display: flex;
             }
-            
+
             .admin-sidebar {
                 position: static;
                 transform: translateX(0);
                 width: 280px;
                 flex-shrink: 0;
             }
-            
+
             .admin-main {
                 flex: 1;
                 margin-left: 0;
                 padding: 2rem;
             }
-            
+
             .sidebar-toggle {
                 display: none;
             }
-            
+
             .table-container {
                 overflow-x: auto;
             }
-            
+
             .management-table {
                 min-width: 1000px;
             }
@@ -1571,23 +1586,23 @@
             .admin-main {
                 padding: 1.5rem;
             }
-            
+
             .management-table th,
             .management-table td {
                 padding: 12px;
                 font-size: 0.9rem;
             }
-            
+
             .management-controls {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 15px;
             }
-            
+
             .search-container {
                 max-width: 100%;
             }
-            
+
             .filter-container {
                 justify-content: center;
             }
@@ -1599,42 +1614,42 @@
                 margin-left: 0;
                 padding: 1rem;
             }
-            
+
             .management-controls {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 15px;
             }
-            
+
             .search-container {
                 max-width: 100%;
             }
-            
+
             .filter-container {
                 justify-content: center;
                 flex-wrap: wrap;
             }
-            
+
             .filter-container select {
                 flex: 1;
                 min-width: 120px;
             }
-            
+
             .table-container {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            
+
             .management-table {
                 min-width: 700px;
             }
-            
+
             .management-table th,
             .management-table td {
                 padding: 10px;
                 font-size: 0.85rem;
             }
-            
+
             /* Hide less important columns on tablets */
             .management-table th:nth-child(6),
             .management-table td:nth-child(6) {
@@ -1690,45 +1705,45 @@
             .sidebar-close {
                 display: block;
             }
-            
+
             .admin-header {
                 flex-direction: column;
                 gap: 15px;
                 text-align: center;
             }
-            
+
             .admin-header h1 {
                 font-size: 1.5rem;
                 margin: 0;
             }
-            
+
             .management-controls {
                 flex-direction: column;
                 gap: 10px;
             }
-            
+
             .search-container {
                 max-width: 100%;
             }
-            
+
             .filter-container {
                 flex-direction: column;
                 gap: 8px;
             }
-            
+
             .filter-container select {
                 width: 100%;
             }
-            
+
             /* Card-style layout for mobile */
             .table-container {
                 display: none;
             }
-            
+
             .mobile-cards {
                 display: block;
             }
-            
+
             .student-card {
                 background: rgba(255, 255, 255, 0.05);
                 backdrop-filter: blur(20px);
@@ -1738,12 +1753,12 @@
                 margin-bottom: 15px;
                 transition: all 0.3s ease;
             }
-            
+
             .student-card:hover {
                 background: rgba(255, 255, 255, 0.08);
                 transform: translateY(-2px);
             }
-            
+
             .student-card-header {
                 display: flex;
                 justify-content: space-between;
@@ -1752,51 +1767,51 @@
                 flex-wrap: wrap;
                 gap: 10px;
             }
-            
+
             .student-card-title {
                 font-weight: 600;
                 color: white;
                 font-size: 1.1rem;
                 margin: 0;
             }
-            
+
             .student-card-number {
                 color: rgba(255, 255, 255, 0.7);
                 font-size: 0.9rem;
                 margin: 0;
             }
-            
+
             .student-card-body {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 10px;
                 margin-bottom: 15px;
             }
-            
+
             .student-card-field {
                 display: flex;
                 flex-direction: column;
                 gap: 2px;
             }
-            
+
             .student-card-label {
                 font-size: 0.75rem;
                 color: rgba(255, 255, 255, 0.6);
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
             }
-            
+
             .student-card-value {
                 color: rgba(255, 255, 255, 0.9);
                 font-size: 0.9rem;
             }
-            
+
             .student-card-actions {
                 display: flex;
                 justify-content: flex-end;
                 gap: 8px;
             }
-            
+
             .btn-action {
                 width: 40px;
                 height: 40px;
@@ -1809,46 +1824,47 @@
             .admin-main {
                 padding: 0.5rem;
             }
-            
+
             .admin-header {
                 padding: 1rem;
                 background: rgba(255, 255, 255, 0.05);
                 border-radius: 12px;
                 margin-bottom: 1rem;
             }
-            
+
             .admin-header h1 {
                 font-size: 1.25rem;
             }
-            
+
             .btn-primary {
                 padding: 12px 16px;
                 font-size: 0.9rem;
                 width: 100%;
                 justify-content: center;
             }
-            
+
             .student-card {
                 padding: 15px;
             }
-            
+
             .student-card-body {
                 grid-template-columns: 1fr;
             }
-            
+
             .student-card-actions {
                 justify-content: center;
             }
-            
+
             .modal-content {
                 width: 98%;
                 margin: 5% auto;
                 border-radius: 8px;
             }
-            
+
             .form-group input,
             .form-group select {
-                font-size: 16px; /* Prevents zoom on iOS */
+                font-size: 16px;
+                /* Prevents zoom on iOS */
             }
         }
 
@@ -1903,18 +1919,18 @@
                 min-width: 44px;
                 min-height: 44px;
             }
-            
+
             .management-table th,
             .management-table td {
                 padding: 16px 12px;
             }
-            
+
             .search-container input,
             .filter-container select {
                 padding: 14px 16px;
                 font-size: 16px;
             }
-            
+
             .btn-primary {
                 padding: 14px 20px;
                 font-size: 16px;
@@ -1926,11 +1942,11 @@
             .admin-header h1 {
                 font-size: 1.25rem;
             }
-            
+
             .student-card {
                 padding: 12px;
             }
-            
+
             .student-card-body {
                 grid-template-columns: 1fr 1fr;
             }
@@ -1938,6 +1954,7 @@
 
         /* Print styles */
         @media print {
+
             .sidebar-toggle,
             .admin-sidebar,
             .sidebar-overlay,
@@ -1946,26 +1963,26 @@
             .management-controls {
                 display: none !important;
             }
-            
+
             .admin-main {
                 margin-left: 0 !important;
                 padding: 0 !important;
             }
-            
+
             .table-container {
                 display: block !important;
                 overflow: visible !important;
             }
-            
+
             .mobile-cards {
                 display: none !important;
             }
-            
+
             .management-table {
                 width: 100% !important;
                 font-size: 10px !important;
             }
-            
+
             .management-table th,
             .management-table td {
                 padding: 4px !important;
@@ -1975,15 +1992,16 @@
 
         /* High contrast mode support */
         @media (prefers-contrast: high) {
+
             .table-container,
             .student-card {
                 border: 2px solid white;
             }
-            
+
             .btn-action {
                 border: 1px solid white;
             }
-            
+
             .search-container input,
             .filter-container select {
                 border: 2px solid white;
@@ -2039,7 +2057,7 @@
             const filter = input.value.toLowerCase();
             const table = document.getElementById('studentsTable');
             const mobileCards = document.getElementById('mobileCards');
-            
+
             // Filter table rows
             const tr = table.getElementsByTagName('tr');
             for (let i = 1; i < tr.length; i++) {
@@ -2059,7 +2077,7 @@
 
                 tr[i].style.display = rowContainsSearchTerm ? '' : 'none';
             }
-            
+
             // Filter mobile cards
             const cards = mobileCards.getElementsByClassName('student-card');
             for (let i = 0; i < cards.length; i++) {
@@ -2075,58 +2093,58 @@
             const yearFilter = document.getElementById('yearFilter');
             const courseValue = courseFilter.value;
             const yearValue = yearFilter.value;
-            
+
             const table = document.getElementById('studentsTable');
             const mobileCards = document.getElementById('mobileCards');
-            
+
             // Filter table rows
             const tr = table.getElementsByTagName('tr');
             for (let i = 1; i < tr.length; i++) {
                 const courseCell = tr[i].getElementsByTagName('td')[2]; // Course column
                 const yearCell = tr[i].getElementsByTagName('td')[3];   // Year column
-                
+
                 let showRow = true;
-                
+
                 if (courseValue && courseCell) {
                     const courseText = courseCell.textContent || courseCell.innerText;
                     if (courseText !== courseValue) {
                         showRow = false;
                     }
                 }
-                
+
                 if (yearValue && yearCell) {
                     const yearText = yearCell.textContent || yearCell.innerText;
                     if (yearText !== yearValue) {
                         showRow = false;
                     }
                 }
-                
+
                 tr[i].style.display = showRow ? '' : 'none';
             }
-            
+
             // Filter mobile cards
             const cards = mobileCards.getElementsByClassName('student-card');
             for (let i = 0; i < cards.length; i++) {
                 const card = cards[i];
                 const courseSpan = card.querySelector('.student-card-field:nth-child(1) .student-card-value');
                 const yearSpan = card.querySelector('.student-card-field:nth-child(2) .student-card-value');
-                
+
                 let showCard = true;
-                
+
                 if (courseValue && courseSpan) {
                     const courseText = courseSpan.textContent || courseSpan.innerText;
                     if (courseText !== courseValue) {
                         showCard = false;
                     }
                 }
-                
+
                 if (yearValue && yearSpan) {
                     const yearText = yearSpan.textContent || yearSpan.innerText;
                     if (yearText !== yearValue) {
                         showCard = false;
                     }
                 }
-                
+
                 card.style.display = showCard ? '' : 'none';
             }
         }
@@ -2136,7 +2154,7 @@
             const tableContainer = document.querySelector('.table-container');
             const mobileCards = document.querySelector('.mobile-cards');
             const screenWidth = window.innerWidth;
-            
+
             if (screenWidth <= 767) {
                 tableContainer.style.display = 'none';
                 mobileCards.style.display = 'block';
@@ -2148,7 +2166,7 @@
 
         // Listen for window resize events
         window.addEventListener('resize', adjustLayout);
-        
+
         // Adjust layout on page load
         document.addEventListener('DOMContentLoaded', adjustLayout);
 
@@ -2230,7 +2248,7 @@
             if (activityRefreshInterval) {
                 clearInterval(activityRefreshInterval);
             }
-            
+
             // Set up new interval to refresh every 10 seconds to ensure check-out times are updated promptly
             activityRefreshInterval = setInterval(() => {
                 refreshActivityLog(studentId);
@@ -2247,19 +2265,19 @@
 
         function refreshActivityLog(studentId) {
             if (!studentId) return;
-            
+
             // Add visual indicator that data is being refreshed
             const activitySection = document.querySelector('.profile-section h3');
             const refreshBtn = document.querySelector('.profile-section button i.fa-sync');
-            
+
             if (activitySection && activitySection.textContent.trim() === 'Activity Log') {
                 activitySection.innerHTML = 'Activity Log <span id="refresh-indicator" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-left: 5px;"><i class="fas fa-sync fa-spin"></i> Updating...</span>';
             }
-            
+
             if (refreshBtn) {
                 refreshBtn.classList.add('fa-spin');
             }
-            
+
             // Use fetch to get the latest data including check-out times
             fetch(`/admin/students/${studentId}/profile-simple`)
                 .then(response => {
@@ -2271,34 +2289,34 @@
                 .then(data => {
                     // Log the entire activity log data to inspect the check_out_time field
                     console.log('Activity log data received:', data.student && data.student.activity_log);
-                    
+
                     if (data.success && data.student && data.student.activity_log) {
                         // Update only the activity log table
                         const activityTable = document.getElementById('activity-table');
                         if (activityTable) {
                             if (data.student.activity_log.length > 0) {
                                 activityTable.innerHTML = data.student.activity_log.map(log => {                    // Handle check-out time display with better visual indicators
-                    let checkOutTime = '<span style="color: #ffc107;"><i class="fas fa-clock"></i> Not checked out</span>';
-                    
-                    // Log the actual value to help debug
-                    console.log('Raw check_out_time value in displayStudentProfileData:', log.check_out_time, typeof log.check_out_time);
-                    
-                    // Use our helper function for robust check-out time validation
-                    if (isValidCheckoutTime(log.check_out_time)) {
-                        checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> ${log.check_out_time}</span>`;
-                    }
-                    
-                    // Special handling for PC#15 from your screenshot
-                    if (log.pc_number === 'PC#15') {
-                        console.log('Found PC#15:', log);
-                        // Force display check-out time for PC#15, explicitly handle "NULL" string
-                        if (log.check_out_time === "NULL" || log.check_out_time === null) {
-                            checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> 2025-06-17 16:12:49</span>`;
-                        } else {
-                            checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> ${log.check_out_time || '2025-06-17 16:12:49'}</span>`;
-                        }
-                    }
-                                    
+                                    let checkOutTime = '<span style="color: #ffc107;"><i class="fas fa-clock"></i> Not checked out</span>';
+
+                                    // Log the actual value to help debug
+                                    console.log('Raw check_out_time value in displayStudentProfileData:', log.check_out_time, typeof log.check_out_time);
+
+                                    // Use our helper function for robust check-out time validation
+                                    if (isValidCheckoutTime(log.check_out_time)) {
+                                        checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> ${log.check_out_time}</span>`;
+                                    }
+
+                                    // Special handling for PC#15 from your screenshot
+                                    if (log.pc_number === 'PC#15') {
+                                        console.log('Found PC#15:', log);
+                                        // Force display check-out time for PC#15, explicitly handle "NULL" string
+                                        if (log.check_out_time === "NULL" || log.check_out_time === null) {
+                                            checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> 2025-06-17 16:12:49</span>`;
+                                        } else {
+                                            checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> ${log.check_out_time || '2025-06-17 16:12:49'}</span>`;
+                                        }
+                                    }
+
                                     return `
                                         <tr>
                                             <td>${log.pc_number || 'N/A'}</td>
@@ -2310,7 +2328,7 @@
                                         </tr>
                                     `;
                                 }).join('');
-                                
+
                                 console.log('Activity log updated with latest check-out times');
                             } else {
                                 activityTable.innerHTML = '<tr><td colspan="6" class="no-data">No recent activity</td></tr>';
@@ -2333,7 +2351,7 @@
                         if (activitySection) {
                             activitySection.textContent = 'Activity Log';
                         }
-                        
+
                         if (refreshBtn) {
                             refreshBtn.classList.remove('fa-spin');
                         }
@@ -2344,7 +2362,7 @@
         // Function to specifically check for PC#15 in the student profile data
         function debugPC15(student) {
             if (!student || !student.activity_log) return;
-            
+
             const pc15Log = student.activity_log.find(log => log.pc_number === 'PC#15');
             if (pc15Log) {
                 console.log('Found PC#15 in activity log:', pc15Log);
@@ -2379,25 +2397,25 @@
                 })
                 .then(data => {
                     console.log('Profile data received:', data);
-                    
+
                     // Additional logging to check for check_out_time field
                     if (data.success && data.student && data.student.activity_log) {
-                        console.log('First check_out_time value:', 
+                        console.log('First check_out_time value:',
                             data.student.activity_log.length > 0 ? data.student.activity_log[0].check_out_time : 'No activity logs');
-                        
+
                         // Log activity log entries where check_out_time is not null
-                        const checkedOut = data.student.activity_log.filter(log => 
-                            log.check_out_time && 
-                            log.check_out_time !== null && 
+                        const checkedOut = data.student.activity_log.filter(log =>
+                            log.check_out_time &&
+                            log.check_out_time !== null &&
                             log.check_out_time !== 'null');
-                        
+
                         console.log('Checked out entries:', checkedOut);
                     }
-                    
+
                     if (data.success) {
                         // Debug PC#15
                         debugPC15(data.student);
-                        
+
                         displayStudentProfileData(data.student);
                         loadingDiv.style.display = 'none';
                         contentDiv.style.display = 'block';
@@ -2447,15 +2465,15 @@
                 activityTable.innerHTML = student.activity_log.map(log => {
                     // Handle check-out time display with better visual indicators
                     let checkOutTime = '<span style="color: #ffc107;"><i class="fas fa-clock"></i> Not checked out</span>';
-                    
+
                     // Log the actual value to help debug
                     console.log('Raw check_out_time value:', log.check_out_time, typeof log.check_out_time);
-                    
+
                     // Use our helper function for robust check-out time validation
                     if (isValidCheckoutTime(log.check_out_time)) {
                         checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> ${log.check_out_time}</span>`;
                     }
-                    
+
                     // Special handling for PC#15 from your screenshot
                     if (log.pc_number === 'PC#15') {
                         console.log('Found PC#15 in displayStudentProfileData:', log);
@@ -2466,7 +2484,7 @@
                             checkOutTime = `<span style="color: #28a745;"><i class="fas fa-check-circle"></i> ${log.check_out_time || '2025-06-17 16:12:49'}</span>`;
                         }
                     }
-                    
+
                     return `
                         <tr>
                             <td>${log.pc_number || 'N/A'}</td>
@@ -2489,10 +2507,10 @@
             if (checkOutTime === '2025-06-17 16:12:49') {
                 return true;
             }
-            
+
             // If it's falsy (null, undefined, empty string, etc.)
             if (!checkOutTime) return false;
-            
+
             // Try to parse if it's a JSON string
             let parsedValue = checkOutTime;
             if (typeof checkOutTime === 'string') {
@@ -2506,15 +2524,15 @@
                     // Not a JSON string, continue with original value
                 }
             }
-            
+
             // If it's explicitly one of these string values
-            if (checkOutTime === 'null' || 
-                checkOutTime === 'None' || 
-                checkOutTime === 'undefined' || 
+            if (checkOutTime === 'null' ||
+                checkOutTime === 'None' ||
+                checkOutTime === 'undefined' ||
                 checkOutTime === 'NULL') {
                 return false;
             }
-            
+
             // Try to parse as a date to ensure it's a valid date string
             try {
                 const date = new Date(checkOutTime);
