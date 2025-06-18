@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 16, 2025 at 11:05 AM
+-- Generation Time: Jun 18, 2025 at 03:34 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -49,7 +49,7 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`admin_id`, `username`, `password`, `full_name`, `email`, `role`, `is_active`, `last_login`, `login_attempts`, `locked_until`, `password_reset_token`, `password_reset_expires`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '$2b$12$07lVEPWMITdoCP5wT5YTP.6MQMh.Z8IVftMzv4RwfZ2KW4DJ4ehHu', 'Super Administrator', 'admin@ccs.edu', 'super_admin', 1, '2025-06-15 06:58:59', 1, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-15 06:58:59'),
+(1, 'admin', '$2b$12$07lVEPWMITdoCP5wT5YTP.6MQMh.Z8IVftMzv4RwfZ2KW4DJ4ehHu', 'Super Administrator', 'admin@ccs.edu', 'super_admin', 1, '2025-06-18 01:31:15', 1, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-18 01:31:15'),
 (2, 'ccs_admin', '$2b$12$wrl.4orbkFN9U6uyLV59xubZWU9Keu0s/3N0VoH23a7seViui8KF6', 'CCS Administrator', 'ccsadmin@ccs.edu', 'admin', 1, NULL, 0, NULL, NULL, NULL, '2025-06-06 06:50:04', '2025-06-06 09:11:17');
 
 -- --------------------------------------------------------
@@ -96,6 +96,24 @@ INSERT INTO `faculty` (`faculty_id`, `name`, `department`, `username`, `password
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `faculty_logs`
+--
+
+CREATE TABLE `faculty_logs` (
+  `log_id` int(11) NOT NULL,
+  `faculty_id` varchar(50) NOT NULL,
+  `faculty_name` varchar(100) NOT NULL,
+  `action_type` enum('CHECK_IN','CHECK_OUT') NOT NULL,
+  `room_name` varchar(50) DEFAULT NULL,
+  `section_name` varchar(50) DEFAULT NULL,
+  `class_duration` varchar(20) DEFAULT NULL,
+  `timestamp` datetime NOT NULL,
+  `session_id` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `rand_strings`
 --
 
@@ -105,6 +123,15 @@ CREATE TABLE `rand_strings` (
   `Date` date NOT NULL,
   `State` enum('Mayoral','Maintenance','5minutes') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rand_strings`
+--
+
+INSERT INTO `rand_strings` (`ID`, `randomC`, `Date`, `State`) VALUES
+(38, '6014601', '2025-06-17', 'Maintenance'),
+(39, '7741361', '2025-06-17', '5minutes'),
+(43, '9300907', '2025-06-18', 'Mayoral');
 
 -- --------------------------------------------------------
 
@@ -197,7 +224,7 @@ CREATE TABLE `students` (
 
 INSERT INTO `students` (`student_id`, `student_number`, `name`, `course`, `year_level`, `section_id`, `email`, `status`, `course_id`) VALUES
 (1, '224-12536M', 'Adrian Kurt P. Nacu', 'BSCS', 3, 1, 'adrian.nacu@example.com', 'AVAILABLE', 1),
-(2, '224-12537M', 'Emman Seron', 'BSCS', 3, 1, 'emman.seron@example.com', 'AVAILABLE', 1),
+(2, '224-12537M', 'Emman Seron', 'BSCS', 3, 1, 'emman.seron@example.com', 'CURRENTLY IN ROOM 201', 1),
 (3, '224-12538M', 'Charlie Magne Aranez', 'BSCS', 3, 1, 'charlie.aranez@example.com', 'AVAILABLE', 1),
 (4, '224-11392M', 'Rodeo, RJ L.', 'BSCS', 3, 2, 'rjrodeo@gmail.com', 'AVAILABLE', 1);
 
@@ -213,6 +240,7 @@ CREATE TABLE `student_attendance` (
   `pc_number` varchar(10) NOT NULL,
   `professor_id` int(11) NOT NULL,
   `check_in_time` datetime NOT NULL,
+  `check_out_time` datetime NOT NULL,
   `room_number` varchar(50) DEFAULT NULL,
   `class_session_id` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -221,17 +249,21 @@ CREATE TABLE `student_attendance` (
 -- Dumping data for table `student_attendance`
 --
 
-INSERT INTO `student_attendance` (`id`, `student_number`, `pc_number`, `professor_id`, `check_in_time`, `room_number`, `class_session_id`) VALUES
-(1, '224-12536M', 'PC#05', 1, '2025-06-11 11:24:11', '201', NULL),
-(2, '224-12537M', 'PC#03', 1, '2025-06-11 11:24:47', '201', NULL),
-(3, '224-12536M', 'PC#03', 1, '2025-06-11 11:44:32', '201', '1_1749613468'),
-(4, '224-12537M', 'PC#08', 1, '2025-06-11 11:47:02', '201', '1_1749613598'),
-(5, '224-12536M', 'PC#04', 1, '2025-06-11 11:48:27', '201', '1_1749613598'),
-(6, '224-12536M', 'PC#01', 1, '2025-06-11 11:55:26', '201', '1_1749614120'),
-(7, '224-12536M', 'PC#02', 1, '2025-06-11 11:55:53', '201', '1_1749614146'),
-(8, '224-12537M', 'PC#11', 1, '2025-06-11 12:10:43', '201', '1_1749615030'),
-(9, '224-12536M', 'PC#09', 1, '2025-06-12 22:01:58', '201', '1_1749736914'),
-(10, '224-12537M', 'PC#11', 1, '2025-06-15 18:38:04', '201', '1_1749983851');
+INSERT INTO `student_attendance` (`id`, `student_number`, `pc_number`, `professor_id`, `check_in_time`, `check_out_time`, `room_number`, `class_session_id`) VALUES
+(1, '224-12536M', 'PC#05', 1, '2025-06-11 11:24:11', '0000-00-00 00:00:00', '201', NULL),
+(2, '224-12537M', 'PC#03', 1, '2025-06-11 11:24:47', '0000-00-00 00:00:00', '201', NULL),
+(3, '224-12536M', 'PC#03', 1, '2025-06-11 11:44:32', '0000-00-00 00:00:00', '201', '1_1749613468'),
+(4, '224-12537M', 'PC#08', 1, '2025-06-11 11:47:02', '0000-00-00 00:00:00', '201', '1_1749613598'),
+(5, '224-12536M', 'PC#04', 1, '2025-06-11 11:48:27', '0000-00-00 00:00:00', '201', '1_1749613598'),
+(6, '224-12536M', 'PC#01', 1, '2025-06-11 11:55:26', '0000-00-00 00:00:00', '201', '1_1749614120'),
+(7, '224-12536M', 'PC#02', 1, '2025-06-11 11:55:53', '0000-00-00 00:00:00', '201', '1_1749614146'),
+(8, '224-12537M', 'PC#11', 1, '2025-06-11 12:10:43', '0000-00-00 00:00:00', '201', '1_1749615030'),
+(9, '224-12536M', 'PC#09', 1, '2025-06-12 22:01:58', '0000-00-00 00:00:00', '201', '1_1749736914'),
+(10, '224-12537M', 'PC#11', 1, '2025-06-15 18:38:04', '0000-00-00 00:00:00', '201', '1_1749983851'),
+(11, '224-12536M', 'PC#05', 1, '2025-06-17 15:47:07', '2025-06-17 15:47:14', '201', '1_1750146401'),
+(14, '224-12536M', 'PC#16', 1, '2025-06-17 22:53:40', '2025-06-17 22:56:15', '201', '1_1750171997'),
+(15, '224-12537M', 'PC#19', 1, '2025-06-17 23:33:21', '2025-06-17 23:34:11', '201', '1_1750174388'),
+(16, '224-12537M', 'PC#01', 1, '2025-06-17 23:39:05', '0000-00-00 00:00:00', '201', '1_1750174739');
 
 -- --------------------------------------------------------
 
@@ -275,6 +307,15 @@ ALTER TABLE `courses`
 --
 ALTER TABLE `faculty`
   ADD PRIMARY KEY (`faculty_id`);
+
+--
+-- Indexes for table `faculty_logs`
+--
+ALTER TABLE `faculty_logs`
+  ADD PRIMARY KEY (`log_id`),
+  ADD KEY `idx_faculty_id` (`faculty_id`),
+  ADD KEY `idx_timestamp` (`timestamp`),
+  ADD KEY `idx_action_type` (`action_type`);
 
 --
 -- Indexes for table `rand_strings`
@@ -352,10 +393,16 @@ ALTER TABLE `faculty`
   MODIFY `faculty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `faculty_logs`
+--
+ALTER TABLE `faculty_logs`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `rand_strings`
 --
 ALTER TABLE `rand_strings`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `rooms`
@@ -385,7 +432,7 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `student_attendance`
 --
 ALTER TABLE `student_attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `subjects`
