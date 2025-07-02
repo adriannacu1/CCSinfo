@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -37,13 +37,20 @@
                 <div class="nav-section">
                     <div class="nav-section-title">MAIN</div>
                     <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
-                    </ul>
+                        <ul class="nav-menu">
+                            <li class="nav-item">
+                                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('admin_analytics') }}" class="nav-link">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>Analytics</span>
+                                </a>
+                            </li>
+                        </ul>
                 </div>
 
                 <div class="nav-section">
@@ -91,6 +98,14 @@
                 <div class="nav-section">
                     <div class="nav-section-title">SETTINGS</div>
                     <ul class="nav-menu">
+                        {% if admin.role == 'super_admin' %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_management') }}" class="nav-link">
+                                <i class="fas fa-user-shield"></i>
+                                <span>Admin Management</span>
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_settings') }}" class="nav-link">
                                 <i class="fas fa-cog"></i>
@@ -204,8 +219,9 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            background: #ffffff;
             min-height: 100vh;
+            color: #333333;
         }
 
         .admin-container {
@@ -217,9 +233,9 @@
         /* Sidebar Styles */
         .admin-sidebar {
             width: 280px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(248, 249, 250, 0.95);
             backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
             position: fixed;
             height: 100vh;
             left: 0;
@@ -227,6 +243,7 @@
             z-index: 1000;
             overflow-y: auto;
             transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-close {
@@ -236,7 +253,7 @@
             right: 20px;
             background: none;
             border: none;
-            color: white;
+            color: #333333;
             font-size: 24px;
             cursor: pointer;
             z-index: 1001;
@@ -245,7 +262,7 @@
         .admin-profile {
             padding: 30px 20px;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .admin-avatar {
@@ -257,18 +274,18 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 15px;
-            color: white;
+            color: #333333;
             font-size: 24px;
         }
 
         .admin-info h4 {
-            color: white;
+            color: #333333;
             margin-bottom: 5px;
             font-weight: 600;
         }
 
         .admin-role {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(0, 0, 0, 0.6);
             font-size: 14px;
         }
 
@@ -281,7 +298,7 @@
         }
 
         .nav-section-title {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(0, 0, 0, 0.5);
             font-size: 12px;
             font-weight: 600;
             letter-spacing: 1px;
@@ -301,7 +318,7 @@
             display: flex;
             align-items: center;
             padding: 12px 20px;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(0, 0, 0, 0.7);
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
@@ -314,13 +331,13 @@
         }
 
         .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: rgba(248, 249, 250, 0.95);
+            color: #333333;
         }
 
         .nav-item.active .nav-link {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            color: #333333;
         }
 
         .nav-item.active .nav-link::before {
@@ -341,9 +358,9 @@
         }
 
         .admin-header {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(248, 249, 250, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             padding: 30px 40px;
             display: flex;
             justify-content: between;
@@ -351,14 +368,14 @@
         }
 
         .header-left h1 {
-            color: white;
+            color: #333333;
             font-size: 28px;
             font-weight: 700;
             margin-bottom: 5px;
         }
 
         .header-subtitle {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(0, 0, 0, 0.6);
             font-size: 16px;
         }
 
@@ -380,8 +397,8 @@
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: rgba(248, 249, 250, 0.95);
+            color: #333333;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -395,21 +412,21 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(248, 249, 250, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .card-header {
-            background: rgba(255, 255, 255, 0.05);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(248, 249, 250, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             padding: 20px 30px;
         }
 
         .card-header h3 {
-            color: white;
+            color: #333333;
             font-weight: 600;
             margin: 0;
         }
@@ -424,7 +441,7 @@
         }
 
         .info-row {
-            color: rgba(255, 255, 255, 0.9);
+            color: #333333;
             font-size: 16px;
             display: flex;
             align-items: center;
@@ -432,7 +449,7 @@
         }
 
         .info-row strong {
-            color: white;
+            color: #333333;
             min-width: 120px;
         }
 
@@ -470,12 +487,12 @@
         .table td {
             padding: 12px 16px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .table th {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
+            background: rgba(248, 249, 250, 0.95);
+            color: #333333;
             font-weight: 600;
             font-size: 14px;
             text-transform: uppercase;
@@ -483,7 +500,7 @@
         }
 
         .table td {
-            color: rgba(255, 255, 255, 0.9);
+            color: #333333;
         }
 
         .text-center {
@@ -505,9 +522,9 @@
             top: 20px;
             left: 20px;
             z-index: 1001;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(248, 249, 250, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
+            color: #333333;
             width: 50px;
             height: 50px;
             border-radius: 12px;

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - CCS Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .speakers-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .speakers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .speaker-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 2rem;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .speaker-item {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar (same as events.html) -->
+        <div class="admin-sidebar">
+            <!-- Sidebar content here -->
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Create New Event</h1>
+                <div class="breadcrumb">
+                    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a> /
+                    <a href="{{ url_for('admin_events') }}">Events</a> /
+                    Create Event
+                </div>
+            </div>
+
+            <div class="form-container">
+                <form id="createEventForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="title">Event Title <span class="required">*</span></label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category <span class="required">*</span></label>
+                            <select id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="seminar">Seminar</option>
+                                <option value="conference">Conference</option>
+                                <option value="hackathon">Hackathon</option>
+                                <option value="networking">Networking</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event_date">Event Date <span class="required">*</span></label>
+                            <input type="date" id="event_date" name="event_date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event_time">Start Time <span class="required">*</span></label>
+                            <input type="time" id="event_time" name="event_time" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="end_time">End Time</label>
+                            <input type="time" id="end_time" name="end_time">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location <span class="required">*</span></label>
+                            <input type="text" id="location" name="location" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="price">Price ($)</label>
+                            <input type="number" id="price" name="price" min="0" step="0.01" value="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max_attendees">Max Attendees</label>
+                            <input type="number" id="max_attendees" name="max_attendees" min="1">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="description">Description <span class="required">*</span></label>
+                            <textarea id="description" name="description" required placeholder="Enter event description..."></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="featured_image">Featured Image URL</label>
+                            <input type="url" id="featured_image" name="featured_image" placeholder="https://example.com/image.jpg">
+                        </div>
+                    </div>
+
+                    <!-- Speakers Section -->
+                    <div class="speakers-section">
+                        <div class="speakers-header">
+                            <h3>Event Speakers</h3>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addSpeaker()">
+                                <i class="fas fa-plus"></i>
+                                Add Speaker
+                            </button>
+                        </div>
+                        <div id="speakers-container">
+                            <!-- Speakers will be added here -->
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('admin_events') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Create Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        let speakerCount = 0;
+
+        function addSpeaker() {
+            speakerCount++;
+            const speakersContainer = document.getElementById('speakers-container');
+            const speakerHtml = `
+                <div class="speaker-item" id="speaker-${speakerCount}">
+                    <div class="form-group">
+                        <label>Speaker Name</label>
+                        <input type="text" name="speakers" placeholder="Enter speaker name">
+                    </div>
+                    <div class="form-group">
+                        <label>Role/Title</label>
+                        <input type="text" name="speaker_roles" placeholder="Enter speaker role">
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeSpeaker(${speakerCount})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            speakersContainer.insertAdjacentHTML('beforeend', speakerHtml);
+        }
+
+        function removeSpeaker(id) {
+            const speakerElement = document.getElementById(`speaker-${id}`);
+            speakerElement.remove();
+        }
+
+        // Set minimum date to today
+        document.getElementById('event_date').min = new Date().toISOString().split('T')[0];
+
+        // Form submission
+        document.getElementById('createEventForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+
+            try {
+                const formData = new FormData(this);
+                
+                const response = await fetch('{{ url_for("create_event") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Event created successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '{{ url_for("admin_events") }}';
+                    }, 1000);
+                } else {
+                    showNotification(result.message || 'Error creating event', 'error');
+                }
+            } catch (error) {
+                showNotification('Error creating event', 'error');
+            } finally {
+                loading.classList.remove('show');
+            }
+        });
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 2rem;
+                right: 2rem;
+                background: white;
+                border-radius: 8px;
+                padding: 1rem 1.5rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                border-left: 4px solid ${type === 'success' ? '#10b981' : '#ef4444'};
+                transform: translateX(100%);
+                opacity: 0;
+                transition: all 0.3s;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}" style="color: ${type === 'success' ? '#10b981' : '#ef4444'};"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add initial speaker
+        addSpeaker();
+    </script>
+</body>
+</html>

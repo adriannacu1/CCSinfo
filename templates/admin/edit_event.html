@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Event - CCS Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .admin-profile {
+            padding: 0 2rem 2rem;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 2rem;
+        }
+
+        .admin-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .admin-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-role {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .nav-item.active .nav-link {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .speakers-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .speakers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .speaker-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 2rem;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .speaker-item {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="admin-sidebar">
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="admin-info">
+                    <h4>Admin User</h4>
+                    <span class="admin-role">Administrator</span>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">MAIN</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">MANAGEMENT</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_students') }}" class="nav-link">
+                                <i class="fas fa-user-graduate"></i>
+                                <span>Students</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_faculty') }}" class="nav-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>Faculty</span>
+                            </a>
+                        </li>
+                        <li class="nav-item active">
+                            <a href="{{ url_for('admin_events') }}" class="nav-link">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Events</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">SYSTEM</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_logout') }}" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Edit Event</h1>
+                <div class="breadcrumb">
+                    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a> /
+                    <a href="{{ url_for('admin_events') }}">Events</a> /
+                    Edit Event
+                </div>
+            </div>
+
+            <div class="form-container">
+                <form id="editEventForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="title">Event Title <span class="required">*</span></label>
+                            <input type="text" id="title" name="title" value="{{ event.title if event else '' }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category <span class="required">*</span></label>
+                            <select id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="workshop" {{ 'selected' if event and event.category == 'workshop' else '' }}>Workshop</option>
+                                <option value="seminar" {{ 'selected' if event and event.category == 'seminar' else '' }}>Seminar</option>
+                                <option value="conference" {{ 'selected' if event and event.category == 'conference' else '' }}>Conference</option>
+                                <option value="hackathon" {{ 'selected' if event and event.category == 'hackathon' else '' }}>Hackathon</option>
+                                <option value="networking" {{ 'selected' if event and event.category == 'networking' else '' }}>Networking</option>
+                                <option value="other" {{ 'selected' if event and event.category == 'other' else '' }}>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event_date">Event Date <span class="required">*</span></label>
+                            <input type="date" id="event_date" name="event_date" 
+                                   value="{{ event.event_date.strftime('%Y-%m-%d') if event and event.event_date else '' }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event_time">Start Time <span class="required">*</span></label>
+                            <input type="time" id="event_time" name="event_time" 
+                                   value="{{ event.event_time.strftime('%H:%M') if event and event.event_time else '' }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="end_time">End Time</label>
+                            <input type="time" id="end_time" name="end_time" 
+                                   value="{{ event.end_time.strftime('%H:%M') if event and event.end_time else '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location <span class="required">*</span></label>
+                            <input type="text" id="location" name="location" value="{{ event.location if event else '' }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="price">Price ($)</label>
+                            <input type="number" id="price" name="price" min="0" step="0.01" 
+                                   value="{{ event.price if event else '0' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max_attendees">Max Attendees</label>
+                            <input type="number" id="max_attendees" name="max_attendees" min="1" 
+                                   value="{{ event.max_attendees if event and event.max_attendees else '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option value="upcoming" {{ 'selected' if event and event.status == 'upcoming' else '' }}>Upcoming</option>
+                                <option value="ongoing" {{ 'selected' if event and event.status == 'ongoing' else '' }}>Ongoing</option>
+                                <option value="completed" {{ 'selected' if event and event.status == 'completed' else '' }}>Completed</option>
+                                <option value="cancelled" {{ 'selected' if event and event.status == 'cancelled' else '' }}>Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="description">Description <span class="required">*</span></label>
+                            <textarea id="description" name="description" required>{{ event.description if event else '' }}</textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="featured_image">Featured Image URL</label>
+                            <input type="url" id="featured_image" name="featured_image" 
+                                   value="{{ event.featured_image if event and event.featured_image else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Speakers Section -->
+                    <div class="speakers-section">
+                        <div class="speakers-header">
+                            <h3>Event Speakers</h3>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addSpeaker()">
+                                <i class="fas fa-plus"></i>
+                                Add Speaker
+                            </button>
+                        </div>
+                        <div id="speakers-container">
+                            {% if speakers %}
+                                {% for speaker in speakers %}
+                                <div class="speaker-item" id="speaker-{{ loop.index }}">
+                                    <div class="form-group">
+                                        <label>Speaker Name</label>
+                                        <input type="text" name="speakers" value="{{ speaker.name }}" placeholder="Enter speaker name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Role/Title</label>
+                                        <input type="text" name="speaker_roles" value="{{ speaker.role }}" placeholder="Enter speaker role">
+                                    </div>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeSpeaker({{ loop.index }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('admin_events') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Update Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        let speakerCount = {{ speakers|length if speakers else 0 }};
+
+        function addSpeaker() {
+            speakerCount++;
+            const speakersContainer = document.getElementById('speakers-container');
+            const speakerHtml = `
+                <div class="speaker-item" id="speaker-${speakerCount}">
+                    <div class="form-group">
+                        <label>Speaker Name</label>
+                        <input type="text" name="speakers" placeholder="Enter speaker name">
+                    </div>
+                    <div class="form-group">
+                        <label>Role/Title</label>
+                        <input type="text" name="speaker_roles" placeholder="Enter speaker role">
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeSpeaker(${speakerCount})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            speakersContainer.insertAdjacentHTML('beforeend', speakerHtml);
+        }
+
+        function removeSpeaker(id) {
+            const speakerElement = document.getElementById(`speaker-${id}`);
+            if (speakerElement) {
+                speakerElement.remove();
+            }
+        }
+
+        // Form submission
+        document.getElementById('editEventForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+
+            try {
+                const formData = new FormData(this);
+                
+                const response = await fetch('{{ url_for("edit_event", event_id=event.event_id) if event else "#" }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Event updated successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '{{ url_for("admin_events") }}';
+                    }, 1000);
+                } else {
+                    showNotification(result.message || 'Error updating event', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error updating event', 'error');
+            } finally {
+                loading.classList.remove('show');
+            }
+        });
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 2rem;
+                right: 2rem;
+                background: white;
+                border-radius: 8px;
+                padding: 1rem 1.5rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                border-left: 4px solid ${type === 'success' ? '#10b981' : '#ef4444'};
+                transform: translateX(100%);
+                opacity: 0;
+                transition: all 0.3s;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}" style="color: ${type === 'success' ? '#10b981' : '#ef4444'};"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add initial speaker if none exist
+        document.addEventListener('DOMContentLoaded', function() {
+            if (speakerCount === 0) {
+                addSpeaker();
+            }
+        });
+    </script>
+</body>
+</html>
