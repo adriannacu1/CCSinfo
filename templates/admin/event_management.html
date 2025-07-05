@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management - CCS Info System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- Mobile/Tablet Toggle Button -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Admin Sidebar -->
+        <div class="admin-sidebar" id="adminSidebar">
+            <!-- Close button for mobile/tablet -->
+            <button class="sidebar-close" id="sidebarClose">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="admin-info">
+                    <h4>{{ admin.full_name or 'Administrator' }}</h4>
+                    <p class="admin-role">{{ admin.role.replace('_', ' ').title() if admin.role else 'Administrator' }}
+                    </p>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">MAIN</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">MANAGEMENT</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_students') }}" class="nav-link">
+                                <i class="fas fa-user-graduate"></i>
+                                <span>Students</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_faculty') }}" class="nav-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>Faculty</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_rooms') }}" class="nav-link">
+                                <i class="fas fa-door-open"></i>
+                                <span>Rooms</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_sections') }}" class="nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Sections</span>
+                            </a>
+                        </li>
+                        <li class="nav-item active">
+                            <a href="{{ url_for('admin_event_management') }}" class="nav-link">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Events</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">ROOM ACCESS</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_temp_keys') }}" class="nav-link">
+                                <i class="fas fa-key"></i>
+                                <span>Temporary Keys</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">SETTINGS</div>
+                    <ul class="nav-menu">
+                        {% if admin and admin.role == 'super_admin' %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_management') }}" class="nav-link">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Admin Management</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_settings') }}" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_logout') }}" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Sidebar Overlay for mobile/tablet -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <div class="admin-main" id="adminMain">
+            <header class="admin-header">
+                <div class="header-left">
+                    <h1><i class="fas fa-calendar-alt"></i> Event Management</h1>
+                    <p>Manage events, speakers, and event details</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" onclick="openEventModal()">
+                        <i class="fas fa-plus"></i> Add Event
+                    </button>
+                </div>
+            </header>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ event_stats.total_events }}</h3>
+                        <p>Total Events</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ event_stats.upcoming_events }}</h3>
+                        <p>Upcoming Events</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ event_stats.past_events }}</h3>
+                        <p>Past Events</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ event_stats.total_speakers }}</h3>
+                        <p>Total Speakers</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Table -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-list"></i> Events List</h3>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <input type="text" id="eventSearch" placeholder="Search events...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="past">Past</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="">All Categories</option>
+                            <option value="conference">Conference</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="seminar">Seminar</option>
+                            <option value="networking">Networking</option>
+                            <option value="hackathon">Hackathon</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="admin-table" id="eventsTable">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Category</th>
+                                <th>Date & Time</th>
+                                <th>Location</th>
+                                <th>Attendees</th>
+                                <th>Status</th>
+                                <th>Speakers</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in events %}
+                            <tr data-event-id="{{ event.event_id }}">
+                                <td>
+                                    <div class="event-info">
+                                        <div class="event-title">{{ event.title or event.event_name or 'Untitled Event'
+                                            }}</div>
+                                        <div class="event-description">
+                                            {% if event.description %}
+                                            {{ event.description[:50] }}{% if event.description|length > 50 %}...{%
+                                            endif %}
+                                            {% else %}
+                                            No description
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="category-badge category-{{ event.category or 'conference' }}">
+                                        {{ (event.category or 'Conference').title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="datetime-info">
+                                        <div class="date">
+                                            {% if event.event_date %}
+                                            {% if event.event_date.strftime %}
+                                            {{ event.event_date.strftime('%Y-%m-%d') }}
+                                            {% else %}
+                                            {{ event.event_date }}
+                                            {% endif %}
+                                            {% else %}
+                                            N/A
+                                            {% endif %}
+                                        </div>
+                                        <div class="time">
+                                            {% if event.event_time_formatted %}
+                                            {{ event.event_time_formatted }}
+                                            {% if event.end_time_formatted %}
+                                            - {{ event.end_time_formatted }}
+                                            {% endif %}
+                                            {% else %}
+                                            N/A
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ event.location or 'N/A' }}</td>
+                                <td>
+                                    <div class="attendee-info">
+                                        <span class="current">{{ event.current_attendees or 0 }}</span>
+                                        {% if event.max_attendees %}
+                                        <span class="separator">/</span>
+                                        <span class="max">{{ event.max_attendees }}</span>
+                                        {% else %}
+                                        <span class="unlimited">∞</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="status-badge status-{{ event.event_status or event.status or 'upcoming' }}">
+                                        <i class="fas fa-circle"></i>
+                                        {{ (event.event_status or event.status or 'upcoming').title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="speaker-count">{{ event.speaker_count or 0 }} speakers</span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view" onclick="viewEvent('{{ event.event_id }}')"
+                                            title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-action btn-edit" onclick="editEvent('{{ event.event_id }}')"
+                                            title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action btn-speakers"
+                                            onclick="manageSpeakers('{{ event.event_id }}')" title="Manage Speakers">
+                                            <i class="fas fa-users"></i>
+                                        </button>
+                                        <button class="btn-action btn-delete"
+                                            onclick="deleteEvent('{{ event.event_id }}')" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <!-- Show message if no events -->
+                            {% if not events %}
+                            <tr>
+                                <td colspan="8" class="text-center" style="padding: 40px; color: #6c757d;">
+                                    <i class="fas fa-calendar-times fa-2x mb-3"></i>
+                                    <p>No events found</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Event Modal -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="eventModalTitle">Add New Event</h3>
+                <button class="modal-close" onclick="closeEventModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="eventForm">
+                    <input type="hidden" id="eventId" name="event_id">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title">Event Title *</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="conference">Conference</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="seminar">Seminar</option>
+                                <option value="networking">Networking</option>
+                                <option value="hackathon">Hackathon</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event_date">Event Date *</label>
+                            <input type="date" id="event_date" name="event_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event_time">Start Time *</label>
+                            <input type="time" id="event_time" name="event_time" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="end_time">End Time</label>
+                            <input type="time" id="end_time" name="end_time">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <input type="text" id="location" name="location" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="price">Price (PHP)</label>
+                            <input type="number" id="price" name="price" min="0" step="0.01" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="max_attendees">Max Attendees</label>
+                            <input type="number" id="max_attendees" name="max_attendees" min="1">
+                            <small>Leave blank for unlimited</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="featured_image">Featured Image URL</label>
+                        <input type="url" id="featured_image" name="featured_image">
+                    </div>
+
+                    <div class="form-group" id="statusGroup" style="display: none;">
+                        <label for="status">Status</label>
+                        <select id="status" name="status">
+                            <option value="upcoming">Upcoming</option>
+                            <option value="past">Past</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEventModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" onclick="saveEvent()">
+                    <i class="fas fa-save"></i> Save Event
+                </button>
+            </div>
+        </div>
+    </div> <!-- Speaker Management Modal -->
+    <div class="modal-overlay" id="speakerModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="speakerModalTitle">Manage Event Speakers</h3>
+                <button class="modal-close" onclick="closeSpeakerModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="speakers-section">
+                    <div class="section-header">
+                        <h4>Current Speakers</h4>
+                        <button class="btn btn-sm btn-primary" onclick="openAddSpeakerForm()">
+                            <i class="fas fa-plus"></i> Add Speaker
+                        </button>
+                    </div>
+                    <div id="speakersList" class="speakers-list">
+                        <!-- Speakers will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Add Speaker Form -->
+                <div id="addSpeakerForm" class="add-speaker-form" style="display: none;">
+                    <h4>Add New Speaker</h4>
+                    <form id="speakerForm">
+                        <input type="hidden" id="speakerEventId" name="event_id">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="speakerName">Speaker Name *</label>
+                                <input type="text" id="speakerName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="speakerRole">Role/Title *</label>
+                                <input type="text" id="speakerRole" name="role" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="speakerBio">Biography</label>
+                            <textarea id="speakerBio" name="bio" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="speakerAvatar">Avatar URL</label>
+                            <input type="url" id="speakerAvatar" name="avatar">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="cancelAddSpeaker()">Cancel</button>
+                            <button type="submit" class="btn btn-primary" onclick="saveSpeaker()">
+                                <i class="fas fa-save"></i> Add Speaker
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event View Modal -->
+    <div class="modal-overlay" id="viewEventModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Event Details</h3>
+                <button class="modal-close" onclick="closeViewEventModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="eventViewContent">
+                    <!-- Event details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeViewEventModal()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="editEventFromView()">
+                    <i class="fas fa-edit"></i> Edit Event
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3 id="confirmTitle">Confirm Action</h3>
+                <button class="modal-close" onclick="closeConfirmModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmButton">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast success" id="successToast">
+        <i class="fas fa-check-circle"></i>
+        <span id="successMessage">Success message</span>
+    </div>
+
+    <div class="toast error" id="errorToast">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorMessage">Error message</span>
+    </div>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Admin Container */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            z-index: 1500;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        /* Admin Sidebar */
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(220, 53, 69, 0.7);
+            border-radius: 3px;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .admin-logo span {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #dc3545;
+        }
+
+        .admin-profile {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #dc3545, #b02a37);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .profile-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .profile-info .role {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Navigation */
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 25px;
+        }
+
+        .nav-section-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 2px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: #dc3545;
+        }
+
+        .nav-item.active .nav-link {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border-left-color: #dc3545;
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-left p {
+            color: #636e72;
+            font-size: 1rem;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+
+        /* Statistics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: linear-gradient(45deg, #dc3545, #b02a37);
+        }
+
+        .stat-content h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 5px;
+        }
+
+        .stat-content p {
+            color: #636e72;
+            font-weight: 500;
+        }
+
+        /* Content Card */
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .card-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3436;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Table Controls */
+        .table-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 250px;
+            font-size: 0.9rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        .admin-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .admin-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: top;
+        }
+
+        .admin-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Event Info */
+        .event-info .event-title {
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 5px;
+        }
+
+        .event-info .event-description {
+            color: #636e72;
+            font-size: 0.85rem;
+        }
+
+        /* Category Badges */
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .category-conference {
+            background: rgba(0, 123, 255, 0.1);
+            color: #007bff;
+        }
+
+        .category-workshop {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .category-seminar {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .category-networking {
+            background: rgba(111, 66, 193, 0.1);
+            color: #6f42c1;
+        }
+
+        .category-hackathon {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        /* DateTime Info */
+        .datetime-info .date {
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 2px;
+        }
+
+        .datetime-info .time {
+            color: #636e72;
+            font-size: 0.85rem;
+        }
+
+        /* Attendee Info */
+        .attendee-info {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .attendee-info .current {
+            font-weight: 600;
+            color: #dc3545;
+        }
+
+        .attendee-info .separator {
+            color: #999;
+        }
+
+        .attendee-info .max {
+            color: #636e72;
+        }
+
+        .attendee-info .unlimited {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-upcoming {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .status-past {
+            background: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+
+        .status-cancelled {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        /* Speaker Count */
+        .speaker-count {
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background: rgba(23, 162, 184, 0.1);
+            color: #17a2b8;
+        }
+
+        .btn-view:hover {
+            background: rgba(23, 162, 184, 0.2);
+        }
+
+        .btn-edit {
+            background: rgba(111, 66, 193, 0.1);
+            color: #6f42c1;
+        }
+
+        .btn-edit:hover {
+            background: rgba(111, 66, 193, 0.2);
+        }
+
+        .btn-speakers {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .btn-speakers:hover {
+            background: rgba(255, 193, 7, 0.2);
+        }
+
+        .btn-delete {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .btn-delete:hover {
+            background: rgba(220, 53, 69, 0.2);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-lg {
+            max-width: 800px;
+        }
+
+        .modal-sm {
+            max-width: 400px;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: #212529;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Form Styles */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            color: #495057;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #dc3545;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+        }
+
+        .form-group small {
+            color: #6c757d;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Speaker Management */
+        .speakers-section {
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-header h4 {
+            color: #2d3436;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .speakers-list {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .speaker-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .speaker-item:last-child {
+            border-bottom: none;
+        }
+
+        .speaker-info {
+            flex: 1;
+        }
+
+        .speaker-info .name {
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 2px;
+        }
+
+        .speaker-info .role {
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+
+        .speaker-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .add-speaker-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .add-speaker-form h4 {
+            color: #2d3436;
+            margin-bottom: 15px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            animation: slideIn 0.3s ease;
+            min-width: 250px;
+        }
+
+        .toast.success {
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+        }
+
+        .toast.error {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .admin-main {
+                margin-left: 0;
+                padding: 80px 20px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-main {
+                padding: 80px 15px 15px;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        let currentEventId = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Sidebar toggle functionality
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('adminSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.add('active');
+                    sidebarOverlay.classList.add('active');
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function () {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+
+            // Search functionality
+            const searchInput = document.getElementById('eventSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    const searchTerm = this.value.toLowerCase();
+                    const tableRows = document.querySelectorAll('#eventsTable tbody tr');
+
+                    tableRows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(searchTerm) ? '' : 'none';
+                    });
+                });
+            }
+
+            // Filter functionality
+            const statusFilter = document.getElementById('statusFilter');
+            const categoryFilter = document.getElementById('categoryFilter');
+
+            [statusFilter, categoryFilter].forEach(filter => {
+                if (filter) {
+                    filter.addEventListener('change', applyFilters);
+                }
+            });
+        });
+
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const tableRows = document.querySelectorAll('#eventsTable tbody tr');
+
+            tableRows.forEach(row => {
+                let show = true;
+
+                // Status filter
+                if (statusFilter) {
+                    const statusCell = row.querySelector('.status-badge');
+                    if (statusCell && !statusCell.className.includes(`status-${statusFilter}`)) {
+                        show = false;
+                    }
+                }
+
+                // Category filter
+                if (categoryFilter) {
+                    const categoryCell = row.querySelector('.category-badge');
+                    if (categoryCell && !categoryCell.className.includes(`category-${categoryFilter}`)) {
+                        show = false;
+                    }
+                }
+
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Modal functions
+        function openEventModal(eventData = null) {
+            const modal = document.getElementById('eventModal');
+            const modalTitle = document.getElementById('eventModalTitle');
+            const form = document.getElementById('eventForm');
+            const statusGroup = document.getElementById('statusGroup');
+
+            if (eventData) {
+                // Edit mode
+                modalTitle.textContent = 'Edit Event';
+                populateEventForm(eventData);
+                statusGroup.style.display = 'block';
+            } else {
+                // Add mode
+                modalTitle.textContent = 'Add New Event';
+                form.reset();
+                statusGroup.style.display = 'none';
+                // Set default date to today
+                document.getElementById('event_date').valueAsDate = new Date();
+            }
+
+            modal.style.display = 'block';
+        }
+
+        function closeEventModal() {
+            document.getElementById('eventModal').style.display = 'none';
+        }
+
+        function saveEvent() {
+            const form = document.getElementById('eventForm');
+            const formData = new FormData(form);
+            const eventId = formData.get('event_id');
+            const url = eventId ? `/admin/events/update/${eventId}` : '/admin/events/add';
+            const method = 'POST';
+
+            fetch(url, {
+                method: method,
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', data.message);
+                        closeEventModal();
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('error', data.message);
+                    }
+                })
+                .catch(error => {
+                    showToast('error', 'Error saving event');
+                });
+        }
+
+        function editEvent(eventId) {
+            // Fetch event data and open modal
+            fetch(`/api/events/${eventId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        openEventModal(data.event);
+                    } else {
+                        showToast('error', 'Failed to load event data');
+                    }
+                })
+                .catch(error => {
+                    showToast('error', 'Error loading event data');
+                });
+        }
+
+        function deleteEvent(eventId) {
+            openConfirmModal(
+                'Delete Event',
+                'Are you sure you want to delete this event? This action cannot be undone.',
+                () => {
+                    fetch(`/admin/events/delete/${eventId}`, {
+                        method: 'DELETE'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('success', 'Event deleted successfully');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                showToast('error', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            showToast('error', 'Error deleting event');
+                        });
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        function viewEvent(eventId) {
+            // Fetch event data and display in view modal
+            fetch(`/api/events/${eventId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateViewModal(data.event);
+                        document.getElementById('viewEventModal').style.display = 'block';
+                    } else {
+                        showToast('error', 'Failed to load event data');
+                    }
+                })
+                .catch(error => {
+                    showToast('error', 'Error loading event data');
+                });
+        }
+
+        function manageSpeakers(eventId) {
+            currentEventId = eventId;
+            loadEventSpeakers(eventId);
+            document.getElementById('speakerModal').style.display = 'block';
+        }
+
+        function loadEventSpeakers(eventId) {
+            fetch(`/admin/events/${eventId}/speakers`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateSpeakersList(data.speakers);
+                    } else {
+                        showToast('error', 'Failed to load speakers');
+                    }
+                })
+                .catch(error => {
+                    showToast('error', 'Error loading speakers');
+                });
+        }
+
+        function populateSpeakersList(speakers) {
+            const container = document.getElementById('speakersList');
+
+            if (speakers.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No speakers added yet</div>';
+                return;
+            }
+
+            container.innerHTML = speakers.map(speaker => `
+                    <div class="speaker-item">
+                        <div class="speaker-info">
+                            <div class="name">${speaker.name}</div>
+                            <div class="role">${speaker.role}</div>
+                        </div>
+                        <div class="speaker-actions">
+                            <button class="btn-action btn-delete" onclick="deleteSpeaker(${speaker.speaker_id})" title="Delete Speaker">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function openAddSpeakerForm() {
+            document.getElementById('addSpeakerForm').style.display = 'block';
+            document.getElementById('speakerEventId').value = currentEventId;
+        }
+
+        function cancelAddSpeaker() {
+            document.getElementById('addSpeakerForm').style.display = 'none';
+            document.getElementById('speakerForm').reset();
+        }
+
+        function saveSpeaker() {
+            const form = document.getElementById('speakerForm');
+            const formData = new FormData(form);
+
+            fetch(`/admin/events/${currentEventId}/speakers/add`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', data.message);
+                        cancelAddSpeaker();
+                        loadEventSpeakers(currentEventId);
+                    } else {
+                        showToast('error', data.message);
+                    }
+                })
+                .catch(error => {
+                    showToast('error', 'Error adding speaker');
+                });
+        }
+
+        function deleteSpeaker(speakerId) {
+            openConfirmModal(
+                'Delete Speaker',
+                'Are you sure you want to remove this speaker?',
+                () => {
+                    fetch(`/admin/events/speakers/${speakerId}/delete`, {
+                        method: 'DELETE'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('success', 'Speaker removed successfully');
+                                loadEventSpeakers(currentEventId);
+                            } else {
+                                showToast('error', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            showToast('error', 'Error removing speaker');
+                        });
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        function closeSpeakerModal() {
+            document.getElementById('speakerModal').style.display = 'none';
+            cancelAddSpeaker();
+        }
+
+        function closeViewEventModal() {
+            document.getElementById('viewEventModal').style.display = 'none';
+        }
+
+        function editEventFromView() {
+            closeViewEventModal();
+        }
+
+        function populateViewModal(eventData) {
+            currentEventId = eventData.event_id;
+
+            const content = `
+                    <div class="event-view-header">
+                        <h2>${eventData.title}</h2>
+                        <span class="category-badge category-${eventData.category}">${eventData.category}</span>
+                    </div>
+                    <div class="event-view-details">
+                        <p><strong>Description:</strong> ${eventData.description}</p>
+                        <p><strong>Date:</strong> ${eventData.event_date}</p>
+                        <p><strong>Time:</strong> ${eventData.event_time}${eventData.end_time ? ' - ' + eventData.end_time : ''}</p>
+                        <p><strong>Location:</strong> ${eventData.location}</p>
+                        <p><strong>Price:</strong> ₱${eventData.price || 0}</p>
+                        ${eventData.max_attendees ? `<p><strong>Max Attendees:</strong> ${eventData.max_attendees}</p>` : ''}
+                        <p><strong>Current Attendees:</strong> ${eventData.current_attendees || 0}</p>
+                        <p><strong>Status:</strong> <span class="status-badge status-${eventData.status}">${eventData.status}</span></p>
+                    </div>
+                `;
+
+            document.getElementById('eventViewContent').innerHTML = content;
+        }
+
+        function showToast(type, message) {
+            const toast = document.getElementById(type === 'success' ? 'successToast' : 'errorToast');
+            const messageElement = document.getElementById(type === 'success' ? 'successMessage' : 'errorMessage');
+
+            messageElement.textContent = message;
+            toast.style.display = 'flex';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 5000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function (event) {
+            const modals = ['eventModal', 'speakerModal', 'viewEventModal', 'confirmModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

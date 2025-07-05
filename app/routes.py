@@ -3,6 +3,11 @@ import mysql.connector
 from datetime import datetime, timedelta
 import hashlib
 import time
+import random
+import string
+import traceback
+import urllib.parse
+from app import bcrypt
 
 # Database configuration
 DB_CONFIG = {
@@ -1995,93 +2000,6 @@ def register_routes(app):
         
         return render_template('admin/temp_keys.html', admin=admin_info, recent_keys=recent_keys)
 
-    # ==================== API ENDPOINTS ====================
-    
-    @app.route('/api/dashboard/stats')
-    def dashboard_stats_api():
-        """API endpoint for real-time dashboard statistics"""
-        if 'admin_id' not in session:
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-        
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get total students
-            cursor.execute("SELECT COUNT(*) as total FROM students")
-            total_students = cursor.fetchone()['total']
-            
-            # Get active students (status = 'AVAILABLE')
-            cursor.execute("SELECT COUNT(*) as active FROM students WHERE status = 'AVAILABLE'")
-            active_students = cursor.fetchone()['active']
-            
-            # Get total faculty
-            cursor.execute("SELECT COUNT(*) as total FROM faculty")
-            total_faculty = cursor.fetchone()['total']
-            
-            # Get active faculty (status_state = 'AVAILABLE')
-            cursor.execute("SELECT COUNT(*) as active FROM faculty WHERE status_state = 'AVAILABLE'")
-            active_faculty = cursor.fetchone()['active']
-            
-            # Get total rooms
-            cursor.execute("SELECT COUNT(*) as total FROM rooms")
-            total_rooms = cursor.fetchone()['total']
-            
-            # Get available rooms (assuming all rooms are available for now)
-            available_rooms = total_rooms  # You can modify this logic based on your room booking system
-            
-            # Get total sections
-            cursor.execute("SELECT COUNT(*) as total FROM sections")
-            total_sections = cursor.fetchone()['total']
-            
-            # Get active sections (all sections are active for now)
-            active_sections = total_sections
-            
-            # Get total courses (programs)
-            cursor.execute("SELECT COUNT(*) as total FROM courses")
-            total_courses = cursor.fetchone()['total']
-            
-            # Get temporary keys count (current active keys)
-            cursor.execute("SELECT COUNT(*) as total FROM rand_strings")
-            temp_keys = cursor.fetchone()['total']
-            
-            # Get recent activity count (students checked in today)
-            cursor.execute("""
-                SELECT COUNT(*) as today_checkins 
-                FROM student_attendance 
-                WHERE DATE(check_in_time) = CURDATE()
-            """)
-            today_checkins = cursor.fetchone()['today_checkins']
-            
-            cursor.close()
-            conn.close()
-            
-            stats = {
-                'total_students': total_students,
-                'active_students': active_students,
-                'total_faculty': total_faculty,
-                'active_faculty': active_faculty,
-                'total_rooms': total_rooms,
-                'available_rooms': available_rooms,
-                'total_sections': total_sections,
-                'active_sections': active_sections,
-                'total_courses': total_courses,
-                'temp_keys': temp_keys,
-                'today_checkins': today_checkins,
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }
-            
-            return jsonify({'success': True, 'stats': stats})
-            
-        except Exception as e:
-            if 'cursor' in locals():
-                cursor.close()
-            if 'conn' in locals():
-                conn.close()
-            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
     
     @app.route('/api/admin/dashboard/stats')
     def api_dashboard_stats():
@@ -2150,80 +2068,6 @@ def register_routes(app):
         else:
             return jsonify({'success': False, 'message': 'Database connection failed'}), 500
 
-    @app.route('/admin/management')
-    def admin_management():
-        """Admin management page - only accessible by super admins"""
-        if 'admin_id' not in session:
-            return redirect(url_for('admin_login'))
-        
-        # Check if user is super admin
-        if session.get('admin_role') != 'super_admin':
-            flash('Access denied. Super admin privileges required.', 'error')
-            return redirect(url_for('admin_dashboard'))
-        
-        admin_info = {
-            'admin_id': session.get('admin_id'),
-            'username': session.get('admin_username'),
-            'full_name': session.get('admin_name', 'Super Administrator'),
-            'role': session.get('admin_role', 'super_admin')
-        }
-        
-        # Get admin statistics
-        conn = get_db_connection()
-        admin_stats = {
-            'total_admins': 0,
-            'active_admins': 0,
-            'super_admins': 0,
-            'recent_logins': 0
-        }
-        
-        admins = []
-        
-        if conn:
-            try:
-                cursor = conn.cursor(dictionary=True)
-                
-                # Get admin statistics
-                cursor.execute("SELECT COUNT(*) as total FROM admin")
-                admin_stats['total_admins'] = cursor.fetchone()['total']
-                
-                cursor.execute("SELECT COUNT(*) as active FROM admin WHERE is_active = 1")
-                admin_stats['active_admins'] = cursor.fetchone()['active']
-                
-                cursor.execute("SELECT COUNT(*) as super_admins FROM admin WHERE role = 'super_admin'")
-                admin_stats['super_admins'] = cursor.fetchone()['super_admins']
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as recent 
-                    FROM admin 
-                    WHERE last_login >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-                """)
-                admin_stats['recent_logins'] = cursor.fetchone()['recent']
-                
-                # Get all admins
-                cursor.execute("""
-                    SELECT admin_id, username, full_name, email, role, is_active as status,
-                           last_login, created_at, login_attempts
-                    FROM admin
-                    ORDER BY created_at DESC
-                """)
-                admins = cursor.fetchall()
-                
-                cursor.close()
-                conn.close()
-                
-            except Exception as e:
-                flash(f'Error loading admin data: {str(e)}', 'error')
-                if 'cursor' in locals():
-                    cursor.close()
-                if 'conn' in locals():
-                    conn.close()
-        
-        return render_template('admin/admin_management.html', 
-                             admin_profile=admin_info,
-                             admin_stats=admin_stats,
-                             admins=admins)
-
     # Admin Management API Routes
     @app.route('/admin/get_admin/<int:admin_id>')
     def get_admin_api(admin_id):
@@ -2262,22 +2106,33 @@ def register_routes(app):
             return jsonify({'success': False, 'message': 'Unauthorized'}), 401
         
         try:
+            # Debug: print received form data
+            print("DEBUG: Received form data:", dict(request.form))
+            
             username = request.form.get('username')
-            full_name = request.form.get('fullName')
+            full_name = request.form.get('full_name')
             email = request.form.get('email')
             role = request.form.get('role')
             password = request.form.get('password')
             notes = request.form.get('notes', '')
             
+            print(f"DEBUG: Parsed values - username: '{username}', full_name: '{full_name}', email: '{email}', role: '{role}', password: '{password}'")
+            
             if not all([username, full_name, email, role, password]):
-                return jsonify({'success': False, 'message': 'All required fields must be filled'}), 400
+                missing = []
+                if not username: missing.append('username')
+                if not full_name: missing.append('full_name')
+                if not email: missing.append('email')
+                if not role: missing.append('role')
+                if not password: missing.append('password')
+                print(f"DEBUG: Missing fields: {missing}")
+                return jsonify({'success': False, 'message': f'All required fields must be filled. Missing: {", ".join(missing)}'}), 400
             
             conn = get_db_connection()
             if not conn:
                 return jsonify({'success': False, 'message': 'Database connection failed'}), 500
             
             try:
-                from app import bcrypt
                 cursor = conn.cursor()
                 
                 # Check if username already exists
@@ -2314,7 +2169,7 @@ def register_routes(app):
         
         try:
             username = request.form.get('username')
-            full_name = request.form.get('fullName')
+            full_name = request.form.get('full_name')
             email = request.form.get('email')
             role = request.form.get('role')
             notes = request.form.get('notes', '')
@@ -2501,6 +2356,192 @@ def register_routes(app):
                     
         except Exception as e:
             return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/admin/events/add', methods=['POST'])
+    def admin_add_event():
+        """Add new event via admin panel"""
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        try:
+            # Get form data
+            event_name = request.form.get('event_title')
+            description = request.form.get('description')
+            category = request.form.get('category')
+            event_date = request.form.get('event_date')
+            start_time = request.form.get('start_time')
+            end_time = request.form.get('end_time')
+            location = request.form.get('location')
+            price = request.form.get('price', 0)
+            max_attendees = request.form.get('max_attendees')
+            featured_image = request.form.get('featured_image_url')
+            
+            # Validate required fields
+            if not all([event_name, description, category, event_date, start_time, location]):
+                return jsonify({'success': False, 'message': 'All required fields must be filled'}), 400
+            
+            # Process max_attendees
+            if max_attendees:
+                try:
+                    max_attendees = int(max_attendees)
+                except:
+                    max_attendees = None
+            else:
+                max_attendees = None
+            
+            # Process price
+            try:
+                price = float(price) if price else 0.0
+            except:
+                price = 0.0
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                cursor = conn.cursor()
+                
+                # Convert time strings to TIME format for MySQL
+                start_time_formatted = datetime.strptime(start_time, '%H:%M').time()
+                if end_time:
+                    end_time_formatted = datetime.strptime(end_time, '%H:%M').time()
+                else:
+                    end_time_formatted = None
+                
+                # Insert new event - FIXED: using 'title' instead of 'event_name'
+                cursor.execute("""
+                    INSERT INTO events (title, description, category, event_date, event_time, end_time, 
+                                       location, price, max_attendees, featured_image, status, created_by, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'upcoming', %s, NOW())
+                """, (event_name, description, category, event_date, start_time_formatted, end_time_formatted,
+                      location, price, max_attendees, featured_image, session.get('admin_id')))
+                
+                conn.commit()
+                return jsonify({'success': True, 'message': 'Event created successfully'})
+                
+            except Exception as e:
+                print(f"Error adding event: {e}")
+                return jsonify({'success': False, 'message': f'Error creating event: {str(e)}'}), 500
+            finally:
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            print(f"Error in add_event: {e}")
+            return jsonify({'success': False, 'message': f'Error creating event: {str(e)}'}), 500
+
+    @app.route('/admin/events/update/<int:event_id>', methods=['POST'])
+    def admin_update_event(event_id):
+        """Update existing event via admin panel"""
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        try:
+            # Get form data
+            event_name = request.form.get('event_title')
+            description = request.form.get('description')
+            category = request.form.get('category')
+            event_date = request.form.get('event_date')
+            start_time = request.form.get('start_time')
+            end_time = request.form.get('end_time')
+            location = request.form.get('location')
+            price = request.form.get('price', 0)
+            max_attendees = request.form.get('max_attendees')
+            featured_image = request.form.get('featured_image_url')
+            
+            # Validate required fields
+            if not all([event_name, description, category, event_date, start_time, location]):
+                return jsonify({'success': False, 'message': 'All required fields must be filled'}), 400
+            
+            # Process max_attendees
+            if max_attendees:
+                try:
+                    max_attendees = int(max_attendees)
+                except:
+                    max_attendees = None
+            else:
+                max_attendees = None
+            
+            # Process price
+            try:
+                price = float(price) if price else 0.0
+            except:
+                price = 0.0
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                cursor = conn.cursor()
+                
+                # Convert time strings to TIME format for MySQL
+                start_time_formatted = datetime.strptime(start_time, '%H:%M').time()
+                if end_time:
+                    end_time_formatted = datetime.strptime(end_time, '%H:%M').time()
+                else:
+                    end_time_formatted = None
+                
+                # Update event - FIXED: using 'title' instead of 'event_name'
+                cursor.execute("""
+                    UPDATE events 
+                    SET title = %s, description = %s, category = %s, event_date = %s, 
+                        event_time = %s, end_time = %s, location = %s, price = %s, 
+                        max_attendees = %s, featured_image = %s
+                    WHERE event_id = %s
+                """, (event_name, description, category, event_date, start_time_formatted, end_time_formatted,
+                      location, price, max_attendees, featured_image, event_id))
+                
+                if cursor.rowcount == 0:
+                    return jsonify({'success': False, 'message': 'Event not found'}), 404
+                
+                conn.commit()
+                return jsonify({'success': True, 'message': 'Event updated successfully'})
+                
+            except Exception as e:
+                print(f"Error updating event: {e}")
+                return jsonify({'success': False, 'message': f'Error updating event: {str(e)}'}), 500
+            finally:
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            print(f"Error in update_event: {e}")
+            return jsonify({'success': False, 'message': f'Error updating event: {str(e)}'}), 500
+
+    @app.route('/admin/events/delete/<int:event_id>', methods=['DELETE', 'POST'])
+    def admin_delete_event(event_id):
+        """Delete event via admin panel"""
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Delete associated event speakers first
+            cursor.execute("DELETE FROM event_speakers WHERE event_id = %s", (event_id,))
+            
+            # Delete the event
+            cursor.execute("DELETE FROM events WHERE event_id = %s", (event_id,))
+            
+            if cursor.rowcount == 0:
+                return jsonify({'success': False, 'message': 'Event not found'}), 404
+            
+            conn.commit()
+            return jsonify({'success': True, 'message': 'Event deleted successfully'})
+            
+        except Exception as e:
+            print(f"Error deleting event: {e}")
+            return jsonify({'success': False, 'message': f'Error deleting event: {str(e)}'}), 500
+        finally:
+            if conn:
+                conn.close()
+
     # Add this temporarily to see all your routes
     @app.route('/debug/routes')
     def list_routes():
@@ -2512,3 +2553,331 @@ def register_routes(app):
             output.append(line)
         
         return '<br>'.join(sorted(output))
+    @app.route('/events')
+    def events_page():
+        """Events page showing upcoming events"""
+        conn = get_db_connection()
+        events = []
+        event_counts = {}
+        
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                
+                # Get upcoming events with speakers
+                cursor.execute("""
+                    SELECT e.*, 
+                           GROUP_CONCAT(CONCAT(es.name, '|', es.role, '|', COALESCE(es.avatar, '')) 
+                                       SEPARATOR '|||') as speakers_data
+                    FROM events e
+                    LEFT JOIN event_speakers es ON e.event_id = es.event_id
+                    WHERE e.event_date >= CURDATE() AND e.status = 'upcoming'
+                    GROUP BY e.event_id
+                    ORDER BY e.event_date ASC, e.event_time ASC
+                """)
+                events_raw = cursor.fetchall()
+                
+                # Process events and speakers
+                for event in events_raw:
+                    # Convert timedelta to time string if needed
+                    if event.get('event_time') and hasattr(event['event_time'], 'seconds'):
+                        # Convert timedelta to time string
+                        total_seconds = event['event_time'].seconds
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        event['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                    elif event.get('event_time'):
+                        event['event_time_formatted'] = str(event['event_time'])
+                    else:
+                        event['event_time_formatted'] = "TBA"
+                    
+                    if event.get('end_time') and hasattr(event['end_time'], 'seconds'):
+                        # Convert timedelta to time string
+                        total_seconds = event['end_time'].seconds
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        event['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                    elif event.get('end_time'):
+                        event['end_time_formatted'] = str(event['end_time'])
+                    else:
+                        event['end_time_formatted'] = None
+                    
+                    # Parse speakers data
+                    speakers = []
+                    if event['speakers_data']:
+                        speakers_list = event['speakers_data'].split('|||')
+                        for speaker_data in speakers_list:
+                            if speaker_data.strip():
+                                parts = speaker_data.split('|')
+                                if len(parts) >= 2:
+                                    speakers.append({
+                                        'name': parts[0],
+                                        'role': parts[1],
+                                        'avatar': parts[2] if len(parts) > 2 and parts[2] else None
+                                    })
+                    
+                    event['speakers'] = speakers
+                    events.append(event)
+                
+                # Get event counts by category
+                cursor.execute("""
+                    SELECT category, COUNT(*) as count
+                    FROM events
+                    WHERE event_date >= CURDATE() AND status = 'upcoming'
+                    GROUP BY category
+                """)
+                counts_raw = cursor.fetchall()
+                event_counts = {row['category']: row['count'] for row in counts_raw}
+                
+                cursor.close()
+                conn.close()
+                
+            except Exception as e:
+                print(f"Error loading events: {str(e)}")
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        
+        return render_template('events.html', events=events, event_counts=event_counts)
+
+    @app.route('/api/events/<int:event_id>')
+    def get_event_details(event_id):
+        """API endpoint to get detailed event information"""
+        conn = get_db_connection()
+        
+        if not conn:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get event details
+            cursor.execute("""
+                SELECT * FROM events WHERE event_id = %s
+            """, (event_id,))
+            event = cursor.fetchone()
+            
+            if not event:
+                return jsonify({'success': False, 'message': 'Event not found'}), 404
+            
+            # Format time fields for frontend
+            if event.get('event_time'):
+                if hasattr(event['event_time'], 'seconds'):
+                    # Convert timedelta to time string
+                    total_seconds = event['event_time'].seconds
+                    hours = total_seconds // 3600
+                    minutes = (total_seconds % 3600) // 60
+                    event['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                else:
+                    event['event_time_formatted'] = str(event['event_time'])
+            
+            if event.get('end_time'):
+                if hasattr(event['end_time'], 'seconds'):
+                    # Convert timedelta to time string
+                    total_seconds = event['end_time'].seconds
+                    hours = total_seconds // 3600
+                    minutes = (total_seconds % 3600) // 60
+                    event['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                else:
+                    event['end_time_formatted'] = str(event['end_time'])
+            
+            # Format date for frontend
+            if event.get('event_date'):
+                event['event_date_formatted'] = event['event_date'].strftime('%Y-%m-%d') if hasattr(event['event_date'], 'strftime') else str(event['event_date'])
+            
+            # Get event speakers
+            cursor.execute("""
+                SELECT * FROM event_speakers WHERE event_id = %s ORDER BY speaker_id
+            """, (event_id,))
+            speakers = cursor.fetchall()
+            
+            event['speakers'] = speakers
+            
+            return jsonify({'success': True, 'event': event})
+            
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+        finally:
+            if conn:
+                conn.close()
+
+    @app.route('/api/events/<int:event_id>/register', methods=['POST'])
+    def register_for_event(event_id):
+        """API endpoint to register for an event"""
+        # This would handle event registration
+        # For now, return a placeholder response
+        return jsonify({
+            'success': True, 
+            'message': 'Registration functionality would be implemented here'
+        })
+    
+    @app.route('/admin/management')
+    def admin_management():
+        """Admin management page for super admins"""
+        if 'admin_id' not in session:
+            return redirect(url_for('admin_login'))
+        
+        # Check if user is super admin
+        if session.get('admin_role') != 'super_admin':
+            flash('Access denied. Super admin privileges required.', 'error')
+            return redirect(url_for('admin_dashboard'))
+        
+        admin_info = {
+            'admin_id': session.get('admin_id'),
+            'username': session.get('admin_username'),
+            'full_name': session.get('admin_name', 'Administrator'),
+            'role': session.get('admin_role', 'admin')
+        }
+        
+        # Get all admins from database
+        conn = get_db_connection()
+        admins = []
+        admin_stats = {
+            'total_admins': 0,
+            'active_admins': 0,
+            'super_admins': 0,
+            'recent_logins': 0
+        }
+        
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("""
+                    SELECT admin_id, username, full_name, email, role, 
+                           is_active, last_login, created_at, login_attempts
+                    FROM admin 
+                    ORDER BY created_at DESC
+                """)
+                admins = cursor.fetchall()
+                
+                # Calculate admin statistics
+                admin_stats['total_admins'] = len(admins)
+                admin_stats['active_admins'] = sum(1 for admin in admins if admin.get('is_active', 0))
+                admin_stats['super_admins'] = sum(1 for admin in admins if admin.get('role') == 'super_admin')
+                
+                # Count recent logins (last 7 days)
+                cursor.execute("""
+                    SELECT COUNT(*) as recent_count
+                    FROM admin 
+                    WHERE last_login >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                """)
+                recent_result = cursor.fetchone()
+                admin_stats['recent_logins'] = recent_result['recent_count'] if recent_result else 0
+                
+                cursor.close()
+                conn.close()
+            except Exception as e:
+                flash(f'Error loading admins: {str(e)}', 'error')
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        
+        return render_template('admin/admin_management.html', 
+                             admin=admin_info,
+                             admins=admins,
+                             admin_stats=admin_stats)
+    
+    @app.route('/admin/events')
+    def admin_event_management():
+        """Admin event management page"""
+        if 'admin_id' not in session:
+            return redirect(url_for('admin_login'))
+        
+        admin_info = {
+            'admin_id': session.get('admin_id'),
+            'username': session.get('admin_username'),
+            'full_name': session.get('admin_name', 'Administrator'),
+            'role': session.get('admin_role', 'admin')
+        }
+        
+        # Get events from database
+        conn = get_db_connection()
+        events = []
+        event_stats = {
+            'total_events': 0,
+            'upcoming_events': 0,
+            'past_events': 0,
+            'total_speakers': 0
+        }
+        
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                
+                # Use the correct column names based on your events table structure
+                cursor.execute("""
+                    SELECT event_id, 
+                           title as event_name,
+                           event_date, 
+                           event_time,
+                           end_time, 
+                           location, 
+                           description,
+                           category,
+                           price,
+                           max_attendees,
+                           current_attendees,
+                           status,
+                           featured_image,
+                           created_at
+                FROM events 
+                ORDER BY event_date DESC, event_time DESC
+                """)
+                events = cursor.fetchall()
+                
+                # Process events to handle timedelta objects
+                for event in events:
+                    # Convert timedelta to time string if needed
+                    if event.get('event_time') and hasattr(event['event_time'], 'seconds'):
+                        # Convert timedelta to time string
+                        total_seconds = event['event_time'].seconds
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        event['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                    elif event.get('event_time'):
+                        event['event_time_formatted'] = str(event['event_time'])
+                    else:
+                        event['event_time_formatted'] = "TBA"
+                    
+                    if event.get('end_time') and hasattr(event['end_time'], 'seconds'):
+                        # Convert timedelta to time string
+                        total_seconds = event['end_time'].seconds
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        event['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                    elif event.get('end_time'):
+                        event['end_time_formatted'] = str(event['end_time'])
+                    else:
+                        event['end_time_formatted'] = None
+                
+                # Calculate event statistics
+                event_stats['total_events'] = len(events)
+                
+                for event in events:
+                    status = event.get('status', '').lower()
+                    if status == 'upcoming':
+                        event_stats['upcoming_events'] += 1
+                    elif status in ['completed', 'past']:
+                        event_stats['past_events'] += 1
+                
+                # Get total speakers count
+                cursor.execute("SELECT COUNT(*) as speaker_count FROM event_speakers")
+                speaker_result = cursor.fetchone()
+                event_stats['total_speakers'] = speaker_result['speaker_count'] if speaker_result else 0
+            
+                cursor.close()
+                conn.close()
+            
+            except Exception as e:
+                flash(f'Error loading events: {str(e)}', 'error')
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        
+        return render_template('admin/event_management.html', 
+                             admin=admin_info,
+                             events=events,
+                             event_stats=event_stats)

@@ -29,8 +29,8 @@
                     <i class="fas fa-user-shield"></i>
                 </div>
                 <div class="admin-info">
-                    <h4>{{ admin_profile.full_name or 'Super Administrator' }}</h4>
-                    <p class="admin-role">{{ admin_profile.role|title or 'Super Admin' }}</p>
+                    <h4>{{ admin.full_name or 'Super Administrator' }}</h4>
+                    <p class="admin-role">{{ admin.role|title or 'Super Admin' }}</p>
                 </div>
             </div>
 
@@ -74,6 +74,12 @@
                                 <span>Sections</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_event_management') }}" class="nav-link">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Events</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -92,7 +98,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">SYSTEM</div>
                     <ul class="nav-menu">
-                        {% if admin_profile and admin_profile.role == 'super_admin' %}
+                        {% if admin and admin.role == 'super_admin' %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_management') }}" class="nav-link active">
                                 <i class="fas fa-users-cog"></i>
@@ -278,41 +284,42 @@
                         </thead>
                         <tbody>
                             {% if admins %}
-                            {% for admin in admins %}
-                            <tr data-admin-id="{{ admin.admin_id }}">
+                            {% for user_admin in admins %}
+                            <tr data-admin-id="{{ user_admin.admin_id }}">
                                 <td>
-                                    <input type="checkbox" class="admin-checkbox" value="{{ admin.admin_id }}">
+                                    <input type="checkbox" class="admin-checkbox" value="{{ user_admin.admin_id }}">
                                 </td>
                                 <td>
                                     <div class="admin-info-cell">
                                         <div class="admin-avatar-small">
                                             <i
-                                                class="fas fa-{{ 'crown' if admin.role == 'super_admin' else 'user-shield' }}"></i>
+                                                class="fas fa-{{ 'crown' if user_admin.role == 'super_admin' else 'user-shield' }}"></i>
                                         </div>
                                         <div class="admin-details">
-                                            <strong>{{ admin.full_name or admin.username }}</strong>
-                                            <small>{{ admin.email or 'No email' }}</small>
+                                            <strong>{{ user_admin.full_name or user_admin.username }}</strong>
+                                            <small>{{ user_admin.email or 'No email' }}</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="role-badge role-{{ admin.role }}">
+                                    <span class="role-badge role-{{ user_admin.role }}">
                                         <i
-                                            class="fas fa-{{ 'crown' if admin.role == 'super_admin' else 'shield-alt' if admin.role == 'admin' else 'user-cog' }}"></i>
-                                        {{ admin.role.replace('_', ' ').title() }}
+                                            class="fas fa-{{ 'crown' if user_admin.role == 'super_admin' else 'shield-alt' if user_admin.role == 'admin' else 'user-cog' }}"></i>
+                                        {{ user_admin.role.replace('_', ' ').title() }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="status-badge status-{{ 'active' if admin.status else 'inactive' }}">
+                                    <span
+                                        class="status-badge status-{{ 'active' if user_admin.is_active else 'inactive' }}">
                                         <i class="fas fa-circle"></i>
-                                        {{ 'Active' if admin.status else 'Inactive' }}
+                                        {{ 'Active' if user_admin.is_active else 'Inactive' }}
                                     </span>
                                 </td>
                                 <td>
-                                    {% if admin.last_login %}
+                                    {% if user_admin.last_login %}
                                     <span class="date-display">
-                                        {{ admin.last_login.strftime('%m/%d/%Y') }}
-                                        <small>{{ admin.last_login.strftime('%I:%M %p') }}</small>
+                                        {{ user_admin.last_login.strftime('%m/%d/%Y') }}
+                                        <small>{{ user_admin.last_login.strftime('%I:%M %p') }}</small>
                                     </span>
                                     {% else %}
                                     <span class="text-muted">Never</span>
@@ -320,29 +327,28 @@
                                 </td>
                                 <td>
                                     <span class="date-display">
-                                        {{ admin.created_at.strftime('%m/%d/%Y') }}
+                                        {{ user_admin.created_at.strftime('%m/%d/%Y') }}
                                     </span>
                                 </td>
                                 <td>
                                     <div class="action-buttons">
                                         <!-- Fix all button data attributes to use admin_id -->
-                                        <button class="btn-action btn-edit" data-admin-id="{{ admin.admin_id }}"
+                                        <button class="btn-action btn-edit" data-admin-id="{{ user_admin.admin_id }}"
                                             title="Edit Admin">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-action btn-view" data-admin-id="{{ admin.admin_id }}"
+                                        <button class="btn-action btn-view" data-admin-id="{{ user_admin.admin_id }}"
                                             title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <!-- Fix the protection condition and status handling -->
-                                        {% if admin.role != 'super_admin' or admin.admin_id != session.get('admin_id')
-                                        %}
-                                        <button class="btn-action btn-toggle" data-admin-id="{{ admin.admin_id }}"
-                                            data-status="{{ 'active' if admin.status else 'inactive' }}"
-                                            title="{{ 'Deactivate' if admin.status else 'Activate' }}">
-                                            <i class="fas fa-{{ 'pause' if admin.status else 'play' }}"></i>
+                                        <!-- Only show toggle/delete for other admins (not yourself) -->
+                                        {% if user_admin.admin_id != admin.admin_id %}
+                                        <button class="btn-action btn-toggle" data-admin-id="{{ user_admin.admin_id }}"
+                                            data-status="{{ 'active' if user_admin.is_active else 'inactive' }}"
+                                            title="{{ 'Deactivate' if user_admin.is_active else 'Activate' }}">
+                                            <i class="fas fa-{{ 'pause' if user_admin.is_active else 'play' }}"></i>
                                         </button>
-                                        <button class="btn-action btn-delete" data-admin-id="{{ admin.admin_id }}"
+                                        <button class="btn-action btn-delete" data-admin-id="{{ user_admin.admin_id }}"
                                             title="Delete Admin">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -424,7 +430,7 @@
                                 <option value="">Select Role</option>
                                 <option value="admin">Administrator</option>
                                 <option value="moderator">Moderator</option>
-                                {% if admin_profile.role == 'super_admin' %}
+                                {% if admin.role == 'super_admin' %}
                                 <option value="super_admin">Super Administrator</option>
                                 {% endif %}
                             </select>
