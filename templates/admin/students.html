@@ -91,6 +91,14 @@
                 <div class="nav-section">
                     <div class="nav-section-title">SETTINGS</div>
                     <ul class="nav-menu">
+                        {% if admin and admin.role == 'super_admin' %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_management') }}" class="nav-link">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Admin Management</span>
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_settings') }}" class="nav-link">
                                 <i class="fas fa-cog"></i>
@@ -477,7 +485,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
             min-height: 100vh;
         }
 
@@ -503,6 +511,7 @@
             cursor: pointer;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-toggle:hover {
@@ -512,15 +521,16 @@
 
         .admin-sidebar {
             width: 280px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
             padding: 30px 0;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
             z-index: 1000;
             transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-close {
@@ -528,9 +538,9 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             border: none;
-            color: white;
+            color: #dc3545;
             width: 40px;
             height: 40px;
             border-radius: 10px;
@@ -540,7 +550,7 @@
         }
 
         .sidebar-close:hover {
-            background: rgba(220, 53, 69, 0.4);
+            background: rgba(220, 53, 69, 0.2);
         }
 
         .sidebar-overlay {
@@ -558,7 +568,7 @@
         .admin-profile {
             padding: 0 30px 40px;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
 
@@ -580,14 +590,14 @@
         }
 
         .admin-info h4 {
-            color: white;
+            color: #212529;
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
 
         .admin-role {
-            color: rgba(255, 255, 255, 0.7);
+            color: #6c757d;
             font-size: 0.85rem;
             margin: 0;
         }
@@ -597,7 +607,7 @@
         }
 
         .nav-section-title {
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
@@ -619,7 +629,7 @@
             display: flex;
             align-items: center;
             padding: 12px 30px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #495057;
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
@@ -628,7 +638,7 @@
 
         .nav-link:hover,
         .nav-item.active .nav-link {
-            color: white;
+            color: #dc3545;
             background: rgba(220, 53, 69, 0.1);
         }
 
@@ -662,13 +672,13 @@
             align-items: center;
             margin-bottom: 30px;
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             flex-wrap: wrap;
             gap: 15px;
         }
 
         .page-title {
-            color: white;
+            color: #212529;
             font-size: 2rem;
             font-weight: 700;
             margin: 0;
@@ -677,6 +687,22 @@
         .admin-actions {
             display: flex;
             gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .admin-actions::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .admin-actions::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 2px;
+        }
+
+        .admin-actions::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 2px;
         }
 
         .btn {
@@ -691,6 +717,8 @@
             gap: 8px;
             text-decoration: none;
             font-size: 0.9rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .btn-primary {
@@ -705,13 +733,15 @@
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: #f8f9fa;
+            color: #495057;
         }
 
         .btn-danger {
@@ -731,15 +761,15 @@
         }
 
         .alert-success {
-            background: rgba(40, 167, 69, 0.2);
+            background: rgba(40, 167, 69, 0.1);
             color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.2);
         }
 
         .alert-danger {
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
 
         .management-controls {
@@ -749,12 +779,29 @@
             margin-bottom: 20px;
             gap: 20px;
             flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .management-controls::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .management-controls::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 3px;
+        }
+
+        .management-controls::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 3px;
         }
 
         .search-container {
             position: relative;
             flex: 1;
             max-width: 400px;
+            min-width: 250px;
         }
 
         .search-container i {
@@ -762,21 +809,22 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
         }
 
         .search-container input {
             width: 100%;
             padding: 12px 15px 12px 45px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            color: #212529;
             font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .search-container input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
         }
 
         .search-container input:focus {
@@ -788,57 +836,90 @@
         .filter-container {
             display: flex;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .filter-container select {
             padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
-            color: white;
+            color: #212529;
             cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .filter-container select option {
-            background: #1a1a2e;
-            color: white;
+            background: white;
+            color: #212529;
         }
 
         .table-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 15px;
-            overflow: hidden;
+            overflow-x: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #b02a37;
         }
 
         .management-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 800px;
         }
 
         .management-table th,
         .management-table td {
             padding: 15px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
         }
 
         .management-table th {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
+            background: #f8f9fa;
+            color: #495057;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-size: 0.8rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .management-table td {
-            color: rgba(255, 255, 255, 0.9);
+            color: #212529;
         }
 
         .management-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
+            background: #f8f9fa;
+        }
+
+        .management-table .no-data {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-style: italic;
+            white-space: normal;
         }
 
         .status-badge {
@@ -851,15 +932,15 @@
         }
 
         .status-active {
-            background: rgba(40, 167, 69, 0.2);
+            background: rgba(40, 167, 69, 0.1);
             color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.2);
         }
 
         .status-inactive {
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
 
         .actions {
@@ -880,430 +961,42 @@
         }
 
         .btn-view {
-            background: rgba(23, 162, 184, 0.2);
+            background: rgba(23, 162, 184, 0.1);
             color: #17a2b8;
+            border: 1px solid rgba(23, 162, 184, 0.2);
         }
 
         .btn-view:hover {
-            background: rgba(23, 162, 184, 0.4);
+            background: rgba(23, 162, 184, 0.2);
             transform: scale(1.1);
         }
 
         .btn-edit {
-            background: rgba(23, 162, 184, 0.2);
+            background: rgba(23, 162, 184, 0.1);
             color: #17a2b8;
+            border: 1px solid rgba(23, 162, 184, 0.2);
         }
 
         .btn-edit:hover {
-            background: rgba(23, 162, 184, 0.4);
+            background: rgba(23, 162, 184, 0.2);
             transform: scale(1.1);
         }
 
         .btn-delete {
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
 
         .btn-delete:hover {
-            background: rgba(220, 53, 69, 0.4);
-            transform: scale(1.1);
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .alert-danger {
             background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }
-
-        .management-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .search-container {
-            position: relative;
-            flex: 1;
-            max-width: 400px;
-        }
-
-        .search-container i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 12px 15px 12px 45px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 0.9rem;
-        }
-
-        .search-container input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .search-container input:focus {
-            outline: none;
-            border-color: #dc3545;
-            box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
-        }
-
-        .filter-container {
-            display: flex;
-            gap: 10px;
-        }
-
-        .filter-container select {
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .filter-container select option {
-            background: #1a1a2e;
-            color: white;
-        }
-
-        .table-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .management-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .management-table th,
-        .management-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .management-table th {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.8rem;
-        }
-
-        .management-table td {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .management-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-active {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .status-inactive {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-action {
-            width: 35px;
-            height: 35px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .btn-view {
-            background: rgba(23, 162, 184, 0.2);
-            color: #17a2b8;
-        }
-
-        .btn-view:hover {
-            background: rgba(23, 162, 184, 0.4);
             transform: scale(1.1);
-        }
-
-        .btn-edit {
-            background: rgba(23, 162, 184, 0.2);
-            color: #17a2b8;
-        }
-
-        .btn-edit:hover {
-            background: rgba(23, 162, 184, 0.4);
-            transform: scale(1.1);
-        }
-
-        .btn-delete {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-        }
-
-        .btn-delete:hover {
-            background: rgba(220, 53, 69, 0.4);
-            transform: scale(1.1);
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .alert-danger {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }
-
-        .management-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .search-container {
-            position: relative;
-            flex: 1;
-            max-width: 400px;
-        }
-
-        .search-container i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 12px 15px 12px 45px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 0.9rem;
-        }
-
-        .search-container input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .search-container input:focus {
-            outline: none;
-            border-color: #dc3545;
-            box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
-        }
-
-        .filter-container {
-            display: flex;
-            gap: 10px;
-        }
-
-        .filter-container select {
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .filter-container select option {
-            background: #1a1a2e;
-            color: white;
-        }
-
-        .table-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .management-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .management-table th,
-        .management-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .management-table th {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.8rem;
-        }
-
-        .management-table td {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .management-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-active {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .status-inactive {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-action {
-            width: 35px;
-            height: 35px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .btn-view {
-            background: rgba(23, 162, 184, 0.2);
-            color: #17a2b8;
-        }
-
-        .btn-view:hover {
-            background: rgba(23, 162, 184, 0.4);
-            transform: scale(1.1);
-        }
-
-        .btn-edit {
-            background: rgba(23, 162, 184, 0.2);
-            color: #17a2b8;
-        }
-
-        .btn-edit:hover {
-            background: rgba(23, 162, 184, 0.4);
-            transform: scale(1.1);
-        }
-
-        .btn-delete {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-        }
-
-        .btn-delete:hover {
-            background: rgba(220, 53, 69, 0.4);
-            transform: scale(1.1);
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .alert-danger {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
         }
 
         /* Profile Modal Specific Styles */
         .profile-loading {
             text-align: center;
-            color: rgba(255, 255, 255, 0.7);
+            color: #6c757d;
             padding: 40px;
         }
 
@@ -1328,7 +1021,7 @@
         }
 
         .profile-section h3 {
-            color: white;
+            color: #212529;
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 15px;
@@ -1338,10 +1031,10 @@
         }
 
         .student-info {
-            background: rgba(255, 255, 255, 0.05);
+            background: #f8f9fa;
             border-radius: 8px;
             padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .info-row {
@@ -1362,15 +1055,8 @@
         }
 
         .info-row span {
-            color: white;
+            color: #212529;
             font-weight: 400;
-        }
-
-        .table-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
         }
 
         .profile-table {
@@ -1379,29 +1065,29 @@
         }
 
         .profile-table thead {
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
         }
 
         .profile-table thead th {
             padding: 12px 15px;
-            color: white;
+            color: #212529;
             font-weight: 600;
             font-size: 0.85rem;
             text-align: left;
-            border-bottom: 2px solid rgba(220, 53, 69, 0.3);
+            border-bottom: 2px solid rgba(220, 53, 69, 0.2);
         }
 
         .profile-table tbody tr {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .profile-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: #f8f9fa;
         }
 
         .profile-table tbody td {
             padding: 12px 15px;
-            color: rgba(255, 255, 255, 0.9);
+            color: #212529;
             font-size: 0.9rem;
         }
 
@@ -1412,13 +1098,13 @@
         .profile-actions {
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
             text-align: right;
         }
 
         .no-data {
             text-align: center;
-            color: rgba(255, 255, 255, 0.6);
+            color: #6c757d;
             padding: 20px;
             font-style: italic;
         }
@@ -1437,10 +1123,10 @@
         }
 
         .modal-content {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            background: white;
             margin: 5% auto;
             padding: 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 15px;
             width: 90%;
             max-width: 600px;
@@ -1462,21 +1148,23 @@
 
         .modal-header {
             padding: 20px 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #f8f9fa;
+            border-radius: 15px 15px 0 0;
         }
 
         .modal-header h3 {
-            color: white;
+            color: #212529;
             margin: 0;
             font-size: 1.5rem;
             font-weight: 600;
         }
 
         .close {
-            color: rgba(255, 255, 255, 0.6);
+            color: #6c757d;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
@@ -1489,6 +1177,22 @@
 
         .modal-body {
             padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 4px;
         }
 
         .form-group {
@@ -1503,7 +1207,7 @@
 
         .form-group label {
             display: block;
-            color: white;
+            color: #212529;
             font-weight: 500;
             margin-bottom: 8px;
             font-size: 0.9rem;
@@ -1513,10 +1217,10 @@
         .form-group select {
             width: 100%;
             padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
-            color: white;
+            color: #212529;
             font-size: 0.9rem;
             transition: all 0.3s ease;
         }
@@ -1526,16 +1230,16 @@
             outline: none;
             border-color: #dc3545;
             box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
-            background: rgba(255, 255, 255, 0.15);
+            background: #fff;
         }
 
         .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
         }
 
         .form-group select option {
-            background: #1a1a2e;
-            color: white;
+            background: white;
+            color: #212529;
         }
 
         .form-actions {
@@ -1544,75 +1248,112 @@
             justify-content: flex-end;
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
-        /* Enhanced Responsive Design */
+        /* Mobile Cards (shown on mobile devices) */
+        .mobile-cards {
+            display: none;
+        }
 
-        /* Large Desktop (1200px and up) */
-        @media (min-width: 1200px) {
-            .admin-container {
-                display: flex;
+        .student-card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .student-card:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .student-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .student-card-title {
+            font-weight: 600;
+            color: #212529;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .student-card-number {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .student-card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .student-card-field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .student-card-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .student-card-value {
+            color: #212529;
+            font-size: 0.9rem;
+        }
+
+        .student-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar-toggle {
+                display: block;
             }
 
             .admin-sidebar {
-                position: static;
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.active {
                 transform: translateX(0);
-                width: 280px;
-                flex-shrink: 0;
             }
 
-            .admin-main {
-                flex: 1;
-                margin-left: 0;
-                padding: 2rem;
+            .sidebar-close {
+                display: block;
             }
 
-            .sidebar-toggle {
-                display: none;
+            .sidebar-overlay.active {
+                display: block;
             }
 
-            .table-container {
-                overflow-x: auto;
-            }
-
-            .management-table {
-                min-width: 1000px;
-            }
-        }
-
-        /* Medium Desktop (992px to 1199px) */
-        @media (min-width: 992px) and (max-width: 1199px) {
-            .admin-main {
-                padding: 1.5rem;
-            }
-
-            .management-table th,
-            .management-table td {
-                padding: 12px;
-                font-size: 0.9rem;
-            }
-
-            .management-controls {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 15px;
-            }
-
-            .search-container {
-                max-width: 100%;
-            }
-
-            .filter-container {
-                justify-content: center;
-            }
-        }
-
-        /* Tablet (768px to 991px) */
-        @media (min-width: 768px) and (max-width: 991px) {
             .admin-main {
                 margin-left: 0;
-                padding: 1rem;
+                padding: 80px 20px 20px;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
             }
 
             .management-controls {
@@ -1629,81 +1370,11 @@
                 justify-content: center;
                 flex-wrap: wrap;
             }
-
-            .filter-container select {
-                flex: 1;
-                min-width: 120px;
-            }
-
-            .table-container {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .management-table {
-                min-width: 700px;
-            }
-
-            .management-table th,
-            .management-table td {
-                padding: 10px;
-                font-size: 0.85rem;
-            }
-
-            /* Hide less important columns on tablets */
-            .management-table th:nth-child(6),
-            .management-table td:nth-child(6) {
-                display: none;
-            }
         }
 
-        /* Mobile (480px to 767px) */
-        @media (min-width: 480px) and (max-width: 767px) {
-            .profile-sections {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .modal-content {
-                width: 95%;
-                margin: 10% auto;
-            }
-
-            .modal-body {
-                padding: 15px;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
+        @media (max-width: 768px) {
             .admin-main {
-                margin-left: 0;
-                padding: 1rem;
-            }
-
-            .sidebar-toggle {
-                display: block;
-            }
-
-            .admin-sidebar {
-                transform: translateX(-100%);
-            }
-
-            .admin-sidebar.active {
-                transform: translateX(0);
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-
-            .sidebar-close {
-                display: block;
+                padding: 80px 15px 15px;
             }
 
             .admin-header {
@@ -1735,7 +1406,7 @@
                 width: 100%;
             }
 
-            /* Card-style layout for mobile */
+            /* Hide table, show cards on mobile */
             .table-container {
                 display: none;
             }
@@ -1744,92 +1415,31 @@
                 display: block;
             }
 
-            .student-card {
-                background: rgba(255, 255, 255, 0.05);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 12px;
-                padding: 20px;
-                margin-bottom: 15px;
-                transition: all 0.3s ease;
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
             }
 
-            .student-card:hover {
-                background: rgba(255, 255, 255, 0.08);
-                transform: translateY(-2px);
+            .modal-body {
+                padding: 15px;
             }
 
-            .student-card-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 15px;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-
-            .student-card-title {
-                font-weight: 600;
-                color: white;
-                font-size: 1.1rem;
-                margin: 0;
-            }
-
-            .student-card-number {
-                color: rgba(255, 255, 255, 0.7);
-                font-size: 0.9rem;
-                margin: 0;
-            }
-
-            .student-card-body {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-                margin-bottom: 15px;
-            }
-
-            .student-card-field {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-            }
-
-            .student-card-label {
-                font-size: 0.75rem;
-                color: rgba(255, 255, 255, 0.6);
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .student-card-value {
-                color: rgba(255, 255, 255, 0.9);
-                font-size: 0.9rem;
-            }
-
-            .student-card-actions {
-                display: flex;
-                justify-content: flex-end;
-                gap: 8px;
-            }
-
-            .btn-action {
-                width: 40px;
-                height: 40px;
-                font-size: 0.9rem;
+            .form-row {
+                grid-template-columns: 1fr;
             }
         }
 
-        /* Extra Small Mobile (up to 479px) */
-        @media (max-width: 479px) {
+        @media (max-width: 480px) {
             .admin-main {
-                padding: 0.5rem;
+                padding: 80px 10px 10px;
             }
 
             .admin-header {
                 padding: 1rem;
-                background: rgba(255, 255, 255, 0.05);
+                background: white;
                 border-radius: 12px;
                 margin-bottom: 1rem;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
 
             .admin-header h1 {
@@ -1868,11 +1478,6 @@
             }
         }
 
-        /* Mobile Cards (hidden by default, shown on mobile) */
-        .mobile-cards {
-            display: none;
-        }
-
         /* Student Profile Modal Styles */
         .profile-modal-student {
             max-width: 800px !important;
@@ -1890,7 +1495,7 @@
         .profile-modal-student .modal-body {
             flex: 1;
             overflow-y: auto;
-            padding: 0;
+            padding: 30px;
         }
 
         .profile-modal-student .modal-body::-webkit-scrollbar {
@@ -1898,132 +1503,24 @@
         }
 
         .profile-modal-student .modal-body::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: #f1f3f4;
             border-radius: 4px;
         }
 
         .profile-modal-student .modal-body::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: #dc3545;
             border-radius: 4px;
         }
 
         .profile-modal-student .modal-body::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: #b02a37;
         }
 
-        /* Touch-friendly enhancements */
-        @media (hover: none) and (pointer: coarse) {
-            .btn-action {
-                width: 44px;
-                height: 44px;
-                min-width: 44px;
-                min-height: 44px;
-            }
-
-            .management-table th,
-            .management-table td {
-                padding: 16px 12px;
-            }
-
-            .search-container input,
-            .filter-container select {
-                padding: 14px 16px;
-                font-size: 16px;
-            }
-
-            .btn-primary {
-                padding: 14px 20px;
-                font-size: 16px;
-            }
-        }
-
-        /* Landscape phone orientation */
-        @media (max-width: 767px) and (orientation: landscape) {
-            .admin-header h1 {
-                font-size: 1.25rem;
-            }
-
-            .student-card {
-                padding: 12px;
-            }
-
-            .student-card-body {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        /* Print styles */
-        @media print {
-
-            .sidebar-toggle,
-            .admin-sidebar,
-            .sidebar-overlay,
-            .btn-action,
-            .admin-actions,
-            .management-controls {
-                display: none !important;
-            }
-
-            .admin-main {
-                margin-left: 0 !important;
-                padding: 0 !important;
-            }
-
-            .table-container {
-                display: block !important;
-                overflow: visible !important;
-            }
-
-            .mobile-cards {
-                display: none !important;
-            }
-
-            .management-table {
-                width: 100% !important;
-                font-size: 10px !important;
-            }
-
-            .management-table th,
-            .management-table td {
-                padding: 4px !important;
-                border: 1px solid #000 !important;
-            }
-        }
-
-        /* High contrast mode support */
-        @media (prefers-contrast: high) {
-
-            .table-container,
-            .student-card {
-                border: 2px solid white;
-            }
-
-            .btn-action {
-                border: 1px solid white;
-            }
-
-            .search-container input,
-            .filter-container select {
-                border: 2px solid white;
-            }
-        }
-
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-        }
-
-        /* Dark mode support (if system prefers dark) */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --glass-bg: rgba(0, 0, 0, 0.2);
-                --glass-border: rgba(255, 255, 255, 0.1);
-            }
+        /* Warning text styling */
+        .warning {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-style: italic;
         }
     </style>
 

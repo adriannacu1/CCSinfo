@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
             min-height: 100vh;
         }
 
@@ -44,6 +44,7 @@
             cursor: pointer;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-toggle:hover {
@@ -53,15 +54,16 @@
 
         .admin-sidebar {
             width: 280px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
             padding: 30px 0;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
             z-index: 1000;
             transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-close {
@@ -69,9 +71,9 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             border: none;
-            color: white;
+            color: #dc3545;
             width: 40px;
             height: 40px;
             border-radius: 10px;
@@ -81,7 +83,7 @@
         }
 
         .sidebar-close:hover {
-            background: rgba(220, 53, 69, 0.4);
+            background: rgba(220, 53, 69, 0.2);
         }
 
         .sidebar-overlay {
@@ -99,7 +101,7 @@
         .admin-profile {
             padding: 0 30px 40px;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
 
@@ -121,14 +123,14 @@
         }
 
         .admin-info h4 {
-            color: white;
+            color: #212529;
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
 
         .admin-role {
-            color: rgba(255, 255, 255, 0.7);
+            color: #6c757d;
             font-size: 0.85rem;
             margin: 0;
         }
@@ -138,7 +140,7 @@
         }
 
         .nav-section-title {
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
@@ -160,7 +162,7 @@
             display: flex;
             align-items: center;
             padding: 12px 30px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #495057;
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
@@ -169,7 +171,7 @@
 
         .nav-link:hover,
         .nav-item.active .nav-link {
-            color: white;
+            color: #dc3545;
             background: rgba(220, 53, 69, 0.1);
         }
 
@@ -203,13 +205,13 @@
             align-items: center;
             margin-bottom: 30px;
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             flex-wrap: wrap;
             gap: 15px;
         }
 
         .page-title {
-            color: white;
+            color: #212529;
             font-size: 2rem;
             font-weight: 700;
             margin: 0;
@@ -218,6 +220,22 @@
         .admin-actions {
             display: flex;
             gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .admin-actions::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .admin-actions::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 2px;
+        }
+
+        .admin-actions::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 2px;
         }
 
         .btn {
@@ -232,6 +250,8 @@
             gap: 8px;
             text-decoration: none;
             font-size: 0.9rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .btn-primary {
@@ -246,13 +266,15 @@
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: #f8f9fa;
+            color: #495057;
         }
 
         .btn-danger {
@@ -272,15 +294,15 @@
         }
 
         .alert-success {
-            background: rgba(40, 167, 69, 0.2);
+            background: rgba(40, 167, 69, 0.1);
             color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.2);
         }
 
         .alert-danger {
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
 
         .management-controls {
@@ -290,12 +312,29 @@
             margin-bottom: 20px;
             gap: 20px;
             flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .management-controls::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .management-controls::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 3px;
+        }
+
+        .management-controls::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 3px;
         }
 
         .search-container {
             position: relative;
             flex: 1;
             max-width: 400px;
+            min-width: 250px;
         }
 
         .search-container i {
@@ -303,21 +342,22 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
         }
 
         .search-container input {
             width: 100%;
             padding: 12px 15px 12px 45px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            color: #212529;
             font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .search-container input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
         }
 
         .search-container input:focus {
@@ -329,57 +369,82 @@
         .filter-container {
             display: flex;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .filter-container select {
             padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
-            color: white;
+            color: #212529;
             cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .filter-container select option {
-            background: #1a1a2e;
-            color: white;
+            background: white;
+            color: #212529;
         }
 
         .table-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 15px;
-            overflow: hidden;
+            overflow-x: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #b02a37;
         }
 
         .management-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
 
         .management-table th,
         .management-table td {
             padding: 15px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
         }
 
         .management-table th {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
+            background: #f8f9fa;
+            color: #495057;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-size: 0.8rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .management-table td {
-            color: rgba(255, 255, 255, 0.9);
+            color: #212529;
         }
 
         .management-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
+            background: #f8f9fa;
         }
 
         .status-badge {
@@ -392,15 +457,15 @@
         }
 
         .status-active {
-            background: rgba(40, 167, 69, 0.2);
+            background: rgba(40, 167, 69, 0.1);
             color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.2);
         }
 
         .status-inactive {
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
 
         .actions {
@@ -421,40 +486,44 @@
         }
 
         .btn-edit {
-            background: rgba(23, 162, 184, 0.2);
+            background: rgba(23, 162, 184, 0.1);
             color: #17a2b8;
+            border: 1px solid rgba(23, 162, 184, 0.2);
         }
 
         .btn-edit:hover {
-            background: rgba(23, 162, 184, 0.4);
+            background: rgba(23, 162, 184, 0.2);
             transform: scale(1.1);
         }
 
         .btn-delete {
-            background: rgba(220, 53, 69, 0.2);
+            background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
 
         .btn-delete:hover {
-            background: rgba(220, 53, 69, 0.4);
+            background: rgba(220, 53, 69, 0.2);
             transform: scale(1.1);
         }
 
         .btn-view {
-            background: rgba(40, 167, 69, 0.2);
+            background: rgba(40, 167, 69, 0.1);
             color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
         }
 
         .btn-view:hover {
-            background: rgba(40, 167, 69, 0.4);
+            background: rgba(40, 167, 69, 0.2);
             transform: scale(1.1);
         }
 
         .no-data {
             text-align: center;
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
             font-style: italic;
             padding: 40px;
+            white-space: normal;
         }
 
         .modal {
@@ -465,37 +534,39 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            background: white;
             margin: 5% auto;
             padding: 0;
             border-radius: 15px;
             width: 90%;
             max-width: 600px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .modal-header {
             padding: 20px 25px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #f8f9fa;
+            border-radius: 15px 15px 0 0;
         }
 
         .modal-header h3 {
-            color: white;
+            color: #212529;
             margin: 0;
             font-weight: 600;
         }
 
         .close {
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
@@ -508,6 +579,22 @@
 
         .modal-body {
             padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 4px;
         }
 
         .form-group {
@@ -522,7 +609,7 @@
 
         .form-group label {
             display: block;
-            color: white;
+            color: #212529;
             font-weight: 500;
             margin-bottom: 5px;
             font-size: 0.9rem;
@@ -532,15 +619,15 @@
         .form-group select {
             width: 100%;
             padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
-            color: white;
+            color: #212529;
             font-size: 0.9rem;
         }
 
         .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: #6c757d;
         }
 
         .form-group input:focus,
@@ -551,8 +638,8 @@
         }
 
         .form-group select option {
-            background: #1a1a2e;
-            color: white;
+            background: white;
+            color: #212529;
         }
 
         .form-actions {
@@ -561,15 +648,84 @@
             gap: 10px;
             margin-top: 25px;
             padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .warning {
-            color: #ffc107;
+            color: #e67e22;
             font-style: italic;
             margin-top: 10px;
         }
 
+        /* Mobile Cards (for responsive design) */
+        .mobile-cards {
+            display: none;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .room-card:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .room-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .room-card-title {
+            font-weight: 600;
+            color: #212529;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .room-card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .room-card-field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .room-card-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .room-card-value {
+            color: #212529;
+            font-size: 0.9rem;
+        }
+
+        .room-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Responsive Design */
         @media (max-width: 1024px) {
             .sidebar-toggle {
                 display: block;
@@ -607,6 +763,7 @@
 
             .filter-container {
                 justify-content: stretch;
+                flex-wrap: wrap;
             }
 
             .filter-container select {
@@ -628,13 +785,13 @@
                 grid-template-columns: 1fr;
             }
 
-            .management-table {
-                font-size: 0.8rem;
+            /* Hide table, show cards on mobile */
+            .table-container {
+                display: none;
             }
 
-            .management-table th,
-            .management-table td {
-                padding: 10px 8px;
+            .mobile-cards {
+                display: block;
             }
 
             .modal-content {
@@ -642,9 +799,42 @@
                 margin: 2% auto;
             }
 
-            .actions {
-                flex-direction: column;
-                gap: 5px;
+            .room-card-body {
+                grid-template-columns: 1fr;
+            }
+
+            .room-card-actions {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-main {
+                padding: 80px 10px 10px;
+            }
+
+            .admin-header {
+                padding: 1rem;
+                background: white;
+                border-radius: 12px;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .room-card {
+                padding: 15px;
+            }
+
+            .modal-content {
+                width: 98%;
+                margin: 5% auto;
+                border-radius: 8px;
+            }
+
+            .form-group input,
+            .form-group select {
+                font-size: 16px;
+                /* Prevents zoom on iOS */
             }
         }
     </style>
@@ -728,6 +918,14 @@
                 <div class="nav-section">
                     <div class="nav-section-title">SETTINGS</div>
                     <ul class="nav-menu">
+                        {% if admin and admin.role == 'super_admin' %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_management') }}" class="nav-link">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Admin Management</span>
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_settings') }}" class="nav-link">
                                 <i class="fas fa-cog"></i>
@@ -961,6 +1159,17 @@
 
         function closeModal() {
             document.getElementById('roomModal').style.display = 'none';
+        }
+
+        // Add this function to handle the view/profile modal
+        function openProfileModal(roomId) {
+            // Redirect to the room profile page
+            window.location.href = `/admin/room/${roomId}`;
+        }
+
+        // Alternative: If you want to open it in a new tab
+        function openProfileModalNewTab(roomId) {
+            window.open(`/admin/rooms/${roomId}/profile`, '_blank');
         }
 
         window.onclick = function (event) {

@@ -247,7 +247,7 @@ def register_routes(app):
             'admin_id': session.get('admin_id'),
             'username': session.get('admin_username'),
             'full_name': session.get('admin_name', 'Administrator'),
-            'role': session.get('admin_role', 'admin')
+            'role': session.get('admin_role', 'admin')  # Make sure role is included
         }
         
         # Get database statistics
@@ -307,7 +307,7 @@ def register_routes(app):
         recent_faculty = []
         
         return render_template('admin/dashboard.html', 
-                         admin=admin_info, 
+                         admin=admin_info,  # Use admin_info with role
                          stats=stats,
                          recent_students=recent_students,
                          recent_faculty=recent_faculty)
@@ -322,7 +322,7 @@ def register_routes(app):
             'admin_id': session.get('admin_id'),
             'username': session.get('admin_username'),
             'full_name': session.get('admin_name', 'Administrator'),
-            'role': session.get('admin_role', 'admin')
+            'role': session.get('admin_role', 'admin')  # Make sure role is included
         }
         
         if request.method == 'POST':
@@ -454,7 +454,7 @@ def register_routes(app):
             'admin_id': session.get('admin_id'),
             'username': session.get('admin_username'),
             'full_name': session.get('admin_name', 'Administrator'),
-            'role': session.get('admin_role', 'admin')
+            'role': session.get('admin_role', 'admin')  # Make sure role is included
         }
         
         if request.method == 'POST':
@@ -541,7 +541,7 @@ def register_routes(app):
             'admin_id': session.get('admin_id'),
             'username': session.get('admin_username'),
             'full_name': session.get('admin_name', 'Administrator'),
-            'role': session.get('admin_role', 'admin')
+            'role': session.get('admin_role', 'admin')  # Make sure role is included
         }
         
         if request.method == 'POST':
@@ -636,7 +636,7 @@ def register_routes(app):
             'admin_id': session.get('admin_id'),
             'username': session.get('admin_username'),
             'full_name': session.get('admin_name', 'Administrator'),
-            'role': session.get('admin_role', 'admin')
+            'role': session.get('admin_role', 'admin')  # Make sure role is included
         }
         
         if request.method == 'POST':
@@ -905,9 +905,29 @@ def register_routes(app):
                 flash('Room not found', 'error')
                 return redirect(url_for('room_list'))
             
-            return render_template('room/profile.html', room=room)
-            
-        except mysql.connector.Error as e:
+            # Get schedules for this room
+            cursor.execute("""
+                SELECT s.*, 
+                       sec.section_name,
+                       sub.subject_code,
+                       sub.subject_name as subject,
+                       f.name as faculty_name,
+                       CONCAT(s.start_time, ' - ', s.end_time) as time
+                FROM schedules s
+                LEFT JOIN sections sec ON s.section_id = sec.section_id
+                LEFT JOIN subjects sub ON s.subject_id = sub.subject_id
+                LEFT JOIN faculty f ON s.faculty_id = f.faculty_id
+                WHERE s.room_id = %s
+                ORDER BY FIELD(s.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+                         s.start_time
+            """, (room_id,))
+            schedules = cursor.fetchall()
+
+            return render_template('admin/room_profile.html', 
+                                room=room,
+                                schedules=schedules)
+
+        except Exception as e:
             flash(f'Error loading room: {e}', 'error')
             return redirect(url_for('room_list'))
         finally:
@@ -1212,7 +1232,6 @@ def register_routes(app):
             # Fetch faculty schedules with subject, section and room details
             cursor.execute("""
                 SELECT s.*, 
-                       sec.section_name,
                        sub.subject_code,
                        sub.subject_name as subject,
                        r.room_name,
@@ -1244,7 +1263,7 @@ def register_routes(app):
 
     @app.route('/admin/room/<int:room_id>')
     def admin_room_profile(room_id):
-        """View room profile with schedules and stats"""
+        """View room profile with schedules"""
         if 'admin_id' not in session:
             return redirect(url_for('admin_login'))
 
@@ -1257,30 +1276,27 @@ def register_routes(app):
             cursor = conn.cursor(dictionary=True)
 
             # Fetch room details
-            cursor.execute("""
-                SELECT * FROM rooms WHERE room_id = %s
-            """, (room_id,))
+            cursor.execute("SELECT * FROM rooms WHERE room_id = %s", (room_id,))
             room = cursor.fetchone()
 
             if not room:
                 flash('Room not found', 'error')
                 return redirect(url_for('admin_rooms'))
 
-            # Fetch room schedules with subject, section and faculty details
+            # Fix: Change 'schedules' to 'schedule' (singular)
             cursor.execute("""
                 SELECT s.*, 
                        sec.section_name,
-                       sub.subject_code,
                        sub.subject_name as subject,
                        f.name as faculty_name,
-                       CONCAT(s.start_time, ' - ', s.end_time) as time
-                FROM schedules s
+                       s.time
+                FROM schedule s
                 LEFT JOIN sections sec ON s.section_id = sec.section_id
                 LEFT JOIN subjects sub ON s.subject_id = sub.subject_id
                 LEFT JOIN faculty f ON s.faculty_id = f.faculty_id
                 WHERE s.room_id = %s
                 ORDER BY FIELD(s.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                         s.start_time
+                         s.time
             """, (room_id,))
             schedules = cursor.fetchall()
 
@@ -1288,8 +1304,8 @@ def register_routes(app):
             conn.close()
 
             return render_template('admin/room_profile.html', 
-                                room=room,
-                                schedules=schedules)
+                            room=room,
+                            schedules=schedules)
 
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'error')
@@ -1313,12 +1329,10 @@ def register_routes(app):
         try:
             cursor = conn.cursor(dictionary=True)
 
-            # Fetch section details with course info
+            # Fetch section details
             cursor.execute("""
-                SELECT s.*,
-                       c.course_name as course
+                SELECT s.*
                 FROM sections s
-                LEFT JOIN courses c ON s.course_id = c.course_id
                 WHERE s.section_id = %s
             """, (section_id,))
             section = cursor.fetchone()
@@ -1340,31 +1354,12 @@ def register_routes(app):
             """, (section_id,))
             students = cursor.fetchall()
 
-            # Fetch section schedules with subject, faculty and room details
-            cursor.execute("""
-                SELECT s.*, 
-                       sub.subject_code,
-                       sub.subject_name as subject,
-                       f.name as faculty_name,
-                       r.room_name,
-                       CONCAT(s.start_time, ' - ', s.end_time) as time
-                FROM schedules s
-                LEFT JOIN subjects sub ON s.subject_id = sub.subject_id
-                LEFT JOIN faculty f ON s.faculty_id = f.faculty_id
-                LEFT JOIN rooms r ON s.room_id = r.room_id
-                WHERE s.section_id = %s
-                ORDER BY FIELD(s.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                         s.start_time
-            """, (section_id,))
-            schedules = cursor.fetchall()
-
             cursor.close()
             conn.close()
 
             return render_template('admin/section_profile.html',
                                 section=section,
-                                students=students,
-                                schedules=schedules)
+                                students=students)
 
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'error')
@@ -1976,7 +1971,7 @@ def register_routes(app):
             'admin_id': session.get('admin_id'),
             'username': session.get('admin_username'),
             'full_name': session.get('admin_name', 'Administrator'),
-            'role': session.get('admin_role', 'admin')
+            'role': session.get('admin_role', 'admin')  # Make sure role is included
         }
         
         # Get recent generated keys for display
@@ -2154,3 +2149,366 @@ def register_routes(app):
                 return jsonify({'success': False, 'message': 'Database error'}), 500
         else:
             return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+
+    @app.route('/admin/management')
+    def admin_management():
+        """Admin management page - only accessible by super admins"""
+        if 'admin_id' not in session:
+            return redirect(url_for('admin_login'))
+        
+        # Check if user is super admin
+        if session.get('admin_role') != 'super_admin':
+            flash('Access denied. Super admin privileges required.', 'error')
+            return redirect(url_for('admin_dashboard'))
+        
+        admin_info = {
+            'admin_id': session.get('admin_id'),
+            'username': session.get('admin_username'),
+            'full_name': session.get('admin_name', 'Super Administrator'),
+            'role': session.get('admin_role', 'super_admin')
+        }
+        
+        # Get admin statistics
+        conn = get_db_connection()
+        admin_stats = {
+            'total_admins': 0,
+            'active_admins': 0,
+            'super_admins': 0,
+            'recent_logins': 0
+        }
+        
+        admins = []
+        
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                
+                # Get admin statistics
+                cursor.execute("SELECT COUNT(*) as total FROM admin")
+                admin_stats['total_admins'] = cursor.fetchone()['total']
+                
+                cursor.execute("SELECT COUNT(*) as active FROM admin WHERE is_active = 1")
+                admin_stats['active_admins'] = cursor.fetchone()['active']
+                
+                cursor.execute("SELECT COUNT(*) as super_admins FROM admin WHERE role = 'super_admin'")
+                admin_stats['super_admins'] = cursor.fetchone()['super_admins']
+                
+                cursor.execute("""
+                    SELECT COUNT(*) as recent 
+                    FROM admin 
+                    WHERE last_login >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+                """)
+                admin_stats['recent_logins'] = cursor.fetchone()['recent']
+                
+                # Get all admins
+                cursor.execute("""
+                    SELECT admin_id, username, full_name, email, role, is_active as status,
+                           last_login, created_at, login_attempts
+                    FROM admin
+                    ORDER BY created_at DESC
+                """)
+                admins = cursor.fetchall()
+                
+                cursor.close()
+                conn.close()
+                
+            except Exception as e:
+                flash(f'Error loading admin data: {str(e)}', 'error')
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        
+        return render_template('admin/admin_management.html', 
+                             admin_profile=admin_info,
+                             admin_stats=admin_stats,
+                             admins=admins)
+
+    # Admin Management API Routes
+    @app.route('/admin/get_admin/<int:admin_id>')
+    def get_admin_api(admin_id):
+        """API endpoint to get admin data"""
+        if 'admin_id' not in session or session.get('admin_role') != 'super_admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT admin_id as id, username, full_name, email, role, 
+                       is_active as status, last_login, created_at, login_attempts
+                FROM admin WHERE admin_id = %s
+            """, (admin_id,))
+            admin = cursor.fetchone()
+            
+            if admin:
+                return jsonify({'success': True, 'admin': admin})
+            else:
+                return jsonify({'success': False, 'message': 'Admin not found'}), 404
+                
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+        finally:
+            if conn:
+                conn.close()
+
+    @app.route('/admin/add_admin', methods=['POST'])
+    def add_admin_api():
+        """API endpoint to add new admin"""
+        if 'admin_id' not in session or session.get('admin_role') != 'super_admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        try:
+            username = request.form.get('username')
+            full_name = request.form.get('fullName')
+            email = request.form.get('email')
+            role = request.form.get('role')
+            password = request.form.get('password')
+            notes = request.form.get('notes', '')
+            
+            if not all([username, full_name, email, role, password]):
+                return jsonify({'success': False, 'message': 'All required fields must be filled'}), 400
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                from app import bcrypt
+                cursor = conn.cursor()
+                
+                # Check if username already exists
+                cursor.execute("SELECT admin_id FROM admin WHERE username = %s", (username,))
+                if cursor.fetchone():
+                    return jsonify({'success': False, 'message': 'Username already exists'}), 400
+                
+                # Hash password
+                password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+                
+                # Insert new admin
+                cursor.execute("""
+                    INSERT INTO admin (username, full_name, email, role, password, is_active, created_at)
+                    VALUES (%s, %s, %s, %s, %s, 1, NOW())
+                """, (username, full_name, email, role, password_hash))
+                
+                conn.commit()
+                return jsonify({'success': True, 'message': 'Admin added successfully'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            finally:
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/admin/update_admin/<int:admin_id>', methods=['PUT', 'POST'])
+    def update_admin_api(admin_id):
+        """API endpoint to update admin"""
+        if 'admin_id' not in session or session.get('admin_role') != 'super_admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        try:
+            username = request.form.get('username')
+            full_name = request.form.get('fullName')
+            email = request.form.get('email')
+            role = request.form.get('role')
+            notes = request.form.get('notes', '')
+            password = request.form.get('password')
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                cursor = conn.cursor()
+                
+                # Check if username conflicts with other admins
+                cursor.execute("SELECT admin_id FROM admin WHERE username = %s AND admin_id != %s", (username, admin_id))
+                if cursor.fetchone():
+                    return jsonify({'success': False, 'message': 'Username already exists'}), 400
+                
+                # Update admin (with or without password)
+                if password:
+                    from app import bcrypt
+                    password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+                    cursor.execute("""
+                        UPDATE admin 
+                        SET username = %s, full_name = %s, email = %s, role = %s, password = %s, updated_at = NOW()
+                        WHERE admin_id = %s
+                    """, (username, full_name, email, role, password_hash, admin_id))
+                else:
+                    cursor.execute("""
+                        UPDATE admin 
+                        SET username = %s, full_name = %s, email = %s, role = %s, updated_at = NOW()
+                        WHERE admin_id = %s
+                    """, (username, full_name, email, role, admin_id))
+                
+                conn.commit()
+                return jsonify({'success': True, 'message': 'Admin updated successfully'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            finally:
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/admin/toggle_admin_status/<int:admin_id>', methods=['POST'])
+    def toggle_admin_status_api(admin_id):
+        """API endpoint to toggle admin status"""
+        if 'admin_id' not in session or session.get('admin_role') != 'super_admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        # Prevent deactivating own account
+        if admin_id == session.get('admin_id'):
+            return jsonify({'success': False, 'message': 'Cannot deactivate your own account'}), 400
+        
+        try:
+            data = request.get_json()
+            new_status = 1 if data.get('status') == 'active' else 0
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE admin SET is_active = %s WHERE admin_id = %s", (new_status, admin_id))
+                conn.commit()
+                
+                status_text = 'activated' if new_status else 'deactivated'
+                return jsonify({'success': True, 'message': f'Admin {status_text} successfully'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            finally:
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/admin/delete_admin/<int:admin_id>', methods=['DELETE'])
+    def delete_admin_api(admin_id):
+        """API endpoint to delete admin"""
+        if 'admin_id' not in session or session.get('admin_role') != 'super_admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        # Prevent deleting own account
+        if admin_id == session.get('admin_id'):
+            return jsonify({'success': False, 'message': 'Cannot delete your own account'}), 400
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+        
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM admin WHERE admin_id = %s", (admin_id,))
+            conn.commit()
+            
+            return jsonify({'success': True, 'message': 'Admin deleted successfully'})
+            
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+        finally:
+            if conn:
+                conn.close()
+
+    @app.route('/admin/bulk_toggle_status', methods=['POST'])
+    def bulk_toggle_admin_status():
+        """API endpoint for bulk status toggle"""
+        if 'admin_id' not in session or session.get('admin_role') != 'super_admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        try:
+            data = request.get_json()
+            admin_ids = data.get('admin_ids', [])
+            
+            # Remove current user from list
+            current_admin_id = session.get('admin_id')
+            admin_ids = [aid for aid in admin_ids if int(aid) != current_admin_id]
+            
+            if not admin_ids:
+                return jsonify({'success': False, 'message': 'No valid admins selected'}), 400
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                cursor = conn.cursor()
+                
+                # Toggle status for each admin
+                for admin_id in admin_ids:
+                    cursor.execute("UPDATE admin SET is_active = NOT is_active WHERE admin_id = %s", (admin_id,))
+                
+                conn.commit()
+                return jsonify({'success': True, 'message': f'{len(admin_ids)} admin(s) status updated'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            finally:
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/admin/bulk_delete_admins', methods=['DELETE'])
+    def bulk_delete_admins():
+        """API endpoint for bulk delete"""
+        if 'admin_id' not in session or session.get('admin_role') != 'super_admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+        try:
+            data = request.get_json()
+            admin_ids = data.get('admin_ids', [])
+            
+            # Remove current user from list
+            current_admin_id = session.get('admin_id')
+            admin_ids = [aid for aid in admin_ids if int(aid) != current_admin_id]
+            
+            if not admin_ids:
+                return jsonify({'success': False, 'message': 'No valid admins selected'}), 400
+            
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+            
+            try:
+                cursor = conn.cursor()
+                
+                # Delete admins
+                for admin_id in admin_ids:
+                    cursor.execute("DELETE FROM admin WHERE admin_id = %s", (admin_id,))
+                
+                conn.commit()
+                return jsonify({'success': True, 'message': f'{len(admin_ids)} admin(s) deleted successfully'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            finally:
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+    # Add this temporarily to see all your routes
+    @app.route('/debug/routes')
+    def list_routes():
+        import urllib
+        output = []
+        for rule in app.url_map.iter_rules():
+            methods = ','.join(rule.methods)
+            line = urllib.parse.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, rule))
+            output.append(line)
+        
+        return '<br>'.join(sorted(output))

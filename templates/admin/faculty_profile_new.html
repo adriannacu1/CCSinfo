@@ -91,6 +91,14 @@
                 <div class="nav-section">
                     <div class="nav-section-title">SETTINGS</div>
                     <ul class="nav-menu">
+                        {% if admin and admin.role == 'super_admin' %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_management') }}" class="nav-link">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Admin Management</span>
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_settings') }}" class="nav-link">
                                 <i class="fas fa-cog"></i>
