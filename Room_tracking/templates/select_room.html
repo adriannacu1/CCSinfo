@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Room - CCS Room Access System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 95%;
+            max-width: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2a5298;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .room-card {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .room-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #2a5298;
+        }
+        
+        .room-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2a5298;
+            margin-bottom: 5px;
+        }
+        
+        .room-status {
+            font-size: 14px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        .status-online {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-offline {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .status-error {
+            background: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .refresh-button {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+            transition: background 0.3s;
+        }
+        
+        .refresh-button:hover {
+            background: #1e3c72;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CCS Room Access</h1>
+        <p class="subtitle">Select a room to access</p>
+        
+        <!-- Error message if room wasn't found -->
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <div id="roomContainer" class="room-grid">
+            <p class="loading">Loading available rooms...</p>
+        </div>
+        
+        <button id="refreshButton" class="refresh-button">Refresh Rooms</button>
+    </div>
+    
+    <script>
+        // Function to fetch and display rooms
+        function fetchRooms() {
+            const roomContainer = document.getElementById('roomContainer');
+            roomContainer.innerHTML = '<p class="loading">Loading available rooms...</p>';
+            
+            fetch('/api/rooms')
+                .then(response => response.json())
+                .then(rooms => {
+                    if (rooms.length === 0) {
+                        roomContainer.innerHTML = '<p class="loading">No rooms available</p>';
+                        return;
+                    }
+                    
+                    roomContainer.innerHTML = '';
+                    rooms.forEach(room => {
+                        const card = document.createElement('div');
+                        card.className = 'room-card';
+                        card.onclick = function() {
+                            window.location.href = `/?room_id=${room.room_id}`;
+                        };
+                        
+                        // Get status class
+                        let statusClass = '';
+                        switch(room.status) {
+                            case 'online':
+                                statusClass = 'status-online';
+                                break;
+                            case 'offline':
+                                statusClass = 'status-offline';
+                                break;
+                            default:
+                                statusClass = 'status-error';
+                        }
+                        
+                        card.innerHTML = `
+                            <div class="room-name">Room ${room.room_name}</div>
+                            <div class="room-status ${statusClass}">${room.status}</div>
+                        `;
+                        
+                        roomContainer.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching rooms:', error);
+                    roomContainer.innerHTML = `
+                        <p class="loading">Error loading rooms. Please try again.</p>
+                    `;
+                });
+        }
+        
+        // Fetch rooms on page load
+        document.addEventListener('DOMContentLoaded', fetchRooms);
+        
+        // Set up refresh button
+        document.getElementById('refreshButton').addEventListener('click', fetchRooms);
+    </script>
+</body>
+</html>

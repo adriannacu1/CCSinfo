@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCS Room Access - RFID Scanner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .header {
+            background: #2a5298;
+            color: white;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px 20px;
+            color: #333;
+        }
+        
+        .rfid-form {
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2a5298;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        input:focus {
+            border-color: #2a5298;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(42,82,152,0.2);
+        }
+        
+        button {
+            width: 100%;
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #219a52;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .professor-info {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2a5298;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CCS Room Access System</h1>
+            <p class="subtitle">Tap your RFID card or enter RFID code to access room</p>
+            <p class="room-number" style="font-size: 20px; font-weight: bold; margin-top: 10px;">Room {{ room_id }}</p>
+            <input type="hidden" id="room_id" value="{{ room_id }}">
+        </div>
+        
+        <div class="content">
+            <div id="rfid-section">
+                <div class="rfid-form">
+                    <div class="form-group">
+                        <label for="rfid_code">RFID Code</label>
+                        <input type="text" id="rfid_code" name="rfid_code" placeholder="Enter or scan RFID code" autofocus>
+                    </div>
+                    <button type="button" id="submitBtn">Validate Access</button>
+                </div>
+                
+                <div id="result" class="result"></div>
+                <div id="professor-info" class="professor-info"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const rfidInput = document.getElementById('rfid_code');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultDiv = document.getElementById('result');
+        const professorInfoDiv = document.getElementById('professor-info');
+        let rfidTimeout = null;
+        
+        // Auto-submit when RFID code is entered with delay to ensure full code entry
+        rfidInput.addEventListener('input', function() {
+            // Clear any pending timeout
+            if (rfidTimeout) {
+                clearTimeout(rfidTimeout);
+            }
+            
+            // Set a new timeout to wait for complete code entry
+            if (this.value.length >= 8) { // Adjust length based on your RFID format
+                rfidTimeout = setTimeout(() => {
+                    validateRFID();
+                }, 2000); // Wait 2 seconds before validating
+            }
+        });
+        
+        // Manual submit
+        submitBtn.addEventListener('click', validateRFID);
+        
+        // Also submit on enter key
+        rfidInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (rfidTimeout) {
+                    clearTimeout(rfidTimeout);
+                }
+                validateRFID();
+            }
+        });
+        
+        function validateRFID() {
+            const rfidCode = rfidInput.value.trim();
+            
+            if (!rfidCode) {
+                showError('Please enter an RFID code');
+                return;
+            }
+            
+            // Disable form during validation
+            rfidInput.disabled = true;
+            submitBtn.disabled = true;
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('rfid_code', rfidCode);
+            formData.append('room_id', document.getElementById('room_id').value);
+            
+
+            fetch('/api/validate_rfid', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showSuccess(data.message);
+                    showProfessorInfo(data.faculty_name);
+                    
+                    setTimeout(() => {
+                        window.location.href = '/room_in_use';
+                    }, 1500);
+                } else {
+                    showError(data.message);
+                    rfidInput.disabled = false;
+                    submitBtn.disabled = false;
+                    rfidInput.value = '';
+                    rfidInput.focus();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Network error. Please try again.');
+                
+                rfidInput.disabled = false;
+                submitBtn.disabled = false;
+                rfidInput.value = '';
+                rfidInput.focus();
+            });
+        }
+        
+        function showSuccess(message) {
+            resultDiv.textContent = message;
+            resultDiv.className = 'result success';
+        }
+        
+        function showError(message) {
+            resultDiv.textContent = message;
+            resultDiv.className = 'result error';
+        }
+        
+        function showProfessorInfo(name) {
+            professorInfoDiv.textContent = 'Welcome, ' + name;
+            professorInfoDiv.style.display = 'block';
+        }
+
+        function attemptFocus() {
+            rfidInput.value = '';
+            rfidInput.focus();
+            resultDiv.textContent = "RFID Scanner Ready";
+            resultDiv.className = 'result success';
+            setTimeout(() => {
+                if (resultDiv.textContent === "RFID Scanner Ready") {
+                    resultDiv.className = 'result';
+                }
+            }, 1500);
+        }
+
+        window.addEventListener('load', attemptFocus);
+        document.addEventListener('click', function() {
+            if (!rfidInput.disabled && document.visibilityState === 'visible') {
+                attemptFocus();
+            }
+        });
+
+        // Add a visible "tap to scan" button for mobile users
+        const mobileButton = document.createElement('button');
+        mobileButton.textContent = "Tap to activate scanner";
+        mobileButton.style.marginTop = "20px";
+        mobileButton.style.background = "#2a5298";
+        mobileButton.addEventListener('click', attemptFocus);
+
+        // Insert the button after the result div
+        resultDiv.parentNode.insertBefore(mobileButton, professorInfoDiv);
+    </script>
+</body>
+</html>
