@@ -7,7 +7,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events')
     def api_get_events():
         """API endpoint to get events with filtering and pagination"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -104,7 +104,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events/stats')
     def api_get_event_stats():
         """API endpoint to get event statistics"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -121,9 +121,7 @@ def register_event_routes(app, get_db_connection):
                     SUM(CASE WHEN status = 'upcoming' THEN 1 ELSE 0 END) as upcoming_events,
                     SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as ongoing_events,
                     SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_events,
-                    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_events,
-                    SUM(current_attendees) as total_registrations,
-                    SUM(price * current_attendees) as total_revenue
+                    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_events
                 FROM events
             """
             cursor.execute(stats_query)
@@ -139,7 +137,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events', methods=['POST'])
     def api_create_event():
         """API endpoint to create a new event"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -159,8 +157,8 @@ def register_event_routes(app, get_db_connection):
             # Insert event
             insert_query = """
                 INSERT INTO events (title, description, category, event_date, event_time, end_time, 
-                                  location, price, max_attendees, status, featured_image, created_by)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                  location, status, featured_image, created_by)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(insert_query, (
                 data['title'],
@@ -170,8 +168,6 @@ def register_event_routes(app, get_db_connection):
                 data['event_time'],
                 data.get('end_time'),
                 data['location'],
-                data.get('price', 0.00),
-                data.get('max_attendees'),
                 data.get('status', 'upcoming'),
                 data.get('featured_image'),
                 session['admin_id']
@@ -206,7 +202,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events/<int:event_id>', methods=['PUT'])
     def api_update_event(event_id):
         """API endpoint to update an event"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -220,8 +216,8 @@ def register_event_routes(app, get_db_connection):
             # Update event
             update_query = """
                 UPDATE events SET title = %s, description = %s, category = %s, event_date = %s,
-                                event_time = %s, end_time = %s, location = %s, price = %s,
-                                max_attendees = %s, status = %s, featured_image = %s,
+                                event_time = %s, end_time = %s, location = %s,
+                                status = %s, featured_image = %s,
                                 updated_at = CURRENT_TIMESTAMP
                 WHERE event_id = %s
             """
@@ -233,8 +229,6 @@ def register_event_routes(app, get_db_connection):
                 data['event_time'],
                 data.get('end_time'),
                 data['location'],
-                data.get('price', 0.00),
-                data.get('max_attendees'),
                 data.get('status', 'upcoming'),
                 data.get('featured_image'),
                 event_id
@@ -271,7 +265,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events/<int:event_id>', methods=['DELETE'])
     def api_delete_event(event_id):
         """API endpoint to delete an event"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -302,7 +296,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events/<int:event_id>')
     def api_get_event(event_id):
         """API endpoint to get a single event with speakers"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -314,7 +308,9 @@ def register_event_routes(app, get_db_connection):
             
             # Get event details
             event_query = """
-                SELECT e.*, a.full_name as created_by_name
+                SELECT e.event_id, e.title, e.description, e.category, e.event_date, e.event_time, 
+                       e.end_time, e.location, e.status, e.featured_image, e.created_by, 
+                       e.created_at, e.updated_at, a.full_name as created_by_name
                 FROM events e
                 LEFT JOIN admin a ON e.created_by = a.admin_id
                 WHERE e.event_id = %s
@@ -351,7 +347,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events/bulk-action', methods=['POST'])
     def api_bulk_event_action():
         """API endpoint for bulk actions on events"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -403,7 +399,7 @@ def register_event_routes(app, get_db_connection):
     @app.route('/api/events/export')
     def api_export_events():
         """API endpoint to export events as CSV"""
-        if 'admin_logged_in' not in session:
+        if 'admin_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
         
         connection = get_db_connection()
@@ -454,7 +450,7 @@ def register_event_routes(app, get_db_connection):
             # Get events for export
             export_query = f"""
                 SELECT e.title, e.description, e.category, e.event_date, e.event_time, e.end_time,
-                       e.location, e.price, e.max_attendees, e.current_attendees, e.status,
+                       e.location, e.status,
                        a.full_name as created_by, e.created_at
                 FROM events e
                 LEFT JOIN admin a ON e.created_by = a.admin_id
@@ -468,7 +464,7 @@ def register_event_routes(app, get_db_connection):
             output = io.StringIO()
             writer = csv.DictWriter(output, fieldnames=[
                 'title', 'description', 'category', 'event_date', 'event_time', 'end_time',
-                'location', 'price', 'max_attendees', 'current_attendees', 'status',
+                'location', 'status',
                 'created_by', 'created_at'
             ])
             

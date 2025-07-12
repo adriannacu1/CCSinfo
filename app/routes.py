@@ -914,17 +914,14 @@ def register_routes(app):
             cursor.execute("""
                 SELECT s.*, 
                        sec.section_name,
-                       sub.subject_code,
-                       sub.subject_name as subject,
+                       s.subject,
                        f.name as faculty_name,
-                       CONCAT(s.start_time, ' - ', s.end_time) as time
-                FROM schedules s
+                       s.time
+                FROM schedule s
                 LEFT JOIN sections sec ON s.section_id = sec.section_id
-                LEFT JOIN subjects sub ON s.subject_id = sub.subject_id
                 LEFT JOIN faculty f ON s.faculty_id = f.faculty_id
                 WHERE s.room_id = %s
-                ORDER BY FIELD(s.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                         s.start_time
+                ORDER BY FIELD(s.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
             """, (room_id,))
             schedules = cursor.fetchall()
 
@@ -1237,17 +1234,14 @@ def register_routes(app):
             # Fetch faculty schedules with subject, section and room details
             cursor.execute("""
                 SELECT s.*, 
-                       sub.subject_code,
-                       sub.subject_name as subject,
+                       s.subject,
                        r.room_name,
-                       CONCAT(s.start_time, ' - ', s.end_time) as time
-                FROM schedules s
+                       s.time
+                FROM schedule s
                 LEFT JOIN sections sec ON s.section_id = sec.section_id
-                LEFT JOIN subjects sub ON s.subject_id = sub.subject_id
                 LEFT JOIN rooms r ON s.room_id = r.room_id
                 WHERE s.faculty_id = %s
-                ORDER BY FIELD(s.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                         s.start_time
+                ORDER BY FIELD(s.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
             """, (faculty_id,))
             schedules = cursor.fetchall()
 
@@ -1401,7 +1395,7 @@ def register_routes(app):
             
             if not student:
                 return jsonify({'success': False, 'message': 'Student not found'}), 404
-              # Get student's schedule (from section)
+            # Get student's schedule (from section)
             schedule = []
             if student.get('section_id'):
                 cursor.execute('''
@@ -2372,28 +2366,11 @@ def register_routes(app):
             start_time = request.form.get('start_time')
             end_time = request.form.get('end_time')
             location = request.form.get('location')
-            price = request.form.get('price', 0)
-            max_attendees = request.form.get('max_attendees')
             featured_image = request.form.get('featured_image_url')
             
             # Validate required fields
             if not all([event_name, description, category, event_date, start_time, location]):
                 return jsonify({'success': False, 'message': 'All required fields must be filled'}), 400
-            
-            # Process max_attendees
-            if max_attendees:
-                try:
-                    max_attendees = int(max_attendees)
-                except:
-                    max_attendees = None
-            else:
-                max_attendees = None
-            
-            # Process price
-            try:
-                price = float(price) if price else 0.0
-            except:
-                price = 0.0
             
             conn = get_db_connection()
             if not conn:
@@ -2412,10 +2389,10 @@ def register_routes(app):
                 # Insert new event - FIXED: using 'title' instead of 'event_name'
                 cursor.execute("""
                     INSERT INTO events (title, description, category, event_date, event_time, end_time, 
-                                       location, price, max_attendees, featured_image, status, created_by, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'upcoming', %s, NOW())
+                                       location, featured_image, status, created_by, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'upcoming', %s, NOW())
                 """, (event_name, description, category, event_date, start_time_formatted, end_time_formatted,
-                      location, price, max_attendees, featured_image, session.get('admin_id')))
+                      location, featured_image, session.get('admin_id')))
                 
                 conn.commit()
                 return jsonify({'success': True, 'message': 'Event created successfully'})
@@ -2446,28 +2423,11 @@ def register_routes(app):
             start_time = request.form.get('start_time')
             end_time = request.form.get('end_time')
             location = request.form.get('location')
-            price = request.form.get('price', 0)
-            max_attendees = request.form.get('max_attendees')
             featured_image = request.form.get('featured_image_url')
             
             # Validate required fields
             if not all([event_name, description, category, event_date, start_time, location]):
                 return jsonify({'success': False, 'message': 'All required fields must be filled'}), 400
-            
-            # Process max_attendees
-            if max_attendees:
-                try:
-                    max_attendees = int(max_attendees)
-                except:
-                    max_attendees = None
-            else:
-                max_attendees = None
-            
-            # Process price
-            try:
-                price = float(price) if price else 0.0
-            except:
-                price = 0.0
             
             conn = get_db_connection()
             if not conn:
@@ -2487,11 +2447,11 @@ def register_routes(app):
                 cursor.execute("""
                     UPDATE events 
                     SET title = %s, description = %s, category = %s, event_date = %s, 
-                        event_time = %s, end_time = %s, location = %s, price = %s, 
-                        max_attendees = %s, featured_image = %s
+                        event_time = %s, end_time = %s, location = %s, 
+                        featured_image = %s
                     WHERE event_id = %s
                 """, (event_name, description, category, event_date, start_time_formatted, end_time_formatted,
-                      location, price, max_attendees, featured_image, event_id))
+                      location, featured_image, event_id))
                 
                 if cursor.rowcount == 0:
                     return jsonify({'success': False, 'message': 'Event not found'}), 404
@@ -2542,17 +2502,88 @@ def register_routes(app):
             if conn:
                 conn.close()
 
-    # Add this temporarily to see all your routes
-    @app.route('/debug/routes')
-    def list_routes():
-        import urllib
-        output = []
-        for rule in app.url_map.iter_rules():
-            methods = ','.join(rule.methods)
-            line = urllib.parse.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, rule))
-            output.append(line)
+    @app.route('/api/events/<int:event_id>')
+    def get_event_details(event_id):
+        """API endpoint to get detailed event information"""
+        conn = get_db_connection()
         
-        return '<br>'.join(sorted(output))
+        if not conn:
+            return jsonify({'success': False, 'message': 'Database connection failed'})
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get event details with speakers
+            cursor.execute("""
+                SELECT e.*, 
+                       GROUP_CONCAT(CONCAT(es.name, '|', es.role, '|', COALESCE(es.bio, ''), '|', COALESCE(es.avatar, '')) 
+                                   SEPARATOR '|||') as speakers_data
+                FROM events e
+                LEFT JOIN event_speakers es ON e.event_id = es.event_id
+                WHERE e.event_id = %s
+                GROUP BY e.event_id
+            """, (event_id,))
+            
+            event = cursor.fetchone()
+            
+            if not event:
+                return jsonify({'success': False, 'message': 'Event not found'})
+            
+            # Format time fields
+            if event.get('event_time') and hasattr(event['event_time'], 'seconds'):
+                total_seconds = event['event_time'].seconds
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                event['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+            elif event.get('event_time'):
+                event['event_time_formatted'] = str(event['event_time'])
+            else:
+                event['event_time_formatted'] = "TBA"
+            
+            if event.get('end_time') and hasattr(event['end_time'], 'seconds'):
+                total_seconds = event['end_time'].seconds
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                event['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+            elif event.get('end_time'):
+                event['end_time_formatted'] = str(event['end_time'])
+            else:
+                event['end_time_formatted'] = None
+            
+            # Format date
+            if event.get('event_date'):
+                event['event_date_formatted'] = event['event_date'].strftime('%B %d, %Y')
+            
+            # Parse speakers data
+            speakers = []
+            if event['speakers_data']:
+                speakers_list = event['speakers_data'].split('|||')
+                for speaker_data in speakers_list:
+                    if speaker_data.strip():
+                        parts = speaker_data.split('|')
+                        if len(parts) >= 2:
+                            speakers.append({
+                                'name': parts[0],
+                                'role': parts[1],
+                                'bio': parts[2] if len(parts) > 2 and parts[2] else None,
+                                'avatar': parts[3] if len(parts) > 3 and parts[3] else None
+                            })
+            
+            event['speakers'] = speakers
+            
+            cursor.close()
+            conn.close()
+            
+            return jsonify({'success': True, 'event': event})
+            
+        except Exception as e:
+            print(f"Error loading event details: {str(e)}")
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+            return jsonify({'success': False, 'message': 'Error loading event details'})
+
     @app.route('/events')
     def events_page():
         """Events page showing upcoming events"""
@@ -2567,7 +2598,7 @@ def register_routes(app):
                 # Get upcoming events with speakers
                 cursor.execute("""
                     SELECT e.*, 
-                           GROUP_CONCAT(CONCAT(es.name, '|', es.role, '|', COALESCE(es.avatar, '')) 
+                           GROUP_CONCAT(CONCAT(es.name, '|', es.role, '|', COALESCE(es.avatar, ''), '|', COALESCE(es.bio, '')) 
                                        SEPARATOR '|||') as speakers_data
                     FROM events e
                     LEFT JOIN event_speakers es ON e.event_id = es.event_id
@@ -2640,67 +2671,6 @@ def register_routes(app):
                     conn.close()
         
         return render_template('events.html', events=events, event_counts=event_counts)
-
-    @app.route('/api/events/<int:event_id>')
-    def get_event_details(event_id):
-        """API endpoint to get detailed event information"""
-        conn = get_db_connection()
-        
-        if not conn:
-            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get event details
-            cursor.execute("""
-                SELECT * FROM events WHERE event_id = %s
-            """, (event_id,))
-            event = cursor.fetchone()
-            
-            if not event:
-                return jsonify({'success': False, 'message': 'Event not found'}), 404
-            
-            # Format time fields for frontend
-            if event.get('event_time'):
-                if hasattr(event['event_time'], 'seconds'):
-                    # Convert timedelta to time string
-                    total_seconds = event['event_time'].seconds
-                    hours = total_seconds // 3600
-                    minutes = (total_seconds % 3600) // 60
-                    event['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
-                else:
-                    event['event_time_formatted'] = str(event['event_time'])
-            
-            if event.get('end_time'):
-                if hasattr(event['end_time'], 'seconds'):
-                    # Convert timedelta to time string
-                    total_seconds = event['end_time'].seconds
-                    hours = total_seconds // 3600
-                    minutes = (total_seconds % 3600) // 60
-                    event['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
-                else:
-                    event['end_time_formatted'] = str(event['end_time'])
-            
-            # Format date for frontend
-            if event.get('event_date'):
-                event['event_date_formatted'] = event['event_date'].strftime('%Y-%m-%d') if hasattr(event['event_date'], 'strftime') else str(event['event_date'])
-            
-            # Get event speakers
-            cursor.execute("""
-                SELECT * FROM event_speakers WHERE event_id = %s ORDER BY speaker_id
-            """, (event_id,))
-            speakers = cursor.fetchall()
-            
-            event['speakers'] = speakers
-            
-            return jsonify({'success': True, 'event': event})
-            
-        except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
-        finally:
-            if conn:
-                conn.close()
 
     @app.route('/api/events/<int:event_id>/register', methods=['POST'])
     def register_for_event(event_id):
@@ -2816,9 +2786,6 @@ def register_routes(app):
                            location, 
                            description,
                            category,
-                           price,
-                           max_attendees,
-                           current_attendees,
                            status,
                            featured_image,
                            created_at

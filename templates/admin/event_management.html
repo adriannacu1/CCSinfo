@@ -26,12 +26,15 @@
 
             <div class="admin-profile">
                 <div class="admin-avatar">
+                    {% if admin.role == 'super_admin' %}
+                    <i class="fas fa-crown"></i>
+                    {% else %}
                     <i class="fas fa-user-shield"></i>
+                    {% endif %}
                 </div>
                 <div class="admin-info">
-                    <h4>{{ admin.full_name or 'Administrator' }}</h4>
-                    <p class="admin-role">{{ admin.role.replace('_', ' ').title() if admin.role else 'Administrator' }}
-                    </p>
+                    <h4>{{ admin.full_name or admin.username }}</h4>
+                    <p class="admin-role">{{ admin.role.replace('_', ' ').title() }}</p>
                 </div>
             </div>
 
@@ -99,7 +102,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">SETTINGS</div>
                     <ul class="nav-menu">
-                        {% if admin and admin.role == 'super_admin' %}
+                        {% if admin.role == 'super_admin' %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_management') }}" class="nav-link">
                                 <i class="fas fa-users-cog"></i>
@@ -214,7 +217,7 @@
                                 <th>Category</th>
                                 <th>Date & Time</th>
                                 <th>Location</th>
-                                <th>Attendees</th>
+                                <th>Registration</th>
                                 <th>Status</th>
                                 <th>Speakers</th>
                                 <th>Actions</th>
@@ -270,13 +273,7 @@
                                 <td>{{ event.location or 'N/A' }}</td>
                                 <td>
                                     <div class="attendee-info">
-                                        <span class="current">{{ event.current_attendees or 0 }}</span>
-                                        {% if event.max_attendees %}
-                                        <span class="separator">/</span>
-                                        <span class="max">{{ event.max_attendees }}</span>
-                                        {% else %}
-                                        <span class="unlimited">∞</span>
-                                        {% endif %}
+                                        <span class="unlimited">Event Open</span>
                                     </div>
                                 </td>
                                 <td>
@@ -388,11 +385,6 @@
                         <div class="form-group">
                             <label for="price">Price (PHP)</label>
                             <input type="number" id="price" name="price" min="0" step="0.01" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="max_attendees">Max Attendees</label>
-                            <input type="number" id="max_attendees" name="max_attendees" min="1">
-                            <small>Leave blank for unlimited</small>
                         </div>
                     </div>
 
@@ -541,9 +533,8 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f8f9fa;
-            color: #333;
-            overflow-x: hidden;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+            min-height: 100vh;
         }
 
         /* Admin Container */
@@ -559,160 +550,60 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            background: #dc3545;
-            color: white;
+            z-index: 1001;
+            background: rgba(220, 53, 69, 0.9);
             border: none;
-            border-radius: 8px;
+            color: white;
             width: 50px;
             height: 50px;
+            border-radius: 15px;
+            font-size: 1.2rem;
             cursor: pointer;
-            z-index: 1500;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            backdrop-filter: blur(10px);
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-toggle:hover {
-            background: #c82333;
-            transform: scale(1.05);
+            background: rgba(220, 53, 69, 1);
+            transform: scale(1.1);
         }
 
         /* Admin Sidebar */
         .admin-sidebar {
             width: 280px;
-            background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 30px 0;
             position: fixed;
             height: 100vh;
-            left: 0;
-            top: 0;
             overflow-y: auto;
             z-index: 1000;
             transition: transform 0.3s ease;
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        .admin-sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .admin-sidebar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .admin-sidebar::-webkit-scrollbar-thumb {
-            background: rgba(220, 53, 69, 0.7);
-            border-radius: 3px;
-        }
-
-        .sidebar-header {
-            padding: 30px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .admin-logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .admin-logo img {
+        .sidebar-close {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(220, 53, 69, 0.1);
+            border: none;
+            color: #dc3545;
             width: 40px;
             height: 40px;
-            border-radius: 8px;
-        }
-
-        .admin-logo span {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #dc3545;
-        }
-
-        .admin-profile {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .profile-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(45deg, #dc3545, #b02a37);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .profile-info h4 {
+            border-radius: 10px;
             font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .profile-info .role {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* Navigation */
-        .sidebar-nav {
-            padding: 20px 0;
-        }
-
-        .nav-section {
-            margin-bottom: 25px;
-        }
-
-        .nav-section-title {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 0 20px;
-            margin-bottom: 10px;
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 2px;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
+            cursor: pointer;
             transition: all 0.3s ease;
-            border-left: 3px solid transparent;
         }
 
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-left-color: #dc3545;
-        }
-
-        .nav-item.active .nav-link {
+        .sidebar-close:hover {
             background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border-left-color: #dc3545;
         }
 
-        .nav-link i {
-            width: 20px;
-            text-align: center;
-        }
-
-        /* Sidebar Overlay */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -722,14 +613,124 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             z-index: 999;
+            backdrop-filter: blur(5px);
         }
 
-        /* Main Content */
+        .admin-profile {
+            padding: 0 30px 40px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .admin-avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(45deg, #dc3545, #b02a37);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3);
+        }
+
+        .admin-avatar i {
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .admin-info h4 {
+            color: #212529;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .admin-role {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section-title {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 30px 10px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 2px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 30px;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 0.9rem;
+        }
+
+        .nav-link:hover,
+        .nav-item.active .nav-link {
+            color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .nav-item.active .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(45deg, #dc3545, #b02a37);
+        }
+
+        .nav-link i {
+            margin-right: 12px;
+            font-size: 1rem;
+            width: 18px;
+            text-align: center;
+        }
+
+        /* Custom scrollbar for sidebar */
+        .admin-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 3px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 3px;
+        }
+
+        /* Admin Main Content */
         .admin-main {
             flex: 1;
             margin-left: 280px;
-            padding: 30px;
-            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
         }
 
         /* Header */
@@ -1022,14 +1023,6 @@
         .attendee-info .current {
             font-weight: 600;
             color: #dc3545;
-        }
-
-        .attendee-info .separator {
-            color: #999;
-        }
-
-        .attendee-info .max {
-            color: #636e72;
         }
 
         .attendee-info .unlimited {
@@ -1371,6 +1364,10 @@
         /* Responsive Design */
         @media (max-width: 1024px) {
             .sidebar-toggle {
+                display: block;
+            }
+
+            .sidebar-close {
                 display: block;
             }
 
@@ -1746,8 +1743,6 @@
                         <p><strong>Time:</strong> ${eventData.event_time}${eventData.end_time ? ' - ' + eventData.end_time : ''}</p>
                         <p><strong>Location:</strong> ${eventData.location}</p>
                         <p><strong>Price:</strong> ₱${eventData.price || 0}</p>
-                        ${eventData.max_attendees ? `<p><strong>Max Attendees:</strong> ${eventData.max_attendees}</p>` : ''}
-                        <p><strong>Current Attendees:</strong> ${eventData.current_attendees || 0}</p>
                         <p><strong>Status:</strong> <span class="status-badge status-${eventData.status}">${eventData.status}</span></p>
                     </div>
                 `;

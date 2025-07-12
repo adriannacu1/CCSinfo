@@ -21,7 +21,6 @@ def test_event_management():
             'end_time': '17:00',
             'location': 'CCS Computer Lab 1',
             'price': 50.00,
-            'max_attendees': 30,
             'status': 'upcoming',
             'featured_image': 'https://images.unsplash.com/photo-1526379879527-8559ecfcaec0?w=800&h=400&fit=crop',
             'speakers': [
@@ -46,7 +45,6 @@ def test_event_management():
             'end_time': '18:00',
             'location': 'CCS Main Auditorium',
             'price': 0.00,
-            'max_attendees': 200,
             'status': 'upcoming',
             'featured_image': 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop',
             'speakers': [
@@ -76,7 +74,6 @@ def test_event_management():
             'end_time': '17:00',
             'location': 'CCS Security Lab',
             'price': 75.00,
-            'max_attendees': 25,
             'status': 'upcoming',
             'featured_image': 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=400&fit=crop',
             'speakers': [

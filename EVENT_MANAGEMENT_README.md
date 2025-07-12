@@ -136,8 +136,6 @@ CREATE TABLE events (
   end_time TIME,
   location VARCHAR(255) NOT NULL,
   price DECIMAL(10,2) DEFAULT 0.00,
-  max_attendees INT,
-  current_attendees INT DEFAULT 0,
   status ENUM('upcoming','ongoing','completed','cancelled') DEFAULT 'upcoming',
   featured_image VARCHAR(500),
   created_by INT,

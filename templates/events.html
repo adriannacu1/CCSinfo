@@ -8,7 +8,8 @@
             <div class="col-lg-6">
                 <div class="hero-content">
                     <h1 class="hero-title">CCS <span class="text-gradient">Events</span></h1>
-                    <p class="hero-subtitle">Discover upcoming conferences, workshops, seminars, and networking events
+                    <p class="hero-subtitle">Stay informed about upcoming conferences, workshops, seminars, and
+                        networking events
                         in the College of Computer Studies</p>
                     <div class="hero-buttons">
                         <a href="#upcoming-events" class="btn btn-primary btn-lg me-3">
@@ -132,113 +133,109 @@
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="section-title">Upcoming <span class="text-gradient">Events</span></h2>
-            <p class="section-subtitle">Don't miss out on these exciting opportunities</p>
+            <p class="section-subtitle">Stay updated on the latest educational and networking opportunities</p>
         </div>
 
         <div id="events-container" class="row g-4">
             {% if events %}
             {% for event in events %}
-            <div class="col-lg-6 col-xl-4 event-item" data-category="{{ event.category }}" data-aos="fade-up"
+            <div class="col-lg-6 col-xl-4 event-item" data-category="{{ event['category'] }}" data-aos="fade-up"
                 data-aos-delay="{{ loop.index * 100 }}">
-                <div class="event-card">
+                <div class="event-card h-100">
                     <div class="event-image">
-                        {% if event.featured_image %}
-                        <img src="{{ event.featured_image }}" alt="{{ event.title }}">
+                        {% if event['featured_image'] %}
+                        <img src="{{ event['featured_image'] }}" alt="{{ event['title'] }}">
                         {% else %}
                         <div class="event-placeholder">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
                         {% endif %}
                         <div class="event-category-badge">
-                            <span class="category-{{ event.category }}">{{ event.category.title() }}</span>
+                            <span class="category-{{ event['category'] }}">{{ event['category'].title() }}</span>
                         </div>
                     </div>
 
-                    <div class="event-content">
-                        <div class="event-date">
-                            <div class="date-display">
-                                <span class="day">{{ event.event_date.strftime('%d') }}</span>
-                                <span class="month">{{ event.event_date.strftime('%b') }}</span>
+                    <div class="event-content d-flex flex-column h-100">
+                        <div class="event-header mb-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="date-display">
+                                    <span class="day">{{ event['event_date'].strftime('%d') }}</span>
+                                    <span class="month">{{ event['event_date'].strftime('%b') }}</span>
+                                </div>
+                                <div class="event-status-badge">
+                                    <span class="status-{{ event['status'] }}">{{ event['status'].title() }}</span>
+                                </div>
                             </div>
-                            <div class="time-info">
-                                <div class="event-time">
+
+                            <h4 class="event-title mb-2">{{ event['title'] }}</h4>
+
+                            <div class="event-meta">
+                                <div class="meta-item">
                                     <i class="fas fa-clock"></i>
-                                    {{ event.event_time_formatted or 'Time TBA' }}
-                                    {% if event.end_time_formatted %}
-                                    - {{ event.end_time_formatted }}
-                                    {% endif %}
+                                    <span>{{ event['event_time_formatted'] or 'Time TBA' }}
+                                        {% if event['end_time_formatted'] %} - {{ event['end_time_formatted'] }}{% endif
+                                        %}</span>
                                 </div>
-                                <div class="event-location">
+                                <div class="meta-item">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    {{ event.location }}
+                                    <span>{{ event['location'] }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <h4 class="event-title">{{ event.title }}</h4>
-                        <p class="event-description">{{ event.description[:150] }}{% if event.description|length > 150
-                            %}...{% endif %}</p>
+                        <div class="event-body flex-grow-1">
+                            <p class="event-description">{{ event['description'][:200] }}{% if
+                                event['description']|length > 200 %}...{% endif %}</p>
 
-                        {% if event.speakers %}
-                        <div class="event-speakers">
-                            <div class="speakers-label">Speakers:</div>
-                            <div class="speakers-list">
-                                {% for speaker in event.speakers[:3] %}
-                                <div class="speaker-item">
-                                    {% if speaker.avatar %}
-                                    <img src="{{ speaker.avatar }}" alt="{{ speaker.name }}" class="speaker-avatar">
-                                    {% else %}
-                                    <div class="speaker-avatar-placeholder">
-                                        {{ speaker.name[0] }}
+                            {% if event['speakers'] %}
+                            <div class="event-speakers">
+                                <div class="speakers-label">
+                                    <i class="fas fa-users"></i> Speakers
+                                </div>
+                                <div class="speakers-list">
+                                    {% for speaker in event['speakers'][:2] %}
+                                    <div class="speaker-item">
+                                        {% if speaker['avatar'] %}
+                                        <img src="{{ speaker['avatar'] }}" alt="{{ speaker['name'] }}"
+                                            class="speaker-avatar">
+                                        {% else %}
+                                        <div class="speaker-avatar-placeholder">{{ speaker['name'][0] }}</div>
+                                        {% endif %}
+                                        <div class="speaker-info">
+                                            <div class="speaker-name">{{ speaker['name'] }}</div>
+                                            <div class="speaker-role">{{ speaker['role'] }}</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% if event['speakers']|length > 2 %}
+                                    <div class="more-speakers">
+                                        <small class="text-muted">+{{ event['speakers']|length - 2 }} more
+                                            speakers</small>
                                     </div>
                                     {% endif %}
-                                    <div class="speaker-info">
-                                        <div class="speaker-name">{{ speaker.name }}</div>
-                                        <div class="speaker-role">{{ speaker.role }}</div>
-                                    </div>
                                 </div>
-                                {% endfor %}
-                                {% if event.speakers|length > 3 %}
-                                <div class="more-speakers">
-                                    +{{ event.speakers|length - 3 }} more
-                                </div>
-                                {% endif %}
                             </div>
-                        </div>
-                        {% endif %}
-
-                        <div class="event-footer">
-                            <div class="event-price">
-                                {% if event.price == 0 %}
-                                <span class="price-free">Free</span>
-                                {% else %}
-                                <span class="price-paid">${{ "%.2f"|format(event.price) }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="event-attendance">
-                                {% if event.max_attendees %}
-                                <span class="attendance-info">
-                                    {{ event.current_attendees }}/{{ event.max_attendees }} attendees
-                                </span>
-                                {% endif %}
-                            </div>
+                            {% endif %}
                         </div>
 
-                        <div class="event-actions">
-                            <button class="btn btn-primary btn-sm event-details-btn"
-                                data-event-id="{{ event.event_id }}">
-                                <i class="fas fa-info-circle"></i> View Details
-                            </button>
-                            {% if event.current_attendees < event.max_attendees or not event.max_attendees %} <button
-                                class="btn btn-outline-primary btn-sm register-btn"
-                                data-event-id="{{ event.event_id }}">
-                                <i class="fas fa-user-plus"></i> Register
-                                </button>
+                        <div class="event-footer mt-auto pt-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                {% if event['price'] and event['price'] > 0 %}
+                                <div class="event-price">
+                                    <span class="price-label">Price:</span>
+                                    <span class="price-value">₱{{ "%.2f"|format(event['price']) }}</span>
+                                </div>
                                 {% else %}
-                                <button class="btn btn-secondary btn-sm" disabled>
-                                    <i class="fas fa-user-times"></i> Full
-                                </button>
+                                <div class="event-price">
+                                    <span class="price-free">Free Event</span>
+                                </div>
                                 {% endif %}
+
+                                <button class="btn btn-primary btn-sm event-details-btn"
+                                    data-event-id="{{ event['event_id'] }}">
+                                    <i class="fas fa-info-circle"></i> Details
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -565,24 +562,28 @@
 
     .event-card {
         background: white;
-        border-radius: 20px;
+        border-radius: 15px;
         overflow: hidden;
         transition: all 0.3s ease;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        height: 100%;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
         display: flex;
         flex-direction: column;
+        min-height: 480px;
+        height: 100%;
     }
 
     .event-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border-color: rgba(220, 53, 69, 0.2);
     }
 
     .event-image {
         position: relative;
-        height: 200px;
+        height: 180px;
         overflow: hidden;
+        background: #f8f9fa;
     }
 
     .event-image img {
@@ -593,33 +594,36 @@
     }
 
     .event-card:hover .event-image img {
-        transform: scale(1.05);
+        transform: scale(1.02);
     }
 
     .event-placeholder {
         width: 100%;
         height: 100%;
-        background: linear-gradient(45deg, #dc3545, #b02a37);
+        background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
 
     .event-category-badge {
         position: absolute;
-        top: 15px;
-        left: 15px;
+        top: 12px;
+        left: 12px;
+        z-index: 2;
     }
 
     .event-category-badge span {
-        padding: 5px 12px;
-        border-radius: 15px;
-        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .category-conference {
@@ -654,96 +658,165 @@
         flex-direction: column;
     }
 
-    .event-date {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
+    .event-header {
+        border-bottom: 1px solid #f0f0f0;
         padding-bottom: 15px;
-        border-bottom: 1px solid #e9ecef;
     }
 
     .date-display {
-        background: linear-gradient(45deg, #dc3545, #b02a37);
+        background: linear-gradient(135deg, #dc3545, #b02a37);
         color: white;
-        padding: 10px;
+        padding: 8px 12px;
         border-radius: 10px;
         text-align: center;
-        min-width: 60px;
+        min-width: 55px;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
     }
 
     .date-display .day {
         display: block;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         font-weight: 700;
         line-height: 1;
     }
 
     .date-display .month {
         display: block;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 1px;
+        margin-top: 2px;
     }
 
-    .time-info {
-        flex: 1;
+    .event-status-badge {
+        text-align: right;
     }
 
-    .event-time,
-    .event-location {
+    .event-status-badge span {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .status-upcoming {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.2);
+    }
+
+    .status-ongoing {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+
+    .status-completed {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+        border: 1px solid rgba(108, 117, 125, 0.2);
+    }
+
+    .event-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        line-height: 1.4;
+        margin: 0 0 10px 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 4.2rem;
+        max-height: 4.2rem;
+    }
+
+    .event-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+    .meta-item {
         display: flex;
         align-items: center;
         gap: 8px;
         color: #6c757d;
-        font-size: 0.9rem;
-        margin-bottom: 5px;
+        font-size: 0.85rem;
     }
 
-    .event-title {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 15px;
-        line-height: 1.3;
+    .meta-item i {
+        width: 14px;
+        text-align: center;
+        color: #dc3545;
+    }
+
+    .meta-item span {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .event-body {
+        padding: 20px 0;
+        flex-grow: 1;
     }
 
     .event-description {
-        color: #6c757d;
+        color: #495057;
         line-height: 1.6;
-        margin-bottom: 20px;
-        flex: 1;
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 4.8rem;
     }
 
     .event-speakers {
-        margin-bottom: 20px;
+        margin-top: 15px;
     }
 
     .speakers-label {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 10px;
+        color: #495057;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .speakers-label i {
+        color: #dc3545;
     }
 
     .speakers-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
     }
 
     .speaker-item {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
+        padding: 6px 0;
     }
 
     .speaker-avatar,
     .speaker-avatar-placeholder {
-        width: 35px;
-        height: 35px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         flex-shrink: 0;
+        border: 2px solid #f8f9fa;
     }
 
     .speaker-avatar-placeholder {
@@ -753,7 +826,7 @@
         align-items: center;
         justify-content: center;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.75rem;
     }
 
     .speaker-info {
@@ -762,66 +835,74 @@
     }
 
     .speaker-name {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: #2c3e50;
+        color: #495057;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        line-height: 1.2;
     }
 
     .speaker-role {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         color: #6c757d;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        margin-top: 1px;
     }
 
     .more-speakers {
-        font-size: 0.8rem;
-        color: #dc3545;
-        font-weight: 500;
-        margin-top: 5px;
+        padding: 4px 0;
+        text-align: center;
     }
 
     .event-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
+        border-top: 1px solid #f0f0f0;
         padding-top: 15px;
-        border-top: 1px solid #e9ecef;
     }
 
-    .price-free {
-        color: #28a745;
-        font-weight: 600;
-        font-size: 1.1rem;
+    .event-price {
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    .price-paid {
-        color: #dc3545;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-
-    .attendance-info {
-        font-size: 0.9rem;
+    .price-label {
+        font-size: 0.8rem;
         color: #6c757d;
     }
 
-    .event-actions {
-        display: flex;
-        gap: 10px;
+    .price-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #dc3545;
     }
 
-    .event-actions .btn {
-        flex: 1;
-        padding: 8px 15px;
+    .price-free {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #28a745;
+        background: rgba(40, 167, 69, 0.1);
+        padding: 2px 8px;
         border-radius: 8px;
-        font-size: 0.9rem;
+    }
+
+    .event-details-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        border-radius: 8px;
         font-weight: 500;
+        background: #dc3545;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .event-details-btn:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
     }
 
     /* No Events State */
@@ -1075,9 +1156,10 @@
         });
 
         function loadEventDetails(eventId) {
-            // In a real application, this would fetch event details from the server
-            // For now, we'll show a placeholder
             const modalBody = document.getElementById('eventModalBody');
+            const modalTitle = document.getElementById('eventModalLabel');
+
+            // Show loading state
             modalBody.innerHTML = `
                 <div class="text-center">
                     <div class="spinner-border text-primary" role="status">
@@ -1091,25 +1173,110 @@
             const modal = new bootstrap.Modal(document.getElementById('eventModal'));
             modal.show();
 
-            // Simulate API call
-            setTimeout(() => {
-                modalBody.innerHTML = `
-                    <div class="event-detail-content">
-                        <h4>Event details will be loaded here</h4>
-                        <p>This would contain full event information, speaker details, agenda, etc.</p>
-                    </div>
-                `;
-            }, 1000);
-        }
+            // Fetch event details from API
+            fetch(`/api/events/${eventId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const event = data.event;
+                        modalTitle.textContent = event.title;
 
-        // Registration functionality
-        document.querySelectorAll('.register-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const eventId = this.getAttribute('data-event-id');
-                // Implement registration logic
-                alert('Registration functionality would be implemented here for event ' + eventId);
-            });
-        });
+                        modalBody.innerHTML = `
+                            <div class="event-detail-content">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="event-detail-info">
+                                            <h5>Event Details</h5>
+                                            <p class="event-description">${event.description}</p>
+                                            
+                                            <div class="event-meta mb-4">
+                                                <div class="meta-item mb-2">
+                                                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                                    <strong>Date:</strong> ${event.event_date_formatted}
+                                                </div>
+                                                <div class="meta-item mb-2">
+                                                    <i class="fas fa-clock text-primary me-2"></i>
+                                                    <strong>Time:</strong> ${event.event_time_formatted}${event.end_time_formatted ? ' - ' + event.end_time_formatted : ''}
+                                                </div>
+                                                <div class="meta-item mb-2">
+                                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                                    <strong>Location:</strong> ${event.location}
+                                                </div>
+                                                <div class="meta-item mb-2">
+                                                    <i class="fas fa-tag text-primary me-2"></i>
+                                                    <strong>Category:</strong> <span class="badge bg-primary">${event.category.charAt(0).toUpperCase() + event.category.slice(1)}</span>
+                                                </div>
+                                                ${event.price ? `
+                                                <div class="meta-item mb-2">
+                                                    <i class="fas fa-dollar-sign text-primary me-2"></i>
+                                                    <strong>Price:</strong> ₱${event.price}
+                                                </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        ${event.featured_image ? `
+                                        <div class="event-image mb-3">
+                                            <img src="${event.featured_image}" alt="${event.title}" class="img-fluid rounded">
+                                        </div>
+                                        ` : ''}
+                                        
+                                        <div class="event-status mb-3">
+                                            <span class="badge bg-success fs-6">
+                                                <i class="fas fa-circle me-1"></i>${event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${event.speakers && event.speakers.length > 0 ? `
+                                <div class="speakers-section mt-4">
+                                    <h5>Speakers</h5>
+                                    <div class="row">
+                                        ${event.speakers.map(speaker => `
+                                            <div class="col-md-6 mb-3">
+                                                <div class="speaker-card p-3 border rounded">
+                                                    <div class="d-flex align-items-start">
+                                                        ${speaker.avatar ?
+                                `<img src="${speaker.avatar}" alt="${speaker.name}" class="speaker-avatar me-3" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">` :
+                                `<div class="speaker-avatar-placeholder me-3" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(45deg, #dc3545, #b02a37); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                                                                ${speaker.name.charAt(0)}
+                                                            </div>`
+                            }
+                                                        <div class="speaker-info">
+                                                            <h6 class="mb-1">${speaker.name}</h6>
+                                                            <p class="text-muted mb-1 small">${speaker.role}</p>
+                                                            ${speaker.bio ? `<p class="small mb-0">${speaker.bio}</p>` : ''}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    } else {
+                        modalBody.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Error loading event details: ${data.message}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error loading event details. Please try again.
+                        </div>
+                    `;
+                });
+        }
 
         // Load more functionality
         const loadMoreBtn = document.getElementById('load-more-btn');

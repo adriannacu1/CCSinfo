@@ -66,6 +66,21 @@
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
+        /* Admin Sidebar Scrollbar */
+        .admin-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 3px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 3px;
+        }
+
         .sidebar-close {
             display: none;
             position: absolute;
@@ -152,6 +167,21 @@
             list-style: none;
             padding: 0;
             margin: 0;
+        }
+
+        /* Admin Navigation Scrollbar */
+        .admin-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .admin-nav::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 3px;
+        }
+
+        .admin-nav::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 3px;
         }
 
         .nav-item {
@@ -854,7 +884,11 @@
             </button>
             <div class="admin-profile">
                 <div class="admin-avatar">
+                    {% if admin and admin.role == 'super_admin' %}
+                    <i class="fas fa-crown" style="color: #ffd700;"></i>
+                    {% else %}
                     <i class="fas fa-user-shield"></i>
+                    {% endif %}
                 </div>
                 <div class="admin-info">
                     <h4>{{ admin.full_name or 'Administrator' }}</h4>
@@ -863,7 +897,7 @@
             </div>
             <nav class="admin-nav">
                 <div class="nav-section">
-                    <div class="nav-section-title">MAIN</div>
+                    <h6 class="nav-section-title">MAIN</h6>
                     <ul class="nav-menu">
                         <li class="nav-item">
                             <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
@@ -874,7 +908,7 @@
                     </ul>
                 </div>
                 <div class="nav-section">
-                    <div class="nav-section-title">MANAGEMENT</div>
+                    <h6 class="nav-section-title">MANAGEMENT</h6>
                     <ul class="nav-menu">
                         <li class="nav-item">
                             <a href="{{ url_for('admin_students') }}" class="nav-link">
@@ -910,7 +944,7 @@
                 </div>
 
                 <div class="nav-section">
-                    <div class="nav-section-title">ROOM ACCESS</div>
+                    <h6 class="nav-section-title">ROOM ACCESS</h6>
                     <ul class="nav-menu">
                         <li class="nav-item">
                             <a href="{{ url_for('admin_temp_keys') }}" class="nav-link">
@@ -922,7 +956,7 @@
                 </div>
 
                 <div class="nav-section">
-                    <div class="nav-section-title">SETTINGS</div>
+                    <h6 class="nav-section-title">SETTINGS</h6>
                     <ul class="nav-menu">
                         {% if admin and admin.role == 'super_admin' %}
                         <li class="nav-item">

@@ -21,8 +21,12 @@ def create_app():
     bcrypt.init_app(app)
 
     # Register routes
-    from app.routes import register_routes
+    from app.routes import register_routes, get_db_connection
     register_routes(app)
+    
+    # Register event routes
+    from event_routes import register_event_routes
+    register_event_routes(app, get_db_connection)
 
     return app
 
