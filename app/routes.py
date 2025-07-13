@@ -2505,84 +2505,113 @@ def register_routes(app):
     @app.route('/api/events/<int:event_id>')
     def get_event_details(event_id):
         """API endpoint to get detailed event information"""
+        print(f"=== API request for event ID: {event_id} ===")
+        
         conn = get_db_connection()
         
         if not conn:
-            return jsonify({'success': False, 'message': 'Database connection failed'})
+            print("❌ Database connection failed")
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
         
         try:
             cursor = conn.cursor(dictionary=True)
             
-            # Get event details with speakers
-            cursor.execute("""
-                SELECT e.*, 
-                       GROUP_CONCAT(CONCAT(es.name, '|', es.role, '|', COALESCE(es.bio, ''), '|', COALESCE(es.avatar, '')) 
-                                   SEPARATOR '|||') as speakers_data
-                FROM events e
-                LEFT JOIN event_speakers es ON e.event_id = es.event_id
-                WHERE e.event_id = %s
-                GROUP BY e.event_id
-            """, (event_id,))
-            
+            # Get event details first
+            print(f"🔍 Querying event with ID: {event_id}")
+            cursor.execute("SELECT * FROM events WHERE event_id = %s", (event_id,))
             event = cursor.fetchone()
             
             if not event:
-                return jsonify({'success': False, 'message': 'Event not found'})
+                print(f"❌ Event with ID {event_id} not found")
+                cursor.close()
+                conn.close()
+                return jsonify({'success': False, 'message': f'Event with ID {event_id} not found'}), 404
+            
+            print(f"✅ Found event: {event['title']}")
+            
+            # Get speakers separately
+            print(f"🔍 Querying speakers for event ID: {event_id}")
+            cursor.execute("""
+                SELECT name, role, bio, avatar 
+                FROM event_speakers 
+                WHERE event_id = %s
+                ORDER BY speaker_id
+            """, (event_id,))
+            speakers_raw = cursor.fetchall()
+            
+            print(f"✅ Found {len(speakers_raw)} speakers")
+            
+            # Convert speakers to list of dictionaries
+            speakers = []
+            for speaker in speakers_raw:
+                speakers.append({
+                    'name': speaker['name'],
+                    'role': speaker['role'],
+                    'bio': speaker['bio'] if speaker['bio'] else None,
+                    'avatar': speaker['avatar'] if speaker['avatar'] else None
+                })
+            
+            event['speakers'] = speakers
+            
+            print(f"📋 Processing time formatting for event")
             
             # Format time fields
-            if event.get('event_time') and hasattr(event['event_time'], 'seconds'):
-                total_seconds = event['event_time'].seconds
-                hours = total_seconds // 3600
-                minutes = (total_seconds % 3600) // 60
-                event['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
-            elif event.get('event_time'):
-                event['event_time_formatted'] = str(event['event_time'])
+            if event.get('event_time'):
+                if hasattr(event['event_time'], 'seconds'):
+                    total_seconds = event['event_time'].seconds
+                    hours = total_seconds // 3600
+                    minutes = (total_seconds % 3600) // 60
+                    event['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                else:
+                    # Handle string time format
+                    try:
+                        event['event_time_formatted'] = str(event['event_time'])
+                    except:
+                        event['event_time_formatted'] = "TBA"
             else:
                 event['event_time_formatted'] = "TBA"
             
-            if event.get('end_time') and hasattr(event['end_time'], 'seconds'):
-                total_seconds = event['end_time'].seconds
-                hours = total_seconds // 3600
-                minutes = (total_seconds % 3600) // 60
-                event['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
-            elif event.get('end_time'):
-                event['end_time_formatted'] = str(event['end_time'])
+            if event.get('end_time'):
+                if hasattr(event['end_time'], 'seconds'):
+                    total_seconds = event['end_time'].seconds
+                    hours = total_seconds // 3600
+                    minutes = (total_seconds % 3600) // 60
+                    event['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                else:
+                    # Handle string time format
+                    try:
+                        event['end_time_formatted'] = str(event['end_time'])
+                    except:
+                        event['end_time_formatted'] = None
             else:
                 event['end_time_formatted'] = None
             
             # Format date
             if event.get('event_date'):
-                event['event_date_formatted'] = event['event_date'].strftime('%B %d, %Y')
-            
-            # Parse speakers data
-            speakers = []
-            if event['speakers_data']:
-                speakers_list = event['speakers_data'].split('|||')
-                for speaker_data in speakers_list:
-                    if speaker_data.strip():
-                        parts = speaker_data.split('|')
-                        if len(parts) >= 2:
-                            speakers.append({
-                                'name': parts[0],
-                                'role': parts[1],
-                                'bio': parts[2] if len(parts) > 2 and parts[2] else None,
-                                'avatar': parts[3] if len(parts) > 3 and parts[3] else None
-                            })
-            
-            event['speakers'] = speakers
+                try:
+                    if hasattr(event['event_date'], 'strftime'):
+                        event['event_date_formatted'] = event['event_date'].strftime('%B %d, %Y')
+                    else:
+                        event['event_date_formatted'] = str(event['event_date'])
+                except:
+                    event['event_date_formatted'] = str(event['event_date'])
+            else:
+                event['event_date_formatted'] = "Date TBA"
             
             cursor.close()
             conn.close()
             
+            print(f"✅ Successfully processed event data for ID: {event_id}")
             return jsonify({'success': True, 'event': event})
             
         except Exception as e:
-            print(f"Error loading event details: {str(e)}")
+            print(f"❌ Error loading event details for ID {event_id}: {str(e)}")
+            print(f"📋 Error traceback: {traceback.format_exc()}")
             if 'cursor' in locals():
                 cursor.close()
             if 'conn' in locals():
                 conn.close()
-            return jsonify({'success': False, 'message': 'Error loading event details'})
+            return jsonify({'success': False, 'message': f'Error loading event details: {str(e)}'}), 500
 
     @app.route('/events')
     def events_page():
@@ -2595,21 +2624,37 @@ def register_routes(app):
             try:
                 cursor = conn.cursor(dictionary=True)
                 
-                # Get upcoming events with speakers
+                # Get upcoming events
                 cursor.execute("""
-                    SELECT e.*, 
-                           GROUP_CONCAT(CONCAT(es.name, '|', es.role, '|', COALESCE(es.avatar, ''), '|', COALESCE(es.bio, '')) 
-                                       SEPARATOR '|||') as speakers_data
-                    FROM events e
-                    LEFT JOIN event_speakers es ON e.event_id = es.event_id
+                    SELECT * FROM events e
                     WHERE e.event_date >= CURDATE() AND e.status = 'upcoming'
-                    GROUP BY e.event_id
                     ORDER BY e.event_date ASC, e.event_time ASC
                 """)
                 events_raw = cursor.fetchall()
+                print(f"Found {len(events_raw)} upcoming events")
                 
-                # Process events and speakers
+                # Process events and get speakers for each
                 for event in events_raw:
+                    # Get speakers for this event
+                    cursor.execute("""
+                        SELECT name, role, bio, avatar 
+                        FROM event_speakers 
+                        WHERE event_id = %s
+                        ORDER BY speaker_id
+                    """, (event['event_id'],))
+                    speakers_raw = cursor.fetchall()
+                    
+                    # Convert speakers to list of dictionaries
+                    speakers = []
+                    for speaker in speakers_raw:
+                        speakers.append({
+                            'name': speaker['name'],
+                            'role': speaker['role'],
+                            'bio': speaker['bio'] if speaker['bio'] else None,
+                            'avatar': speaker['avatar'] if speaker['avatar'] else None
+                        })
+                    
+                    event['speakers'] = speakers
                     # Convert timedelta to time string if needed
                     if event.get('event_time') and hasattr(event['event_time'], 'seconds'):
                         # Convert timedelta to time string
@@ -2633,21 +2678,6 @@ def register_routes(app):
                     else:
                         event['end_time_formatted'] = None
                     
-                    # Parse speakers data
-                    speakers = []
-                    if event['speakers_data']:
-                        speakers_list = event['speakers_data'].split('|||')
-                        for speaker_data in speakers_list:
-                            if speaker_data.strip():
-                                parts = speaker_data.split('|')
-                                if len(parts) >= 2:
-                                    speakers.append({
-                                        'name': parts[0],
-                                        'role': parts[1],
-                                        'avatar': parts[2] if len(parts) > 2 and parts[2] else None
-                                    })
-                    
-                    event['speakers'] = speakers
                     events.append(event)
                 
                 # Get event counts by category
@@ -2671,6 +2701,109 @@ def register_routes(app):
                     conn.close()
         
         return render_template('events.html', events=events, event_counts=event_counts)
+
+    @app.route('/events/<int:event_id>')
+    def event_profile(event_id):
+        """Event profile page showing detailed event information"""
+        conn = get_db_connection()
+        event = None
+        related_events = []
+        prev_event = None
+        next_event = None
+        
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                
+                # Get the specific event
+                cursor.execute("SELECT * FROM events WHERE event_id = %s", (event_id,))
+                event_raw = cursor.fetchone()
+                
+                if event_raw:
+                    # Get speakers for this event
+                    cursor.execute("""
+                        SELECT name, role, bio, avatar 
+                        FROM event_speakers 
+                        WHERE event_id = %s
+                        ORDER BY speaker_id
+                    """, (event_id,))
+                    speakers_raw = cursor.fetchall()
+                    
+                    # Convert speakers to list of dictionaries
+                    speakers = []
+                    for speaker in speakers_raw:
+                        speakers.append({
+                            'name': speaker['name'],
+                            'role': speaker['role'],
+                            'bio': speaker['bio'] if speaker['bio'] else None,
+                            'avatar': speaker['avatar'] if speaker['avatar'] else None
+                        })
+                    
+                    event_raw['speakers'] = speakers
+                    
+                    # Format time fields
+                    if event_raw.get('event_time') and hasattr(event_raw['event_time'], 'seconds'):
+                        total_seconds = event_raw['event_time'].seconds
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        event_raw['event_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                    elif event_raw.get('event_time'):
+                        event_raw['event_time_formatted'] = str(event_raw['event_time'])
+                    else:
+                        event_raw['event_time_formatted'] = "TBA"
+                    
+                    if event_raw.get('end_time') and hasattr(event_raw['end_time'], 'seconds'):
+                        total_seconds = event_raw['end_time'].seconds
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        event_raw['end_time_formatted'] = f"{hours:02d}:{minutes:02d}"
+                    elif event_raw.get('end_time'):
+                        event_raw['end_time_formatted'] = str(event_raw['end_time'])
+                    else:
+                        event_raw['end_time_formatted'] = None
+                    
+                    event = event_raw
+                    
+                    # Get related events (same category, excluding current event)
+                    cursor.execute("""
+                        SELECT event_id, title, event_date, category
+                        FROM events 
+                        WHERE category = %s AND event_id != %s AND status = 'upcoming'
+                        ORDER BY event_date ASC 
+                        LIMIT 3
+                    """, (event['category'], event_id))
+                    related_events = cursor.fetchall()
+                    
+                    # Get previous and next events (by date)
+                    cursor.execute("""
+                        SELECT event_id, title FROM events 
+                        WHERE event_date < %s AND status = 'upcoming'
+                        ORDER BY event_date DESC LIMIT 1
+                    """, (event['event_date'],))
+                    prev_event = cursor.fetchone()
+                    
+                    cursor.execute("""
+                        SELECT event_id, title FROM events 
+                        WHERE event_date > %s AND status = 'upcoming'
+                        ORDER BY event_date ASC LIMIT 1
+                    """, (event['event_date'],))
+                    next_event = cursor.fetchone()
+                
+                cursor.close()
+                conn.close()
+                
+            except Exception as e:
+                print(f"Error loading event profile for ID {event_id}: {str(e)}")
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        
+        return render_template('event_profile.html', 
+                             event=event, 
+                             related_events=related_events,
+                             prev_event=prev_event,
+                             next_event=next_event)
 
     @app.route('/api/events/<int:event_id>/register', methods=['POST'])
     def register_for_event(event_id):

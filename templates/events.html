@@ -219,7 +219,7 @@
                         </div>
 
                         <div class="event-footer mt-auto pt-3">
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
                                 {% if event['price'] and event['price'] > 0 %}
                                 <div class="event-price">
                                     <span class="price-label">Price:</span>
@@ -230,11 +230,13 @@
                                     <span class="price-free">Free Event</span>
                                 </div>
                                 {% endif %}
+                            </div>
 
-                                <button class="btn btn-primary btn-sm event-details-btn"
-                                    data-event-id="{{ event['event_id'] }}">
-                                    <i class="fas fa-info-circle"></i> Details
-                                </button>
+                            <div class="event-actions d-flex gap-2">
+                                <a href="{{ url_for('event_profile', event_id=event['event_id']) }}"
+                                    class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -264,20 +266,7 @@
     </div>
 </section>
 
-<!-- Event Details Modal -->
-<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="eventModalBody">
-                <!-- Event details will be loaded here -->
-            </div>
-        </div>
-    </div>
-</div>
+<!-- No Modal Needed for Informational Purposes -->
 
 <style>
     /* Hero Section - Same as index */
@@ -389,7 +378,7 @@
 
     /* Categories Section */
     .categories-section {
-        padding: 100px 0;
+        padding: 60px 0;
         background: #f8f9fa;
     }
 
@@ -482,13 +471,14 @@
 
     /* Filter Section */
     .filter-section {
-        padding: 30px 0;
+        padding: 15px 0;
         background: white;
         border-bottom: 1px solid #e9ecef;
         position: sticky;
         top: 0;
         z-index: 100;
         backdrop-filter: blur(10px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .filter-bar {
@@ -506,17 +496,18 @@
     }
 
     .filter-btn {
-        padding: 10px 20px;
+        padding: 8px 16px;
         border: 2px solid #e9ecef;
         background: white;
-        border-radius: 25px;
+        border-radius: 20px;
         color: #6c757d;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s ease;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        font-size: 0.9rem;
     }
 
     .filter-btn:hover,
@@ -533,11 +524,12 @@
     }
 
     .search-box input {
-        padding: 10px 40px 10px 15px;
+        padding: 8px 35px 8px 12px;
         border: 2px solid #e9ecef;
-        border-radius: 25px;
-        width: 250px;
+        border-radius: 20px;
+        width: 220px;
         transition: all 0.3s ease;
+        font-size: 0.9rem;
     }
 
     .search-box input:focus {
@@ -548,15 +540,16 @@
 
     .search-box i {
         position: absolute;
-        right: 15px;
+        right: 12px;
         top: 50%;
         transform: translateY(-50%);
         color: #6c757d;
+        font-size: 0.9rem;
     }
 
     /* Events Section */
     .events-section {
-        padding: 80px 0;
+        padding: 40px 0 80px 0;
         background: #f8f9fa;
     }
 
@@ -1159,6 +1152,8 @@
             const modalBody = document.getElementById('eventModalBody');
             const modalTitle = document.getElementById('eventModalLabel');
 
+            console.log('Loading event details for ID:', eventId);
+
             // Show loading state
             modalBody.innerHTML = `
                 <div class="text-center">
@@ -1175,11 +1170,24 @@
 
             // Fetch event details from API
             fetch(`/api/events/${eventId}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success) {
+                    console.log('Event data received:', data);
+                    if (data.success && data.event) {
                         const event = data.event;
                         modalTitle.textContent = event.title;
+
+                        // Update the "View Full Details" button
+                        const viewFullBtn = document.getElementById('viewFullEventBtn');
+                        if (viewFullBtn) {
+                            viewFullBtn.href = `/events/${eventId}`;
+                        }
 
                         modalBody.innerHTML = `
                             <div class="event-detail-content">
@@ -1187,24 +1195,24 @@
                                     <div class="col-md-8">
                                         <div class="event-detail-info">
                                             <h5>Event Details</h5>
-                                            <p class="event-description">${event.description}</p>
+                                            <p class="event-description">${event.description || 'No description available.'}</p>
                                             
                                             <div class="event-meta mb-4">
                                                 <div class="meta-item mb-2">
                                                     <i class="fas fa-calendar-alt text-primary me-2"></i>
-                                                    <strong>Date:</strong> ${event.event_date_formatted}
+                                                    <strong>Date:</strong> ${event.event_date_formatted || 'Date TBA'}
                                                 </div>
                                                 <div class="meta-item mb-2">
                                                     <i class="fas fa-clock text-primary me-2"></i>
-                                                    <strong>Time:</strong> ${event.event_time_formatted}${event.end_time_formatted ? ' - ' + event.end_time_formatted : ''}
+                                                    <strong>Time:</strong> ${event.event_time_formatted || 'Time TBA'}${event.end_time_formatted ? ' - ' + event.end_time_formatted : ''}
                                                 </div>
                                                 <div class="meta-item mb-2">
                                                     <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                                    <strong>Location:</strong> ${event.location}
+                                                    <strong>Location:</strong> ${event.location || 'Location TBA'}
                                                 </div>
                                                 <div class="meta-item mb-2">
                                                     <i class="fas fa-tag text-primary me-2"></i>
-                                                    <strong>Category:</strong> <span class="badge bg-primary">${event.category.charAt(0).toUpperCase() + event.category.slice(1)}</span>
+                                                    <strong>Category:</strong> <span class="badge bg-primary">${event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'General'}</span>
                                                 </div>
                                                 ${event.price ? `
                                                 <div class="meta-item mb-2">
@@ -1224,7 +1232,7 @@
                                         
                                         <div class="event-status mb-3">
                                             <span class="badge bg-success fs-6">
-                                                <i class="fas fa-circle me-1"></i>${event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                                                <i class="fas fa-circle me-1"></i>${event.status ? event.status.charAt(0).toUpperCase() + event.status.slice(1) : 'Active'}
                                             </span>
                                         </div>
                                     </div>
@@ -1232,7 +1240,7 @@
                                 
                                 ${event.speakers && event.speakers.length > 0 ? `
                                 <div class="speakers-section mt-4">
-                                    <h5>Speakers</h5>
+                                    <h5><i class="fas fa-users me-2"></i>Speakers</h5>
                                     <div class="row">
                                         ${event.speakers.map(speaker => `
                                             <div class="col-md-6 mb-3">
@@ -1241,12 +1249,12 @@
                                                         ${speaker.avatar ?
                                 `<img src="${speaker.avatar}" alt="${speaker.name}" class="speaker-avatar me-3" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">` :
                                 `<div class="speaker-avatar-placeholder me-3" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(45deg, #dc3545, #b02a37); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-                                                                ${speaker.name.charAt(0)}
+                                                                ${speaker.name ? speaker.name.charAt(0) : '?'}
                                                             </div>`
                             }
                                                         <div class="speaker-info">
-                                                            <h6 class="mb-1">${speaker.name}</h6>
-                                                            <p class="text-muted mb-1 small">${speaker.role}</p>
+                                                            <h6 class="mb-1">${speaker.name || 'Unknown Speaker'}</h6>
+                                                            <p class="text-muted mb-1 small">${speaker.role || 'Role not specified'}</p>
                                                             ${speaker.bio ? `<p class="small mb-0">${speaker.bio}</p>` : ''}
                                                         </div>
                                                     </div>
@@ -1255,24 +1263,24 @@
                                         `).join('')}
                                     </div>
                                 </div>
-                                ` : ''}
+                                ` : '<div class="mt-4"><p class="text-muted">No speakers information available.</p></div>'}
                             </div>
                         `;
                     } else {
                         modalBody.innerHTML = `
                             <div class="alert alert-danger">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                Error loading event details: ${data.message}
+                                ${data.message || 'Failed to load event details'}
                             </div>
                         `;
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Error fetching event details:', error);
                     modalBody.innerHTML = `
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Error loading event details. Please try again.
+                            Unable to load event details. Please try again later.
                         </div>
                     `;
                 });
