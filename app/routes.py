@@ -57,7 +57,6 @@ def register_routes(app):
         # Get database statistics for the landing page
         conn = get_db_connection()
         stats = {
-            'total_students': 0,
             'total_faculty': 0,
             'total_rooms': 0,
             'total_courses': 0
@@ -66,10 +65,6 @@ def register_routes(app):
         if conn:
             try:
                 cursor = conn.cursor()
-                
-                # Count students
-                cursor.execute("SELECT COUNT(*) FROM students")
-                stats['total_students'] = cursor.fetchone()[0] or 0
                 
                 # Count faculty
                 cursor.execute("SELECT COUNT(*) FROM faculty")
@@ -258,8 +253,6 @@ def register_routes(app):
         # Get database statistics
         conn = get_db_connection()
         stats = {
-            'total_students': 0,
-            'active_students': 0,
             'total_faculty': 0,
             'active_faculty': 0,
             'total_rooms': 0,
@@ -273,11 +266,6 @@ def register_routes(app):
         if conn:
             try:
                 cursor = conn.cursor()
-                
-                # Count students
-                cursor.execute("SELECT COUNT(*) FROM students")
-                stats['total_students'] = cursor.fetchone()[0] or 0
-                stats['active_students'] = stats['total_students']
                 
                 # Count faculty
                 cursor.execute("SELECT COUNT(*) FROM faculty")
@@ -308,146 +296,12 @@ def register_routes(app):
             except Exception as e:
                 print(f"Error getting stats: {e}")
         
-        recent_students = []
         recent_faculty = []
         
         return render_template('admin/dashboard.html', 
-                         admin=admin_info,  # Use admin_info with role
+                         admin=admin_info,
                          stats=stats,
-                         recent_students=recent_students,
                          recent_faculty=recent_faculty)
-
-    @app.route('/admin/students', methods=['GET', 'POST'])
-    def admin_students():
-        """Admin students management with CRUD operations"""
-        if 'admin_id' not in session:
-            return redirect(url_for('admin_login'))
-        
-        admin_info = {
-            'admin_id': session.get('admin_id'),
-            'username': session.get('admin_username'),
-            'full_name': session.get('admin_name', 'Administrator'),
-            'role': session.get('admin_role', 'admin')  # Make sure role is included
-        }
-        
-        if request.method == 'POST':
-            action = request.form.get('action')
-            
-            conn = get_db_connection()
-            if not conn:
-                flash('Database connection failed', 'error')
-                return redirect(url_for('admin_students'))
-            
-            try:
-                cursor = conn.cursor()
-                
-                if action == 'add':
-                    # Add new student
-                    student_number = request.form.get('student_number')
-                    name = request.form.get('name')
-                    course = request.form.get('course')
-                    year_level = request.form.get('year_level')
-                    section_id = request.form.get('section_id')
-                    email = request.form.get('email') or None
-                    status = 'Active'
-                    
-                    # Get course_id based on course name
-                    cursor.execute("SELECT course_id FROM courses WHERE course_name = %s", (course,))
-                    course_result = cursor.fetchone()
-                    course_id = course_result[0] if course_result else None
-                    
-                    # Check if student number already exists
-                    cursor.execute("SELECT student_id FROM students WHERE student_number = %s", (student_number,))
-                    if cursor.fetchone():
-                        flash(f'Student Number {student_number} already exists', 'error')
-                    else:
-                        cursor.execute("""
-                            INSERT INTO students (student_number, name, course, year_level, section_id, email, status, course_id)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        """, (student_number, name, course, year_level, section_id, email, status, course_id))
-                        conn.commit()
-                        flash(f'Student {name} added successfully', 'success')
-                
-                elif action == 'edit':
-                    # Edit existing student
-                    student_id = request.form.get('student_id_hidden')
-                    student_number = request.form.get('student_number')
-                    name = request.form.get('name')
-                    course = request.form.get('course')
-                    year_level = request.form.get('year_level')
-                    section_id = request.form.get('section_id')
-                    email = request.form.get('email') or None
-                    
-                    # Get course_id based on course name
-                    cursor.execute("SELECT course_id FROM courses WHERE course_name = %s", (course,))
-                    course_result = cursor.fetchone()
-                    course_id = course_result[0] if course_result else None
-                    
-                    # Check if new student number conflicts with existing ones (except current)
-                    cursor.execute("SELECT student_id FROM students WHERE student_number = %s AND student_id != %s", (student_number, student_id))
-                    if cursor.fetchone():
-                        flash(f'Student Number {student_number} already exists', 'error')
-                    else:
-                        cursor.execute("""
-                            UPDATE students SET student_number = %s, name = %s, course = %s, 
-                            year_level = %s, section_id = %s, email = %s, course_id = %s
-                            WHERE student_id = %s
-                        """, (student_number, name, course, year_level, section_id, email, course_id, student_id))
-                        conn.commit()
-                        flash(f'Student {name} updated successfully', 'success')
-                
-                elif action == 'delete':
-                    # Delete student
-                    student_id = request.form.get('student_id_hidden')
-                    cursor.execute("DELETE FROM students WHERE student_id = %s", (student_id,))
-                    conn.commit()
-                    flash('Student deleted successfully', 'success')
-                
-                cursor.close()
-                conn.close()
-                
-            except Exception as e:
-                flash(f'An error occurred: {str(e)}', 'error')
-                if 'cursor' in locals():
-                    cursor.close()
-                if 'conn' in locals():
-                    conn.close()
-        
-            return redirect(url_for('admin_students'))
-        
-        # GET request - fetch and display students
-        students = []
-        sections = []
-        conn = get_db_connection()
-        if conn:
-            try:
-                cursor = conn.cursor(dictionary=True)
-                
-                # Get students with section information
-                cursor.execute("""
-                    SELECT s.student_id, s.student_number, s.name, s.course, s.year_level, 
-                           s.email, s.status, s.section_id,
-                           sec.section_name
-                    FROM students s
-                    LEFT JOIN sections sec ON s.section_id = sec.section_id
-                    ORDER BY s.student_id DESC
-                """)
-                students = cursor.fetchall()
-                
-                # Get all sections for the dropdown
-                cursor.execute("""
-                    SELECT section_id, section_name, course, year_level
-                    FROM sections
-                    ORDER BY course, year_level, section_name
-                """)
-                sections = cursor.fetchall()
-                
-                cursor.close()
-                conn.close()
-            except Exception as e:
-                flash(f'Error fetching students: {str(e)}', 'error')
-        
-        return render_template('admin/students.html', admin=admin_info, students=students, sections=sections)
 
     @app.route('/admin/faculty', methods=['GET', 'POST'])
     def admin_faculty():
@@ -734,10 +588,9 @@ def register_routes(app):
             try:
                 cursor = conn.cursor(dictionary=True)
                 
-                # Get sections with student count
+                # Get sections
                 cursor.execute("""
-                    SELECT s.*,
-                           (SELECT COUNT(*) FROM students st WHERE st.section_id = s.section_id) as student_count
+                    SELECT s.*
                     FROM sections s
                     ORDER BY s.course, s.year_level, s.section_name
                 """)
@@ -752,77 +605,6 @@ def register_routes(app):
 
     # ==================== OTHER ROUTES ====================
     
-    @app.route('/students')
-    def student_list():
-        conn = get_db_connection()
-        if not conn:
-            flash('Database connection error', 'error')
-            return render_template('student/list.html', students=[])
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get all students with course and section info
-            students_query = """
-            SELECT s.student_id, s.student_number, s.name, s.course, s.year_level, s.email,
-                   sec.section_name, sec.section_id
-            FROM students s
-            LEFT JOIN sections sec ON s.section_id = sec.section_id
-            ORDER BY s.name
-            """
-            cursor.execute(students_query)
-            students = cursor.fetchall()
-            
-            return render_template('student/list.html', students=students)
-            
-        except mysql.connector.Error as e:
-            flash(f'Error loading students: {e}', 'error')
-            return render_template('student/list.html', students=[])
-        finally:
-            cursor.close()
-            conn.close()
-
-    @app.route('/student/<int:student_id>')
-    def student_profile(student_id):
-        conn = get_db_connection()
-        if not conn:
-            flash('Database connection error', 'error')
-            return redirect(url_for('student_list'))
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            # Get student info with section and course
-            cursor.execute('''
-                SELECT s.*, sec.section_name, sec.year_level, c.course_name
-                FROM students s
-                LEFT JOIN sections sec ON s.section_id = sec.section_id
-                LEFT JOIN courses c ON s.course_id = c.course_id
-                WHERE s.student_id = %s
-            ''', (student_id,))
-            student = cursor.fetchone()            
-            if not student:
-                flash('Student not found', 'error')
-                return redirect(url_for('student_list'))
-            
-            # Get schedule/subjects for the student's section (with subject, instructor, room)
-            cursor.execute('''
-                SELECT sch.time, sch.day, sub.subject_name, f.name AS instructor_name, r.room_name
-                FROM schedule sch
-                LEFT JOIN subjects sub ON sch.subject_id = sub.subject_id
-                LEFT JOIN faculty f ON sch.faculty_id = f.faculty_id
-                LEFT JOIN rooms r ON sch.room_id = r.room_id
-                WHERE sch.section_id = %s
-            ''', (student['section_id'],))
-            schedule = cursor.fetchall()
-            
-            return render_template('student/profile.html', student=student, schedule=schedule)
-        except mysql.connector.Error as e:
-            flash(f'Error loading student: {e}', 'error')
-            return redirect(url_for('student_list'))
-        finally:
-            cursor.close()
-            conn.close()
-
     @app.route('/faculty')
     def faculty_list():
         conn = get_db_connection()
@@ -946,10 +728,9 @@ def register_routes(app):
         try:
             cursor = conn.cursor(dictionary=True)
             
-            # Get all sections with course info and student count
+            # Get all sections with course info
             sections_query = """
-            SELECT s.section_id, s.section_name, s.course, s.year_level,
-                   (SELECT COUNT(*) FROM students st WHERE st.section_id = s.section_id) as student_count
+            SELECT s.section_id, s.section_name, s.course, s.year_level
             FROM sections s
             ORDER BY s.course, s.year_level, s.section_name
             """
@@ -983,16 +764,7 @@ def register_routes(app):
                 flash('Section not found', 'error')
                 return redirect(url_for('section_list'))
             
-            # Get students in this section
-            cursor.execute("""
-                SELECT student_id, student_number, name
-                FROM students
-                WHERE section_id = %s
-                ORDER BY name
-            """, (section_id,))
-            students = cursor.fetchall()
-            
-            return render_template('section/profile.html', section=section, students=students)
+            return render_template('section/profile.html', section=section)
             
         except mysql.connector.Error as e:
             flash(f'Error loading section: {e}', 'error')
@@ -1075,14 +847,12 @@ def register_routes(app):
             cursor.execute("SELECT COUNT(*) as count FROM rand_strings WHERE Date > DATE_SUB(NOW(), INTERVAL 24 HOUR)")
             stats['active_temp_keys'] = cursor.fetchone()['count']
             
-            # Get recent activity from student_attendance (last 10 check-ins)
+            # Get recent faculty activity (last 10 logins)
             cursor.execute("""
-                SELECT sa.student_number, s.name as full_name, sa.check_in_time as login_time, 
-                       sa.check_out_time as logout_time, sa.room_number, f.name as professor_name
-                FROM student_attendance sa
-                LEFT JOIN students s ON sa.student_number = s.student_number
-                LEFT JOIN faculty f ON sa.professor_id = f.faculty_id
-                ORDER BY sa.check_in_time DESC
+                SELECT f.name as faculty_name, f.last_login, f.department
+                FROM faculty f
+                WHERE f.last_login IS NOT NULL
+                ORDER BY f.last_login DESC
                 LIMIT 10
             """)
             recent_activity = cursor.fetchall()
@@ -1368,95 +1138,6 @@ def register_routes(app):
                 conn.close()
             return redirect(url_for('admin_sections'))
 
-    @app.route('/admin/students/<int:student_id>/profile')
-    def admin_student_profile_api(student_id):
-        """API endpoint to get student profile data for modal"""
-        if 'admin_id' not in session:
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
-
-        try:
-            cursor = conn.cursor(dictionary=True)
-              # Get student info with section and course
-            cursor.execute('''
-                SELECT s.*, 
-                       sec.section_name, 
-                       sec.year_level, 
-                       c.course_name
-                FROM students s
-                LEFT JOIN sections sec ON s.section_id = sec.section_id
-                LEFT JOIN courses c ON s.course_id = c.course_id
-                WHERE s.student_id = %s
-            ''', (student_id,))
-            student = cursor.fetchone()
-            
-            if not student:
-                return jsonify({'success': False, 'message': 'Student not found'}), 404
-            # Get student's schedule (from section)
-            schedule = []
-            if student.get('section_id'):
-                cursor.execute('''
-                    SELECT sch.day, 
-                           sch.time as time_range,
-                           sch.subject as subject_name, 
-                           f.name AS faculty_name, 
-                           r.room_name
-                    FROM schedule sch
-                    LEFT JOIN faculty f ON sch.faculty_id = f.faculty_id
-                    LEFT JOIN rooms r ON sch.room_id = r.room_id
-                    WHERE sch.section_id = %s
-                    ORDER BY FIELD(sch.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
-                ''', (student['section_id'],))                
-                
-            schedule = cursor.fetchall()
-            
-            # Get activity log (recent attendance) for admin use
-            activity_log = []
-            cursor.execute('''
-                SELECT sa.pc_number,
-                       f.name AS professor_name,
-                       DATE_FORMAT(sa.check_in_time, '%Y-%m-%d %H:%i:%s') as check_in_time,
-                       DATE_FORMAT(sa.check_out_time, '%Y-%m-%d %H:%i:%s') as check_out_time,
-                       sa.room_number as room_name,
-                       sa.class_session_id as session_id
-                FROM student_attendance sa
-                LEFT JOIN faculty f ON sa.professor_id = f.faculty_id
-                WHERE sa.student_number = %s
-                ORDER BY sa.check_in_time DESC
-                LIMIT 10
-            ''', (student['student_number'],))
-            activity_log = cursor.fetchall()
-            
-            cursor.close()
-            conn.close()
-
-            # Format the response
-            student_data = {
-                'student_id': student['student_id'],
-                'name': student['name'],
-                'student_number': student['student_number'],
-                'email': student['email'] or 'N/A',
-                'course_name': student['course_name'] or 'N/A',
-                'year_level': student['year_level'] or 'N/A',
-                'section_name': student['section_name'] or 'N/A',
-                'status': student['status'] or 'Active',
-                'schedule': schedule or [],
-                'activity_log': activity_log or []
-            }
-
-            return jsonify({'success': True, 'student': student_data})
-
-        except Exception as e:
-            print(f"Error in student profile API: {str(e)}")  # Debug logging
-            if 'cursor' in locals():
-                cursor.close()
-            if 'conn' in locals():
-                conn.close()
-            return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
-
     @app.route('/admin/faculty/<int:faculty_id>/profile')
     def admin_faculty_profile_api(faculty_id):
         """API endpoint to get faculty profile data for modal"""
@@ -1538,38 +1219,6 @@ def register_routes(app):
                     pass
             return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
-    @app.route('/admin/students/<int:student_id>', methods=['DELETE'])
-    def delete_admin_student(student_id):
-        """Delete a student via AJAX"""
-        if 'admin_id' not in session:
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-        
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
-        
-        try:
-            cursor = conn.cursor()
-            
-            # Check if student exists
-            cursor.execute("SELECT name FROM students WHERE student_id = %s", (student_id,))
-            student = cursor.fetchone()
-            
-            if not student:
-                return jsonify({'success': False, 'message': 'Student not found'}), 404
-            
-            # Delete the student
-            cursor.execute("DELETE FROM students WHERE student_id = %s", (student_id,))
-            conn.commit()
-            
-            cursor.close()
-            conn.close()
-            
-            return jsonify({'success': True, 'message': f'Student {student[0]} deleted successfully'})
-            
-        except Exception as e:
-            return jsonify({'success': False, 'message': f'Error deleting student: {str(e)}'}), 500
-
     # Test endpoint for debugging
     @app.route('/admin/test-db')
     def test_db_connection():
@@ -1584,21 +1233,21 @@ def register_routes(app):
         try:
             cursor = conn.cursor(dictionary=True)
             
-            # Test basic student query
-            cursor.execute('SELECT COUNT(*) as count FROM students')
-            student_count = cursor.fetchone()
+            # Test basic faculty query
+            cursor.execute('SELECT COUNT(*) as count FROM faculty')
+            faculty_count = cursor.fetchone()
             
-            # Test getting a sample student
-            cursor.execute('SELECT * FROM students LIMIT 1')
-            sample_student = cursor.fetchone()
+            # Test getting a sample faculty
+            cursor.execute('SELECT * FROM faculty LIMIT 1')
+            sample_faculty = cursor.fetchone()
             
             cursor.close()
             conn.close()
             
             return jsonify({
                 'success': True, 
-                'student_count': student_count['count'],
-                'sample_student': sample_student
+                'faculty_count': faculty_count['count'],
+                'sample_faculty': sample_faculty
             })
             
         except Exception as e:
@@ -1606,245 +1255,7 @@ def register_routes(app):
                 cursor.close()
             if 'conn' in locals():
                 conn.close()
-            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500    # Simple test route for student profile (using real data based on student_id)
-    @app.route('/admin/students/<int:student_id>/profile-test')
-    def admin_student_profile_test(student_id):
-        """Test version that fetches real data based on student_id"""
-        if 'admin_id' not in session:
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-        
-        conn = get_db_connection()
-        if not conn:
-            # Return mock data if database fails
-            mock_student = {
-                'student_id': student_id,
-                'name': f'Student {student_id}',
-                'student_number': f'224-1253{student_id}M',
-                'email': f'student{student_id}@example.com',
-                'course_name': 'BSCS',
-                'year_level': '3',
-                'section_name': '3-B',
-                'status': 'Active',
-                'schedule': [],
-                'activity_log': []
-            }
-            return jsonify({'success': True, 'student': mock_student})
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get real student data based on student_id
-            cursor.execute('''
-                SELECT s.*, 
-                       sec.section_name, 
-                       sec.year_level, 
-                       c.course_name
-                FROM students s
-                LEFT JOIN sections sec ON s.section_id = sec.section_id
-                LEFT JOIN courses c ON s.course_id = c.course_id
-                WHERE s.student_id = %s
-            ''', (student_id,))
-            student = cursor.fetchone()
-            
-            if not student:
-                cursor.close()
-                conn.close()
-                return jsonify({'success': False, 'message': f'Student with ID {student_id} not found'}), 404
-            
-            # Get student's schedule
-            schedule = []
-            if student.get('section_id'):
-                cursor.execute('''
-                    SELECT sch.day, 
-                           sch.time as time_range,
-                           sch.subject as subject_name, 
-                           f.name AS faculty_name, 
-                           r.room_name
-                    FROM schedule sch
-                    LEFT JOIN faculty f ON sch.faculty_id = f.faculty_id
-                    LEFT JOIN rooms r ON sch.room_id = r.room_id
-                    WHERE sch.section_id = %s
-                    ORDER BY FIELD(sch.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
-                ''', (student['section_id'],))
-                schedule = cursor.fetchall()
-
-            # Get activity log for this specific student
-            activity_log = []
-            if student.get('student_number'):
-                cursor.execute('''
-                    SELECT sa.pc_number,
-                           f.name AS professor_name,
-                           DATE_FORMAT(sa.check_in_time, '%Y-%m-%d %H:%i:%s') as check_in_time,
-                           DATE_FORMAT(sa.check_out_time, '%Y-%m-%d %H:%i:%s') as check_out_time,
-                           sa.room_number as room_name,
-                           sa.class_session_id as session_id
-                    FROM student_attendance sa
-                    LEFT JOIN faculty f ON sa.professor_id = f.faculty_id
-                    WHERE sa.student_number = %s
-                    ORDER BY sa.check_in_time DESC
-                    LIMIT 10
-                ''', (student['student_number'],))
-                activity_log = cursor.fetchall()
-
-            cursor.close()
-            conn.close()
-
-            # Format the response with real data
-            student_data = {
-                'student_id': student['student_id'],
-                'name': student['name'],
-                'student_number': student['student_number'],
-                'email': student['email'] or 'N/A',
-                'course_name': student['course_name'] or student.get('course', 'N/A'),
-                'year_level': str(student['year_level'] or 'N/A'),
-                'section_name': student['section_name'] or 'N/A',
-                'status': student['status'] or 'Active',
-                'schedule': schedule or [],
-                'activity_log': activity_log or []
-            }
-
-            return jsonify({'success': True, 'student': student_data})
-            
-        except Exception as e:
-            print(f"Error in student profile test API: {str(e)}")
-            if 'cursor' in locals():
-                try:
-                    cursor.close()
-                except:
-                    pass
-            if 'conn' in locals():
-                try:
-                    conn.close()
-                except:
-                    pass
-            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500    # Simple and robust endpoint for student profile
-    @app.route('/admin/students/<int:student_id>/profile-simple')
-    def admin_student_profile_simple(student_id):
-        """Simple robust version for student profile"""
-        if 'admin_id' not in session:
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-        
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
-        
-        try:
-            cursor = conn.cursor(dictionary=True)
-            
-            # Get student basic info
-            cursor.execute('''
-                SELECT * FROM students WHERE student_id = %s
-            ''', (student_id,))
-            student = cursor.fetchone()
-            
-            if not student:
-                cursor.close()
-                conn.close()
-                return jsonify({'success': False, 'message': 'Student not found'}), 404
-            
-            # Get section info separately
-            section_name = 'N/A'
-            year_level = 'N/A'
-            if student.get('section_id'):
-                cursor.execute('SELECT section_name, year_level FROM sections WHERE section_id = %s', 
-                             (student['section_id'],))
-                section = cursor.fetchone()
-                if section:
-                    section_name = section['section_name']
-                    year_level = str(section['year_level'])
-            
-            # Get course info separately
-            course_name = student.get('course', 'N/A')
-            if student.get('course_id'):
-                cursor.execute('SELECT course_name FROM courses WHERE course_id = %s', 
-                             (student['course_id'],))
-                course = cursor.fetchone()
-                if course:
-                    course_name = course['course_name']
-            
-            # Get schedule separately
-            schedule = []
-            if student.get('section_id'):
-                cursor.execute('''
-                    SELECT sch.day, sch.time, sch.subject, f.name as faculty_name, r.room_name
-                    FROM schedule sch
-                    LEFT JOIN faculty f ON sch.faculty_id = f.faculty_id
-                    LEFT JOIN rooms r ON sch.room_id = r.room_id
-                    WHERE sch.section_id = %s
-                ''', (student['section_id'],))
-                raw_schedule = cursor.fetchall()
-                
-                # Format schedule for frontend
-                for item in raw_schedule:
-                    schedule.append({
-                        'time_range': item['time'] or 'N/A',
-                        'day': item['day'] or 'N/A',
-                        'subject_name': item['subject'] or 'N/A',
-                        'faculty_name': item['faculty_name'] or 'N/A',
-                        'room_name': item['room_name'] or 'N/A'
-                    })
-            
-            # Get activity log separately (simple query)
-            activity_log = []
-            if student.get('student_number'):
-                cursor.execute('''
-                    SELECT sa.pc_number, sa.check_in_time, sa.check_out_time, sa.room_number, sa.class_session_id,
-                           f.name as professor_name
-                    FROM student_attendance sa
-                    LEFT JOIN faculty f ON sa.professor_id = f.faculty_id
-                    WHERE sa.student_number = %s
-                    ORDER BY sa.check_in_time DESC
-                    LIMIT 10
-                ''', (student['student_number'],))
-                raw_activity = cursor.fetchall()
-                
-                # Format activity log for frontend
-                for item in raw_activity:
-                    activity_log.append({
-                        'pc_number': item['pc_number'] or 'N/A',
-                        'professor_name': item['professor_name'] or 'N/A',
-                        'check_in_time': str(item['check_in_time']) if item['check_in_time'] else 'N/A',
-                        'check_out_time': str(item['check_out_time']) if item['check_out_time'] else None,
-                        'room_name': item['room_number'] or 'N/A',
-                        'session_id': item['class_session_id'] or 'N/A'
-                    })
-
-            cursor.close()
-            conn.close()
-
-            # Build response
-            student_data = {
-                'student_id': student['student_id'],
-                'name': student['name'] or 'N/A',
-                'student_number': student['student_number'] or 'N/A',
-                'email': student['email'] or 'N/A',
-                'course_name': course_name,
-                'year_level': year_level,
-                'section_name': section_name,
-                'status': student['status'] or 'Active',
-                'schedule': schedule,
-                'activity_log': activity_log
-            }
-
-            return jsonify({'success': True, 'student': student_data})
-            
-        except Exception as e:
-            print(f"Error in simple student profile API: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            if 'cursor' in locals():
-                try:
-                    cursor.close()
-                except:
-                    pass
-            if 'conn' in locals():
-                try:
-                    conn.close()
-                except:
-                    pass
-            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
-
-    @app.route('/admin/generate_temp_key', methods=['POST'])
+            return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500    @app.route('/admin/generate_temp_key', methods=['POST'])
     def admin_generate_temp_key():
         """Generate temporary access keys for room access"""
         if 'admin_id' not in session:

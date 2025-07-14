@@ -30,7 +30,6 @@
                             <th>Section ID</th>
                             <th>Section Name</th>
                             <th>Program</th>
-                            <th>Number of Students</th>
                         </tr>
                     </thead>
                     <tbody id="sectionTableBody">
@@ -39,7 +38,6 @@
                             <td>{{ section.section_id }}</td>
                             <td><a href="{{ url_for('section_profile', section_id=section.section_id) }}" class="text-primary">{{ section.section_name }}</a></td>
                             <td>{% if section.program %}{{ section.program }}{% else %}-{% endif %}</td>
-                            <td>{{ section.students|length }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

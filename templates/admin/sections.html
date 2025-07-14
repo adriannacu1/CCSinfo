@@ -910,12 +910,6 @@
                     <h6 class="nav-section-title">MANAGEMENT</h6>
                     <ul class="nav-menu">
                         <li class="nav-item">
-                            <a href="{{ url_for('admin_students') }}" class="nav-link">
-                                <i class="fas fa-user-graduate"></i>
-                                <span>Students</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a href="{{ url_for('admin_faculty') }}" class="nav-link">
                                 <i class="fas fa-chalkboard-teacher"></i>
                                 <span>Faculty</span>
@@ -1014,7 +1008,6 @@
                             <th>Section Name</th>
                             <th>Course</th>
                             <th>Year Level</th>
-                            <th>Students</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -1024,7 +1017,6 @@
                             <td>{{ section.section_name }}</td>
                             <td>{{ section.course }}</td>
                             <td>{{ section.year_level }}</td>
-                            <td>{{ section.student_count }}</td>
                             <td class="actions">
                                 <a href="{{ url_for('admin_section_profile', section_id=section.section_id) }}"
                                     class="btn-action btn-view" title="View Section">

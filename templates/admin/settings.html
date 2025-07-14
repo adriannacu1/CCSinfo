@@ -45,23 +45,15 @@
                             </a>
                         </li>
                     </ul>
-                </div>
-
-                <div class="nav-section">
-                    <div class="nav-section-title">MANAGEMENT</div>
-                    <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="{{ url_for('admin_students') }}" class="nav-link">
-                                <i class="fas fa-user-graduate"></i>
-                                <span>Students</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('admin_faculty') }}" class="nav-link">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                <span>Faculty</span>
-                            </a>
-                        </li>
+                </div>                    <div class="nav-section">
+                        <div class="nav-section-title">MANAGEMENT</div>
+                        <ul class="nav-menu">
+                            <li class="nav-item">
+                                <a href="{{ url_for('admin_faculty') }}" class="nav-link">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span>Faculty</span>
+                                </a>
+                            </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_rooms') }}" class="nav-link">
                                 <i class="fas fa-door-open"></i>
@@ -278,12 +270,6 @@
                             </h5>
 
                             <div class="stats-grid">
-                                <div class="card stats-card students">
-                                    <div class="card-body text-center">
-                                        <h4 class="card-title text-success">{{ stats.total_students }}</h4>
-                                        <p class="card-text">Total Students</p>
-                                    </div>
-                                </div>
                                 <div class="card stats-card faculty">
                                     <div class="card-body text-center">
                                         <h4 class="card-title text-info">{{ stats.total_faculty }}</h4>
@@ -888,10 +874,6 @@
         .stats-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .stats-card.students {
-            border-left-color: #28a745;
         }
 
         .stats-card.faculty {

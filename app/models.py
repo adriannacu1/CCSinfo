@@ -25,7 +25,6 @@ class Section(db.Model):
     course = db.Column(db.String(50))
     year_level = db.Column(db.String(20))
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
-    students = db.relationship('Student', backref='section', lazy=True)
     schedules = db.relationship('Schedule', backref='section', lazy=True)
 
 class Schedule(db.Model):
@@ -39,24 +38,11 @@ class Schedule(db.Model):
     time = db.Column(db.String(50))  # Changed from start_time/end_time to time
     subject = db.Column(db.String(100))  # Added subject field
 
-class Student(db.Model):
-    __tablename__ = 'students'
-    student_id = db.Column(db.Integer, primary_key=True)
-    student_number = db.Column(db.String(20), unique=True, nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    course = db.Column(db.String(50))
-    year_level = db.Column(db.Integer)
-    section_id = db.Column(db.Integer, db.ForeignKey('sections.section_id'))
-    email = db.Column(db.String(255), default='')
-    status = db.Column(db.String(20), default='Active')
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
-
 class Course(db.Model):
     __tablename__ = 'courses'
     course_id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100), nullable=False)
     sections = db.relationship('Section', backref='course_info', lazy=True)
-    students = db.relationship('Student', backref='course_info', lazy=True)
 
 class Subject(db.Model):
     __tablename__ = 'subjects'

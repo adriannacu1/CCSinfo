@@ -177,33 +177,6 @@
                     <p><strong>Course:</strong> {{ section.course }}</p>
                     <p><strong>Year Level:</strong> {{ section.year_level }}</p>
                 </div>
-                <h2 class="mt-4 mb-3">Students</h2>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Student Number</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in students %}
-                            <tr>
-                                <td>{{ student.student_number }}</td>
-                                <td>{{ student.name }}</td>
-                                <td>{{ student.email }}</td>
-                                <td>{{ student.status }}</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4">No students found.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
                 <div class="mt-4">
                     <a href="{{ url_for('admin_sections') }}" class="btn btn-secondary">Back</a>
                 </div>

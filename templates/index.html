@@ -39,23 +39,9 @@
         </div>
 
         <div class="row g-4">
-            <!-- Student Services -->
-            <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-aos="fade-up" data-aos-delay="100">
-                    <div class="service-icon">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <h4>Student Portal</h4>
-                    <p>Access student information, course details, and academic records</p>
-                    <a href="{{ url_for('student_list') }}" class="service-link">
-                        Explore <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
             <!-- Faculty Directory -->
             <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="service-card" data-aos="fade-up" data-aos-delay="100">
                     <div class="service-icon">
                         <i class="fas fa-chalkboard-teacher"></i>
                     </div>
@@ -69,7 +55,7 @@
 
             <!-- Room Information -->
             <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="service-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="service-icon">
                         <i class="fas fa-door-open"></i>
                     </div>
@@ -106,20 +92,7 @@
             <p class="stats-subtitle">Discover our growing community</p>
         </div>
         <div class="row g-4">
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-number"
-                            data-count="{{ stats.total_students if stats.total_students is not none else 0 }}">0</div>
-                        <div class="stat-label">Students</div>
-                        <div class="stat-description">Active learners</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="col-lg-4 col-md-6 col-sm-6">
                 <div class="stat-card">
                     <div class="stat-icon">
                         <i class="fas fa-chalkboard-teacher"></i>
@@ -132,7 +105,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="col-lg-4 col-md-6 col-sm-6">
                 <div class="stat-card">
                     <div class="stat-icon">
                         <i class="fas fa-door-open"></i>
@@ -145,7 +118,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="col-lg-4 col-md-6 col-sm-6">
                 <div class="stat-card">
                     <div class="stat-icon">
                         <i class="fas fa-code"></i>
@@ -170,7 +143,7 @@
                 <div class="about-content">
                     <h2 class="section-title">About <span class="text-gradient">CCS Info</span></h2>
                     <p class="mb-4">CCS Info is your comprehensive information system for the College of Computer
-                        Studies. We provide easy access to student records, faculty information, room details, and
+                        Studies. We provide easy access to faculty information, room details, and
                         various academic services.</p>
                     <div class="feature-list">
                         <div class="feature-item">

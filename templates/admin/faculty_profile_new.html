@@ -2,7 +2,12 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <m                        <li class="nav-item">
+                            <a href="{{ url_for('admin_faculty') }}" class="nav-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>Faculty</span>
+                            </a>
+                        </li>"UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faculty Profile - CCS Admin</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -49,12 +54,6 @@
                 <div class="nav-section">
                     <div class="nav-section-title">MANAGEMENT</div>
                     <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="{{ url_for('admin_students') }}" class="nav-link">
-                                <i class="fas fa-users"></i>
-                                <span>Students</span>
-                            </a>
-                        </li>
                         <li class="nav-item active">
                             <a href="{{ url_for('admin_faculty') }}" class="nav-link">
                                 <i class="fas fa-chalkboard-teacher"></i>

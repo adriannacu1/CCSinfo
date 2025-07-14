@@ -51,12 +51,6 @@
                     <div class="nav-section-title">MANAGEMENT</div>
                     <ul class="nav-menu">
                         <li class="nav-item">
-                            <a href="{{ url_for('admin_students') }}" class="nav-link">
-                                <i class="fas fa-user-graduate"></i>
-                                <span>Students</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a href="{{ url_for('admin_faculty') }}" class="nav-link">
                                 <i class="fas fa-chalkboard-teacher"></i>
                                 <span>Faculty</span>
@@ -150,23 +144,6 @@
             <div class="dashboard-stats">
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>Students</h3>
-                        <div class="stat-number"
-                            data-count="{{ stats.total_students if stats.total_students is not none else 0 }}">0</div>
-                        <div class="stat-label">{{ stats.active_students if stats.active_students is not none else 0 }}
-                            active</div>
-                    </div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i>
-                        +12%
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">
                         <i class="fas fa-chalkboard-teacher"></i>
                     </div>
                     <div class="stat-content">
@@ -241,64 +218,14 @@
             <div class="dashboard-content">
                 <!-- Quick Access Tabs -->
                 <div class="quick-tabs">
-                    <button class="tab-btn active" data-tab="students">Students</button>
-                    <button class="tab-btn" data-tab="faculty">Faculty</button>
+                    <button class="tab-btn active" data-tab="faculty">Faculty</button>
                     <button class="tab-btn" data-tab="rooms">Rooms</button>
                     <button class="tab-btn" data-tab="sections">Sections</button>
                 </div>
 
                 <!-- Tab Content -->
                 <div class="tab-content">
-                    <div class="tab-pane active" id="students-tab">
-                        <div class="section-header">
-                            <h3>Recent Students</h3>
-                            <a href="{{ url_for('admin_students') }}" class="view-all-btn">View All</a>
-                        </div>
-                        <div class="recent-list">
-                            {% for student in recent_students %}
-                            <div class="recent-item">
-                                <div class="item-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="item-info">
-                                    <div class="item-name">{{ student.name }}</div>
-                                    <div class="item-details">{{ student.course }} {{ student.year_level }} - {{
-                                        student.section }}</div>
-                                </div>
-                                <div class="item-status">
-                                    <span class="status-badge active">Active</span>
-                                </div>
-                            </div>
-                            {% else %}
-                            <div class="recent-item">
-                                <div class="item-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="item-info">
-                                    <div class="item-name">Emman Seron</div>
-                                    <div class="item-details">BSCS, 3 - 3-B</div>
-                                </div>
-                                <div class="item-status">
-                                    <span class="status-badge active">Active</span>
-                                </div>
-                            </div>
-                            <div class="recent-item">
-                                <div class="item-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="item-info">
-                                    <div class="item-name">Adrian Kurt P. Nacu</div>
-                                    <div class="item-details">BSCS, 3 - 3-B</div>
-                                </div>
-                                <div class="item-status">
-                                    <span class="status-badge active">Active</span>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div class="tab-pane" id="faculty-tab">
+                    <div class="tab-pane active" id="faculty-tab">
                         <div class="section-header">
                             <h3>Recent Faculty</h3>
                             <a href="{{ url_for('admin_faculty') }}" class="view-all-btn">View All</a>
@@ -364,15 +291,6 @@
 
                 <!-- Charts Section -->
                 <div class="charts-section">
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3>Student Trends</h3>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="studentChart"></canvas>
-                        </div>
-                    </div>
-
                     <div class="chart-container">
                         <div class="chart-header">
                             <h3>Faculty Overview</h3>
@@ -1336,26 +1254,6 @@
 
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
-            // Student Chart
-            new Chart(document.getElementById('studentChart'), {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        data: [0, 0, 0, 1, 2, 1],
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#dc3545',
-                        pointBorderColor: '#dc3545',
-                        pointHoverBackgroundColor: '#b02a37',
-                        pointHoverBorderColor: '#b02a37'
-                    }]
-                },
-                options: chartOptions
-            });
-
             // Faculty Chart
             new Chart(document.getElementById('facultyChart'), {
                 type: 'bar',
@@ -1382,23 +1280,18 @@
                     if (data.success) {
                         const stats = data.stats;
 
-                        // Update student stats
-                        animateCountUp(document.querySelector('[data-count]'), stats.total_students);
-                        document.querySelector('.stat-card:nth-child(1) .stat-label').textContent =
-                            `${stats.active_students} active`;
-
                         // Update faculty stats
                         const facultyCards = document.querySelectorAll('.stat-card');
-                        if (facultyCards[1]) {
-                            animateCountUp(facultyCards[1].querySelector('.stat-number'), stats.total_faculty);
-                            facultyCards[1].querySelector('.stat-label').textContent =
+                        if (facultyCards[0]) {
+                            animateCountUp(facultyCards[0].querySelector('.stat-number'), stats.total_faculty);
+                            facultyCards[0].querySelector('.stat-label').textContent =
                                 `${stats.active_faculty} active`;
                         }
 
                         // Update rooms stats
-                        if (facultyCards[2]) {
-                            animateCountUp(facultyCards[2].querySelector('.stat-number'), stats.total_rooms);
-                            facultyCards[2].querySelector('.stat-label').textContent =
+                        if (facultyCards[1]) {
+                            animateCountUp(facultyCards[1].querySelector('.stat-number'), stats.total_rooms);
+                            facultyCards[1].querySelector('.stat-label').textContent =
                                 `${stats.available_rooms} available`;
                         }
 
